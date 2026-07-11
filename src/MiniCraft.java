@@ -384,7 +384,11 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 else if(y>s+4&&y<bedrock)world[x][y]=r.nextInt(8)==0?COBBLESTONE:STONE;
                 else if(y>=bedrock)world[x][y]=BEDROCK;
             }
-            for(int y=H/3;y<s;y++)world[x][y]=WATER;
+            if(x>2&&x<W-3&&s>hm[x-1]+2&&s>hm[x+1]+2){
+                int wl=Math.min(hm[x-1],hm[x+1])+1;
+                for(int y=wl;y<s;y++)world[x][y]=WATER;
+                if(hm[x-1]==hm[x+1])s=hm[x-1];
+            }
             int beach=r.nextInt(30);
             if(beach<2&&s<H/2-2){
                 for(int by=s;by<=s+2;by++)if(by>=0&&by<H)world[x][by]=SAND;
