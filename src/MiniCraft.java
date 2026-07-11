@@ -1,3 +1,4 @@
+//sha:6446ab97
 //sha:f03e8570
 //sha:fe8aebdb
 //sha:687d9e58
@@ -23,6 +24,7 @@ import java.io.*;
 import java.net.*;
 import java.util.Random;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import javax.sound.sampled.*;
 
 public class MiniCraft extends JPanel implements ActionListener, KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
@@ -663,7 +665,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     private void removeConnectedWater(int x,int y){
         if(x<0||x>=W||y<0||y>=H||world[x][y]!=WATER)return;
-        java.util.ArrayDeque<int[]> q=new java.util.ArrayDeque<>();
+        java.util.LinkedList<int[]> q=new java.util.LinkedList<>();
         q.add(new int[]{x,y});
         while(!q.isEmpty()){
             int[] p=q.poll();int cx=p[0],cy=p[1];
