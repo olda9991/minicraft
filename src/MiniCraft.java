@@ -288,7 +288,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         try{
             File mdir=new File(System.getProperty("user.dir")+"/music");
             if(!mdir.exists())return;
-            File[] files=mdir.listFiles((d,n)->n.endsWith(".wav"));
+            File[] files=mdir.listFiles((d,n)->n.endsWith(".wav")||n.endsWith(".mp3")||n.endsWith(".mp4")||n.endsWith(".ogg"));
             if(files==null||files.length==0)return;
             musicFiles.clear();
             for(File f:files)musicFiles.add(f.getAbsolutePath());
@@ -301,12 +301,19 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         new Thread(()->{
             try{
                 String path=musicFiles.get((int)(Math.random()*musicFiles.size()));
+                if(!path.endsWith(".wav")){
+                    File tmp=File.createTempFile("minicraft_music",".wav");
+                    Runtime.getRuntime().exec(new String[]{"ffmpeg","-i",path,"-acodec","pcm_s16le","-ar","11025","-ac","1","-y",tmp.getAbsolutePath()}).waitFor();
+                    if(!tmp.exists()||tmp.length()<100){playNext();return;}
+                    path=tmp.getAbsolutePath();
+                    tmp.deleteOnExit();
+                }
                 javax.sound.sampled.AudioInputStream ais=javax.sound.sampled.AudioSystem.getAudioInputStream(new File(path));
                 musicClip=javax.sound.sampled.AudioSystem.getClip();
                 musicClip.open(ais);
                 musicClip.start();
                 musicClip.addLineListener(ev->{if(ev.getType()==javax.sound.sampled.LineEvent.Type.STOP)playNext();});
-            }catch(Exception e){}
+            }catch(Exception e){playNext();}
         }).start();
     }
 
