@@ -32,17 +32,17 @@
 - [x] Cross-platform updater
 
 ## To Do
-- [ ] Fix chat: WASD shouldn't move player while typing
-- [ ] Discord Rich Presence (show "Playing MiniCraft" on Discord)
+- [x] Fix chat: WASD should not move player while typing
+- [x] Discord Rich Presence (show "Playing MiniCraft" on Discord)
 - [ ] Furnace GUI (smelting interface)
 - [ ] Chests (storage containers)
 - [ ] Armor system (leather, iron, diamond chestplates)
 - [ ] Better crafting recipe book / guide
-- [ ] Sprint key (shift to run)
+- [x] Sprint key (shift to run faster)
 - [ ] Item tooltips on hotbar hover
 - [ ] Better mob pixel art graphics
 - [ ] More sound effects (mob sounds, eating, etc.)
-- [ ] XP bar on HUD
+- [x] XP bar on HUD
 - [ ] Achievement system
 - [ ] Proper inventory GUI with armor slots
 - [ ] More commands (/weather, /gamemode, /spawn)
