@@ -2,4 +2,5 @@
 cd "$(dirname "$0")"
 export PATH="/home/linuxbrew/.linuxbrew/opt/openjdk@21/bin:$PATH"
 export _JAVA_AWT_WM_NONREPARENTING=1
+fyi -i /var/home/olda/minicraft/icon.png minicraft
 java -cp build MiniCraft
