@@ -1,3 +1,4 @@
+//sha:96526b2b
 //sha:fe11266b
 //sha:983eb6c2
 //sha:be9b7f3f
@@ -94,10 +95,14 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         DropItem(double x,double y,int b){this.x=x;this.y=y;block=b;life=600;vy=-2;}
     }
     class Mob{double x,y;int health=6;int maxHealth=6;int type;int aiT;int hurtT;
-        Mob(double x,double y,int t){this.x=x;this.y=y;type=t;maxHealth=t==2?10:6;health=maxHealth;aiT=(int)(Math.random()*60);}
+        Mob(double x,double y,int t){this.x=x;this.y=y;type=t;maxHealth=t==2?10:t==4?8:6;health=maxHealth;aiT=(int)(Math.random()*60);}
     }
+    class DmgNum{double x,y;int val,life;DmgNum(double x,double y,int v){this.x=x;this.y=y;val=v;life=40;}}
+    class Arrow{double x,y,vx,vy;int life;Arrow(double x,double y,double vx,double vy){this.x=x;this.y=y;this.vx=vx;this.vy=vy;life=120;}}
     private java.util.ArrayList<DropItem> drops=new java.util.ArrayList<>();
     private java.util.ArrayList<Mob> mobs=new java.util.ArrayList<>();
+    private java.util.ArrayList<DmgNum> dmgNums=new java.util.ArrayList<>();
+    private java.util.ArrayList<Arrow> arrows=new java.util.ArrayList<>();
     private BufferedImage discIcon,ghIcon;
     private boolean chatOpen=false;
     private String chatText="";
@@ -492,6 +497,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(screen==Screen.DEATH||screen==Screen.CRAFTING){repaint();return;}
         if(screen!=Screen.PLAY)return;
         double speed=survival&&hunger<=0?1.5:3.0;
+        if(keys[KeyEvent.VK_SHIFT])speed*=1.6;
         int pfoot=(int)((py+playerH/2)/TILE);
         if(pfoot>=0&&pfoot<H&&world[(int)(px/TILE)][pfoot]==WATER)speed*=0.4;
         double dx=0,dy=0;
@@ -524,12 +530,15 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         int targetY=Math.max(0,Math.min(H*TILE-VH*TILE,(int)(py-VH*TILE/2)));
         if(ultraFps){camX=targetX;camY=targetY;}else{if(camSmoothX==0){camSmoothX=targetX;camSmoothY=targetY;}camSmoothX+=(targetX-camSmoothX)*0.15;camSmoothY+=(targetY-camSmoothY)*0.15;camX=(int)camSmoothX;camY=(int)camSmoothY;}
         if(!ultraFps)for(int i=0;i<particles.size();i++){Particle pt=particles.get(i);pt.x+=pt.vx;pt.y+=pt.vy;pt.vy+=0.2;pt.life--;if(pt.life<=0){particles.remove(i);i--;}}
-        if(!ultraFps)for(int i=0;i<drops.size();i++){DropItem d=drops.get(i);d.y+=d.vy;d.vy+=0.1;d.life--;if(Math.abs(d.x-px)<24&&Math.abs(d.y-py)<24){if(d.block==EXP_ORB){addChat("XP","+"+1);}else addToInv(d.block,1);drops.remove(i);i--;}else if(d.life<=0){drops.remove(i);i--;}}
+        if(!ultraFps)for(int i=0;i<drops.size();i++){DropItem d=drops.get(i);d.y+=d.vy;d.vy+=0.1;d.life--;if(Math.abs(d.x-px)<24&&Math.abs(d.y-py)<24){if(d.block==EXP_ORB){}else addToInv(d.block,1);drops.remove(i);i--;}else if(d.life<=0){drops.remove(i);i--;}}
+        for(int i=0;i<dmgNums.size();i++){DmgNum dn=dmgNums.get(i);dn.y-=1.5;dn.life--;if(dn.life<=0){dmgNums.remove(i);i--;}}
+        for(int i=0;i<arrows.size();i++){Arrow a=arrows.get(i);a.x+=a.vx;a.y+=a.vy;a.life--;if(Math.abs(a.x-px)<16&&Math.abs(a.y-py)<16){health--;if(health<=0){dead=true;screen=Screen.DEATH;}arrows.remove(i);i--;}else if(a.life<=0||isSolid((int)(a.x/TILE),(int)(a.y/TILE))){arrows.remove(i);i--;}}
         if(!ultraFps)for(Mob m:mobs){
             m.aiT++;if(m.hurtT>0)m.hurtT--;
             double ndark=Math.abs(worldTime-12000)/12000.0;
             if(m.type==2&&ndark>0.3){double ddx=px-m.x,ddy=py-m.y,dist=Math.sqrt(ddx*ddx+ddy*ddy);if(dist>8){m.x+=ddx/dist*1.5;m.y+=ddy/dist*0.5;}}
-            else if(m.type==4&&ndark>0.3){double ddx=px-m.x,ddy=py-m.y,dist=Math.sqrt(ddx*ddx+ddy*ddy);if(dist>60){m.x+=ddx/dist*2;}else if(m.aiT>40){m.aiT=0;if(dist<80){health--;if(health<=0){dead=true;screen=Screen.DEATH;}}}}
+            else if(m.type==4&&ndark>0.3){double ddx=px-m.x,ddy=py-m.y,dist=Math.sqrt(ddx*ddx+ddy*ddy);if(dist>60){m.x+=ddx/dist*2;}else if(m.aiT>60){m.aiT=0;if(dist<100){arrows.add(new Arrow(m.x,m.y,(px-m.x)/dist*6,(py-m.y)/dist*6));}}}
+            else if(m.aiT>100){m.aiT=0;if(Math.random()<0.3)m.x+=(Math.random()-0.5)*TILE;}
             else if(m.aiT>100){m.aiT=0;if(Math.random()<0.3)m.x+=(Math.random()-0.5)*TILE;}
             if(isSolid((int)(m.x/TILE),(int)((m.y+20)/TILE))){m.aiT=-10;}else m.y+=1.5;
             if(m.type==2&&ndark>0.3&&Math.abs(m.x-px)<24&&Math.abs(m.y-py)<24&&m.hurtT<=0){health--;m.hurtT=40;if(health<=0){dead=true;screen=Screen.DEATH;}}
@@ -796,9 +805,13 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             g2.fillRect((int)(pt.x-camX),(int)(pt.y-camY),2+pt.life/5,2+pt.life/5);
         }
         for(DropItem d:drops){int dbob=(int)(Math.sin(d.life*0.1)*2);g2.drawImage(tex[Math.min(d.block,BLOCK_COUNT-1)],(int)(d.x-camX)-6,(int)(d.y-camY)-6+dbob,null);}
+        for(DmgNum dn:dmgNums){
+            g2.setColor(new Color(255,0,0,dn.life>30?255:dn.life*8));g2.setFont(new Font("PixelPurl",Font.BOLD,14));
+            g2.drawString(""+dn.val,(int)(dn.x-camX)-8,(int)(dn.y-camY));
+        }
+        for(Arrow a:arrows){g2.setColor(Color.WHITE);g2.drawLine((int)(a.x-camX),(int)(a.y-camY),(int)(a.x-a.vx*2-camX),(int)(a.y-a.vy*2-camY));}
         for(Mob m:mobs){
             int mx=(int)(m.x-camX),my=(int)(m.y-camY);
-            g2.setColor(m.type==0?new Color(140,100,60):m.type==1?new Color(220,150,180):m.type==2?new Color(80,120,60):m.type==3?new Color(180,180,180):m.type==4?new Color(200,200,200):Color.WHITE);
             g2.fillRect(mx-10,my-14,20,24);
             g2.setColor(Color.WHITE);g2.drawString(m.type==0?"Cow":m.type==1?"Pig":m.type==2?"Zomb":m.type==3?"Sheep":m.type==4?"Skele":"Chick",mx-10,my-18);
             g2.setColor(new Color(0,0,0,100));g2.fillRect(mx-12,my-24,24,3);
@@ -907,7 +920,6 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             if(e.getKeyCode()==KeyEvent.VK_U){if(updateAvailable)doUpdate();else{new Thread(()->checkUpdate()).start();}}
             return;
         }
-        if(e.getKeyCode()>=0&&e.getKeyCode()<keys.length)keys[e.getKeyCode()]=true;
         if(chatOpen){
             if(e.getKeyCode()==KeyEvent.VK_ENTER&&!chatText.isEmpty()){
                 if(chatText.startsWith("/")){runCommand(chatText);chatText="";chatOpen=false;}
@@ -918,6 +930,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             else{char c=e.getKeyChar();if(c>=' '&&c<='~'&&chatText.length()<60)chatText+=c;}
             return;
         }
+        if(e.getKeyCode()>=0&&e.getKeyCode()<keys.length)keys[e.getKeyCode()]=true;
         if(e.getKeyCode()==KeyEvent.VK_T&&screen==Screen.PLAY){chatOpen=true;chatText="";return;}
         if(screen==Screen.CREATE_WORLD){
             if(e.getKeyCode()==KeyEvent.VK_BACK_SPACE&&typing.length()>0)typing=typing.substring(0,typing.length()-1);
@@ -1061,7 +1074,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(screen==Screen.PLAY){int tx=(mx+camX)/TILE,ty=(my+camY)/TILE;if(!isIn(tx,ty))return;int pt=(int)(px/TILE),pyt=(int)(py/TILE);if(Math.abs(tx-pt)+Math.abs(ty-pyt)<2)return;
             if(e.getButton()==MouseEvent.BUTTON1){
                 boolean hitMob=false;int dmg=selBlock==SWORD?6:3;
-                for(Mob m:mobs){if(Math.abs((mx+camX)-m.x)<24&&Math.abs((my+camY)-m.y)<24){int critDmg=dmg;boolean onG=false;int fx=(int)((px+14)/TILE),fy=(int)((py+TILE-4)/TILE);if(isSolid(fx,fy))onG=true;if(!onG){critDmg*=2;addChat("","CRIT! x2");}m.health-=critDmg;m.hurtT=10;m.x+=(m.x>px?8:-8);if(m.health<=0){drops.add(new DropItem(m.x,m.y,m.type==0?RAW_BEEF:m.type==1?RAW_PORK:m.type==3?WOOL:m.type==4?COOKED_BEEF:COOKED_BEEF));drops.add(new DropItem(m.x-10,m.y-10,EXP_ORB));mobs.remove(m);}hitMob=true;break;}}
+                for(Mob m:mobs){if(Math.abs((mx+camX)-m.x)<24&&Math.abs((my+camY)-m.y)<24){int critDmg=dmg;boolean onG=false;int fx=(int)((px+14)/TILE),fy=(int)((py+TILE-4)/TILE);if(isSolid(fx,fy))onG=true;if(!onG){critDmg*=2;}m.health-=critDmg;m.hurtT=10;dmgNums.add(new DmgNum(m.x,m.y-20,critDmg));m.x+=(m.x>px?8:-8);if(m.health<=0){drops.add(new DropItem(m.x,m.y,m.type==0?RAW_BEEF:m.type==1?RAW_PORK:m.type==3?WOOL:m.type==4?COOKED_BEEF:COOKED_BEEF));drops.add(new DropItem(m.x-10,m.y-10,EXP_ORB));mobs.remove(m);}hitMob=true;break;}}
                 if(!hitMob){if(survival&&world[tx][ty]>0){breakX=tx;breakY=ty;breakTimer=0;int spd=1;if(selBlock==PICKAXE)spd=4;if(selBlock==AXE)spd=4;if(selBlock==SHOVEL)spd=4;breakTime=Math.max(1,BT[Math.min(world[tx][ty],BT.length-1)]/spd);}else if(!survival){world[tx][ty]=0;syncBlock(tx,ty,0);}}
             }
             else if(e.getButton()==MouseEvent.BUTTON3&&selBlock>=0&&(!survival||getInvCount(selBlock)>0)){
