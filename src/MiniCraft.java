@@ -1,3 +1,4 @@
+//sha:fe8aebdb
 //sha:687d9e58
 //sha:f9555418
 //sha:2fc5bec4
@@ -77,7 +78,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private String typing="";
     private int selectedWorld=-1;
     private int menuHover=-1;
-    private boolean showFps=false, showCoords=true, noclip=false, fullscreen=false, ultraFps=false, rtxMode=false, rtxWater=false;
+    private boolean showFps=false, showCoords=true, noclip=false, fullscreen=false, ultraFps=false, rtxMode=false, rtxWater=false, physicsOn=true;
     private int gameFov=25, settingSel=-1;
     private boolean nameEditing=false;
     private boolean updateAvailable=false;
@@ -320,7 +321,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private void saveSettings(){
         try{PrintWriter pw=new PrintWriter(new FileWriter(System.getProperty("user.dir")+"/settings.txt"));
             pw.println("showFps="+showFps);pw.println("showCoords="+showCoords);pw.println("noclip="+noclip);
-            pw.println("fullscreen="+fullscreen);pw.println("fov="+gameFov);pw.println("name="+playerName);            pw.println("ultraFps="+ultraFps);            pw.println("rtxMode="+rtxMode);pw.println("rtxWater="+rtxWater);
+            pw.println("fullscreen="+fullscreen);pw.println("fov="+gameFov);pw.println("name="+playerName);            pw.println("ultraFps="+ultraFps);            pw.println("rtxMode="+rtxMode);            pw.println("rtxWater="+rtxWater);pw.println("physicsOn="+physicsOn);
             pw.close();
         }catch(Exception e){}
     }
@@ -338,6 +339,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 if(p[0].equals("ultraFps"))ultraFps=Boolean.parseBoolean(p[1]);
                 if(p[0].equals("rtxMode"))rtxMode=Boolean.parseBoolean(p[1]);
                 if(p[0].equals("rtxWater"))rtxWater=Boolean.parseBoolean(p[1]);
+                if(p[0].equals("physicsOn"))physicsOn=Boolean.parseBoolean(p[1]);
                 if(p[0].equals("name"))playerName=p[1];
             }
             br.close();
@@ -594,7 +596,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(!isHost&&client!=null&&client.isConnected()&&posTime%100<16){
             client.send("P "+(int)px+" "+(int)py);
         }
-        if(ultraFps||posTime%3!=0){}else{
+        if(ultraFps||posTime%3!=0||!physicsOn){}else{
             for(int y=H-2;y>=0;y--)for(int x=W-1;x>=0;x--){
                 if(world[x][y]==SAND||world[x][y]==GRAVEL){if(y+1<H&&world[x][y+1]==0){world[x][y+1]=world[x][y];world[x][y]=0;}}
                 else if(world[x][y]==WATER){
@@ -790,6 +792,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             "[F3] Ultra FPS: "+(ultraFps?"ON":"OFF"),
             "[F4] RTX Mode: "+(rtxMode?"ON":"OFF"),
             "[F5] RTX Water: "+(rtxWater?"ON":"OFF"),
+            "[F6] Physics: "+(physicsOn?"ON":"OFF"),
             "[F] Mode: "+(survival?"Survival":"Creative"),
             "[F11] Fullscreen: "+(fullscreen?"ON":"OFF"),
             "[N] Name: "+playerName+(nameEditing?(System.currentTimeMillis()/500%2==0?"_":""):""),
@@ -973,6 +976,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(e.getKeyCode()==KeyEvent.VK_F3){ultraFps=!ultraFps;return;}
         if(e.getKeyCode()==KeyEvent.VK_F4){rtxMode=!rtxMode;return;}
         if(e.getKeyCode()==KeyEvent.VK_F5){rtxWater=!rtxWater;return;}
+        if(e.getKeyCode()==KeyEvent.VK_F6){physicsOn=!physicsOn;return;}
         if(e.getKeyCode()==KeyEvent.VK_M){toggleMusic();return;}
         if(e.getKeyCode()==KeyEvent.VK_F11&&(screen==Screen.PLAY||screen==Screen.SETTINGS)){
             fullscreen=!fullscreen;
