@@ -1,3 +1,4 @@
+//sha:567b12fc
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -186,7 +187,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 String fl;while((fl=lr.readLine())!=null){if(fl.contains("//sha:")){localSha=fl.replaceAll(".*//sha:","").trim();break;}}
                 lr.close();
             }
-            if(!localSha.equals(latestSha)){updateAvailable=true;updateVersion=latestSha.substring(0,8);}
+            if(!localSha.isEmpty()&&localSha.equals(latestSha))return;
+            updateAvailable=true;updateVersion=latestSha.substring(0,8);
         }catch(Exception e){}
     }
 
@@ -199,30 +201,28 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             StringBuilder sb=new StringBuilder();
             String line;while((line=br.readLine())!=null)sb.append(line).append("\n");
             br.close();
-            String code=sb.toString();
-            code=code.replaceAll("(?s)//sha:.*?\npublic class MiniCraft","//sha:%s\npublic class MiniCraft".formatted(updateVersion));
-            if(!code.contains("//sha:"+updateVersion))return;
+            String code="//sha:"+updateVersion+"\n"+sb.toString();
             FileWriter fw=new FileWriter(System.getProperty("user.dir")+"/src/MiniCraft.java");
             fw.write(code);fw.close();
-            String homebrewJava="/home/linuxbrew/.linuxbrew/opt/openjdk@21/bin/javac";
-            ProcessBuilder pb=new ProcessBuilder(homebrewJava,"-d",System.getProperty("user.dir")+"/build",System.getProperty("user.dir")+"/src/MiniCraft.java");
+            String javacPath="/home/linuxbrew/.linuxbrew/opt/openjdk@21/bin/javac";
+            ProcessBuilder pb=new ProcessBuilder(javacPath,"-d",System.getProperty("user.dir")+"/build",System.getProperty("user.dir")+"/src/MiniCraft.java");
             pb.redirectErrorStream(true);
-            Process p=pb.start();
-            BufferedReader pbr=new BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
-            while(pbr.readLine()!=null);
-            p.waitFor();
-            if(p.exitValue()==0){
-                updateAvailable=false;
-                SwingUtilities.invokeLater(()->{
-                    JOptionPane.showMessageDialog(this,"Update complete! Restarting...");
-                    try{
-                        String javaBin=System.getProperty("java.home")+"/bin/java";
-                        String classpath=System.getProperty("user.dir")+"/build";
-                        Runtime.getRuntime().exec(new String[]{javaBin,"-cp",classpath,"MiniCraft"});
-                        System.exit(0);
-                    }catch(Exception ex){ex.printStackTrace();}
-                });
+            Process p=pb.start();p.waitFor();
+            if(p.exitValue()!=0){
+                SwingUtilities.invokeLater(()->JOptionPane.showMessageDialog(this,"Update failed! Check console for errors."));
+                return;
             }
+            updateAvailable=false;
+            SwingUtilities.invokeLater(()->{
+                JOptionPane.showMessageDialog(this,"Update complete! Game will restart...");
+                try{
+                    String javaBin="/home/linuxbrew/.linuxbrew/opt/openjdk@21/bin/java";
+                    String cp=System.getProperty("user.dir")+"/build";
+                    String env="_JAVA_AWT_WM_NONREPARENTING=1";
+                    Runtime.getRuntime().exec(new String[]{"/bin/bash","-c",env+" "+javaBin+" -cp "+cp+" MiniCraft & disown"});
+                    Timer t=new javax.swing.Timer(500,ev->System.exit(0));t.setRepeats(false);t.start();
+                }catch(Exception ex){ex.printStackTrace();}
+            });
         }catch(Exception e){e.printStackTrace();}
     }
 
