@@ -1,4 +1,4 @@
-//sha:6446ab97
+//sha:83472ee6
 //sha:f03e8570
 //sha:fe8aebdb
 //sha:687d9e58
@@ -24,7 +24,6 @@ import java.io.*;
 import java.net.*;
 import java.util.Random;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import javax.sound.sampled.*;
 
 public class MiniCraft extends JPanel implements ActionListener, KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
@@ -666,14 +665,15 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private void removeConnectedWater(int x,int y){
         if(x<0||x>=W||y<0||y>=H||world[x][y]!=WATER)return;
         java.util.LinkedList<int[]> q=new java.util.LinkedList<>();
-        q.add(new int[]{x,y});
+        q.add(new int[]{x,y});int count=0;
         while(!q.isEmpty()){
             int[] p=q.poll();int cx=p[0],cy=p[1];
             if(cx<0||cx>=W||cy<0||cy>=H||world[cx][cy]!=WATER)continue;
-            world[cx][cy]=0;
+            world[cx][cy]=0;count++;
             q.add(new int[]{cx-1,cy});q.add(new int[]{cx+1,cy});
             q.add(new int[]{cx,cy-1});q.add(new int[]{cx,cy+1});
         }
+        if(count>0)addChat("Water","Cleared "+count+" blocks");
     }
     private boolean takeFromInv(int block,int count){for(int i=0;i<inv.length;i++)if(inv[i]==block&&invCount[i]>=count){invCount[i]-=count;if(invCount[i]<=0)inv[i]=0;return true;}return false;}
     private int getInvCount(int block){for(int i=0;i<inv.length;i++)if(inv[i]==block)return invCount[i];return 0;}
