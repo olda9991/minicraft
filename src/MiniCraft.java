@@ -1,3 +1,4 @@
+//sha:e63cb844
 //sha:605f5dba
 //sha:903cdcfa
 //sha:188fb1df
@@ -85,6 +86,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private boolean musicOn=true;
     private javax.sound.sampled.Clip musicClip;
     private java.util.ArrayList<String> musicFiles=new java.util.ArrayList<>();
+    private java.util.ArrayList<String> sfxFiles=new java.util.ArrayList<>();
+    private int walkSoundTimer=0;
     private ArrayList<DiscoveredServer> discoveredServers=new ArrayList<>();
     private int selectedServer=-1;
     private DiscoveryThread discovery;
@@ -172,7 +175,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         loadSettings();
         timer=new javax.swing.Timer(16,this);timer.start();
         new Thread(()->checkUpdate()).start();
-        new Thread(()->{try{Thread.sleep(1000);loadMusic();}catch(Exception e){}}).start();
+        new Thread(()->{try{Thread.sleep(1000);loadMusic();loadSFX();}catch(Exception e){}}).start();
     }
 
     private BufferedImage makeIcon(Color c,int s){BufferedImage img=new BufferedImage(s,s,BufferedImage.TYPE_INT_ARGB);Graphics2D g=img.createGraphics();g.setColor(c);g.fillOval(1,1,s-2,s-2);g.setColor(c.brighter());g.fillOval(2,1,s-4,s-3);g.dispose();return img;}
@@ -289,11 +292,11 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             File mdir=new File(System.getProperty("user.dir")+"/music");
             if(!mdir.exists())return;
             File[] files=mdir.listFiles((d,n)->n.endsWith(".wav")||n.endsWith(".mp3")||n.endsWith(".mp4")||n.endsWith(".ogg"));
-            if(files==null||files.length==0)return;
+            if(files==null||files.length==0){System.out.println("No music files found");return;}
             musicFiles.clear();
-            for(File f:files)musicFiles.add(f.getAbsolutePath());
+            for(File f:files){musicFiles.add(f.getAbsolutePath());System.out.println("Music: "+f.getName());}
             playNext();
-        }catch(Exception e){}
+        }catch(Exception e){e.printStackTrace();}
     }
 
     private void playNext(){
@@ -301,19 +304,22 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         new Thread(()->{
             try{
                 String path=musicFiles.get((int)(Math.random()*musicFiles.size()));
+                System.out.println("Playing: "+path);
                 if(!path.endsWith(".wav")){
-                    File tmp=File.createTempFile("minicraft_music",".wav");
-                    Runtime.getRuntime().exec(new String[]{"ffmpeg","-i",path,"-acodec","pcm_s16le","-ar","11025","-ac","1","-y",tmp.getAbsolutePath()}).waitFor();
+                    File tmp=File.createTempFile("mc_music",".wav");
+                    Process p=Runtime.getRuntime().exec(new String[]{"ffmpeg","-i",path,"-acodec","pcm_s16le","-ar","11025","-ac","1","-y",tmp.getAbsolutePath()});
+                    p.waitFor();
                     if(!tmp.exists()||tmp.length()<100){playNext();return;}
                     path=tmp.getAbsolutePath();
                     tmp.deleteOnExit();
                 }
                 javax.sound.sampled.AudioInputStream ais=javax.sound.sampled.AudioSystem.getAudioInputStream(new File(path));
+                if(musicClip!=null){musicClip.stop();musicClip.close();}
                 musicClip=javax.sound.sampled.AudioSystem.getClip();
                 musicClip.open(ais);
                 musicClip.start();
                 musicClip.addLineListener(ev->{if(ev.getType()==javax.sound.sampled.LineEvent.Type.STOP)playNext();});
-            }catch(Exception e){playNext();}
+            }catch(Exception e){e.printStackTrace();playNext();}
         }).start();
     }
 
@@ -321,6 +327,32 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         musicOn=!musicOn;
         if(musicOn)playNext();
         else if(musicClip!=null){musicClip.stop();musicClip.close();}
+    }
+
+    private void loadSFX(){
+        try{
+            File sdir=new File(System.getProperty("user.dir")+"/sounds");
+            if(!sdir.exists())return;
+            File[] files=sdir.listFiles((d,n)->n.endsWith(".wav"));
+            if(files==null||files.length==0)return;
+            sfxFiles.clear();
+            for(File f:files)sfxFiles.add(f.getAbsolutePath());
+        }catch(Exception e){}
+    }
+
+    private void playSFX(String type){
+        new Thread(()->{
+            try{
+                java.util.ArrayList<String> matches=new java.util.ArrayList<>();
+                for(String f:sfxFiles)if(f.contains(type))matches.add(f);
+                if(matches.isEmpty())return;
+                String f=matches.get((int)(Math.random()*matches.size()));
+                javax.sound.sampled.Clip c=javax.sound.sampled.AudioSystem.getClip();
+                c.open(javax.sound.sampled.AudioSystem.getAudioInputStream(new File(f)));
+                c.start();
+                c.addLineListener(ev->{if(ev.getType()==javax.sound.sampled.LineEvent.Type.STOP)c.close();});
+            }catch(Exception e){}
+        }).start();
     }
 
     private void stopWebServer(){
@@ -433,6 +465,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(keys[KeyEvent.VK_W]||keys[KeyEvent.VK_UP])dy-=speed;
         if(keys[KeyEvent.VK_S]||keys[KeyEvent.VK_DOWN])dy+=speed;
         boolean moving=dx!=0||dy!=0;walking=moving;
+        if(moving){walkSoundTimer++;if(walkSoundTimer>20){walkSoundTimer=0;playSFX("grass");}}
         if(moving)hungerTimer++;
         double nx=px+dx,ny=py+dy;
         boolean canX=true,canY=true;
@@ -464,7 +497,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             if(survival)selBlock=Math.min(i+1,BLOCK_COUNT-1);
             else{selBlock=Math.min(i+1+creativeOffset,BLOCK_COUNT-1);}
         }
-        if(breakX>=0&&breakY>=0&&isIn(breakX,breakY)&&world[breakX][breakY]>0){breakTimer++;if(breakTimer>=breakTime){syncBlock(breakX,breakY,0);addToInv(world[breakX][breakY],1);spawnParticles(breakX,breakY,world[breakX][breakY]);world[breakX][breakY]=0;breakX=-1;breakY=-1;breakTimer=0;}}else if(breakX>=0){breakX=-1;breakY=-1;breakTimer=0;}
+        if(breakX>=0&&breakY>=0&&isIn(breakX,breakY)&&world[breakX][breakY]>0){breakTimer++;if(breakTimer>=breakTime){syncBlock(breakX,breakY,0);addToInv(world[breakX][breakY],1);spawnParticles(breakX,breakY,world[breakX][breakY]);playSFX(world[breakX][breakY]<=GRASS||world[breakX][breakY]==SAND?"grass":"stone");world[breakX][breakY]=0;breakX=-1;breakY=-1;breakTimer=0;}}else if(breakX>=0){breakX=-1;breakY=-1;breakTimer=0;}
         if(msgTimer>0)msgTimer--;
         if(chatTimer>0)chatTimer--;
         long posTime=System.currentTimeMillis();
