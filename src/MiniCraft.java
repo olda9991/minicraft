@@ -312,14 +312,14 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         for(int x=3;x<W-3;x++)for(int y=H/2;y<H-3;y++){
             if(world[x][y]==STONE||world[x][y]==COBBLESTONE){
                 int v=r.nextInt(80);
-                if(v<2)world[x][y]=DIAMOND_ORE;
-                else if(v<4&&y>H/2+5)world[x][y]=EMERALD_ORE;
-                else if(v<6)world[x][y]=GOLD_ORE;
-                else if(v<10)world[x][y]=REDSTONE_ORE;
-                else if(v<13)world[x][y]=LAPIS_ORE;
-                else if(v<20)world[x][y]=IRON_ORE;
-                else if(v<28)world[x][y]=COPPER_ORE;
-                else if(v<40)world[x][y]=COAL_ORE;
+                if(v<1&&y>H*3/4)world[x][y]=DIAMOND_ORE;
+                else if(v<2&&y>H*3/4)world[x][y]=EMERALD_ORE;
+                else if(v<5&&y>H/2+8)world[x][y]=GOLD_ORE;
+                else if(v<9&&y>H/2+3)world[x][y]=REDSTONE_ORE;
+                else if(v<12&&y>H/2+3)world[x][y]=LAPIS_ORE;
+                else if(v<22)world[x][y]=IRON_ORE;
+                else if(v<30)world[x][y]=COPPER_ORE;
+                else if(v<45)world[x][y]=COAL_ORE;
             }
         }
         for(int x=2;x<W-2;x++)for(int y=getHeight(x)+5;y<H-3;y++){
