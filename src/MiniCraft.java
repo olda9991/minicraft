@@ -1,3 +1,4 @@
+//sha:8054e471
 //sha:188fb1df
 //sha:b1df95eb
 import javax.swing.*;
@@ -202,10 +203,13 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
 
     private void doUpdate(){
+        final int w=getWidth(),h=getHeight();
+        new Thread(()->{
         try{
             java.net.URL url=new java.net.URL(GITHUB_RAW);
             java.net.HttpURLConnection conn=(java.net.HttpURLConnection)url.openConnection();
             conn.setConnectTimeout(10000);conn.setReadTimeout(10000);
+            if(conn.getResponseCode()!=200){showMsg("Download failed! (HTTP "+conn.getResponseCode()+")");return;}
             BufferedReader br=new BufferedReader(new java.io.InputStreamReader(conn.getInputStream()));
             StringBuilder sb=new StringBuilder();
             String line;while((line=br.readLine())!=null)sb.append(line).append("\n");
@@ -213,26 +217,26 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             String code="//sha:"+updateVersion+"\n"+sb.toString();
             FileWriter fw=new FileWriter(System.getProperty("user.dir")+"/src/MiniCraft.java");
             fw.write(code);fw.close();
-            String javacPath="/home/linuxbrew/.linuxbrew/opt/openjdk@21/bin/javac";
-            ProcessBuilder pb=new ProcessBuilder(javacPath,"-d",System.getProperty("user.dir")+"/build",System.getProperty("user.dir")+"/src/MiniCraft.java");
-            pb.redirectErrorStream(true);
+            showMsg("Downloaded! Compiling...");
+            String dir=System.getProperty("user.dir");
+            ProcessBuilder pb=new ProcessBuilder("/home/linuxbrew/.linuxbrew/opt/openjdk@21/bin/javac","-d",dir+"/build",dir+"/src/MiniCraft.java");
+            pb.directory(new File(dir));pb.redirectErrorStream(true);
             Process p=pb.start();p.waitFor();
             if(p.exitValue()!=0){
-                SwingUtilities.invokeLater(()->JOptionPane.showMessageDialog(this,"Update failed! Check console for errors."));
-                return;
+                java.io.BufferedReader err=new java.io.BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
+                String errLine,errOut="";while((errLine=err.readLine())!=null)errOut+=errLine+"\n";
+                showMsg("Compile failed:\n"+errOut);return;
             }
-            updateAvailable=false;
-            SwingUtilities.invokeLater(()->{
-                JOptionPane.showMessageDialog(this,"Update complete! Game will restart...");
-                try{
-                    String javaBin="/home/linuxbrew/.linuxbrew/opt/openjdk@21/bin/java";
-                    String cp=System.getProperty("user.dir")+"/build";
-                    String env="_JAVA_AWT_WM_NONREPARENTING=1";
-                    Runtime.getRuntime().exec(new String[]{"/bin/bash","-c",env+" "+javaBin+" -cp "+cp+" MiniCraft & disown"});
-                    Timer t=new javax.swing.Timer(500,ev->System.exit(0));t.setRepeats(false);t.start();
-                }catch(Exception ex){ex.printStackTrace();}
-            });
-        }catch(Exception e){e.printStackTrace();}
+            showMsg("Done! Restarting...");
+            Thread.sleep(500);
+            try{new ProcessBuilder("/home/linuxbrew/.linuxbrew/opt/openjdk@21/bin/java","-cp",dir+"/build","MiniCraft").directory(new File(dir)).start();}catch(Exception ex){}
+            Thread.sleep(500);
+            System.exit(0);
+        }catch(Exception e){showMsg("Error: "+e.getMessage());}
+        }).start();
+    }
+    private void showMsg(String msg){
+        SwingUtilities.invokeLater(()->JOptionPane.showMessageDialog(this,msg,"MiniCraft Update",JOptionPane.INFORMATION_MESSAGE));
     }
 
     private void loadTex(){tex=new BufferedImage[BLOCK_COUNT];for(int i=0;i<BLOCK_COUNT;i++){try{tex[i]=javax.imageio.ImageIO.read(new File(TEX_DIR+TF[i]+".png"));
