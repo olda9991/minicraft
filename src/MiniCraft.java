@@ -193,7 +193,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 pipe+="/discord-ipc-0";
                 java.net.UnixDomainSocketAddress addr=java.net.UnixDomainSocketAddress.of(pipe);
                 java.nio.channels.SocketChannel sc=java.nio.channels.SocketChannel.open(addr);
-                sock=sc.socket();
+                sock=sc.socket();sock.setSoTimeout(2000);
                 if(sock==null)return;
                 out=new java.io.PrintWriter(sock.getOutputStream(),true);in=new java.io.BufferedReader(new java.io.InputStreamReader(sock.getInputStream()));
                 out.print("{\"v\":1,\"client_id\":\"1512377902195540018\"}\n");out.flush();
@@ -232,7 +232,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         loadSettings();
         timer=new javax.swing.Timer(16,this);timer.start();
         new Thread(()->checkUpdate()).start();
-        new Thread(()->{try{Thread.sleep(1000);loadMusic();loadSFX();discordRPC=new DiscordRPC();discordRPC.start();}catch(Exception e){}}).start();
+        new Thread(()->{try{Thread.sleep(1000);loadMusic();loadSFX();        discordRPC=new DiscordRPC();discordRPC.setDaemon(true);discordRPC.start();}catch(Exception e){}}).start();
     }
 
     private BufferedImage makeIcon(Color c,int s){BufferedImage img=new BufferedImage(s,s,BufferedImage.TYPE_INT_ARGB);Graphics2D g=img.createGraphics();g.setColor(c);g.fillOval(1,1,s-2,s-2);g.setColor(c.brighter());g.fillOval(2,1,s-4,s-3);g.dispose();return img;}
