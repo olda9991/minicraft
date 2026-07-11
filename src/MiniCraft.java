@@ -86,7 +86,12 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     class DropItem{double x,y,vy;int block,life;
         DropItem(double x,double y,int b){this.x=x;this.y=y;block=b;life=600;vy=-2;}
     }
+    class Mob{double x,y;int health=6;int type;int aiT;
+        Mob(double x,double y,int t){this.x=x;this.y=y;type=t;aiT=(int)(Math.random()*60);}
+    }
     private java.util.ArrayList<DropItem> drops=new java.util.ArrayList<>();
+    private java.util.ArrayList<Mob> mobs=new java.util.ArrayList<>();
+    private BufferedImage discIcon,ghIcon;
     private boolean chatOpen=false;
     private String chatText="";
     private ArrayList<String> chatMessages=new ArrayList<>();
@@ -177,6 +182,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         heartImg=new BufferedImage[1];heartImg[0]=makeIcon(new Color(200,0,0),9);
         hungerImg=new BufferedImage[1];hungerImg[0]=makeIcon(new Color(180,120,40),9);
         try{logoImg=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/MINICRAFT.png"));}catch(Exception e){logoImg=null;}
+        try{discIcon=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/discord.png"));}catch(Exception e){discIcon=null;}
+        try{ghIcon=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/github.png"));}catch(Exception e){ghIcon=null;}
         new File(DATA_DIR).mkdirs();
         try{GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(Font.createFont(Font.TRUETYPE_FONT,new File(System.getProperty("user.dir")+"/PixelPurl.ttf")));}catch(Exception e){}
         refreshWorldList();
@@ -424,6 +431,11 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
         px=W/2.0*TILE;py=getGround(W/2)*TILE-playerH/2;health=20;hunger=20;dead=false;fallDist=0;survival=true;
         for(int i=0;i<inv.length;i++){inv[i]=0;invCount[i]=0;}
+        mobs.clear();
+        for(int i=0;i<15;i++){
+            int mx=10+(int)(Math.random()*(W-20)),my=getGround(mx);
+            if(world[mx][my]==GRASS)mobs.add(new Mob(mx*TILE,my*TILE-playerH/2,(int)(Math.random()*2)));
+        }
     }
 
     private int getGround(int x){
@@ -502,6 +514,11 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(ultraFps){camX=targetX;camY=targetY;}else{if(camSmoothX==0){camSmoothX=targetX;camSmoothY=targetY;}camSmoothX+=(targetX-camSmoothX)*0.15;camSmoothY+=(targetY-camSmoothY)*0.15;camX=(int)camSmoothX;camY=(int)camSmoothY;}
         if(!ultraFps)for(int i=0;i<particles.size();i++){Particle pt=particles.get(i);pt.x+=pt.vx;pt.y+=pt.vy;pt.vy+=0.2;pt.life--;if(pt.life<=0){particles.remove(i);i--;}}
         if(!ultraFps)for(int i=0;i<drops.size();i++){DropItem d=drops.get(i);d.y+=d.vy;d.vy+=0.1;d.life--;if(Math.abs(d.x-px)<20&&Math.abs(d.y-py)<20){addToInv(d.block,1);drops.remove(i);i--;}else if(d.life<=0){drops.remove(i);i--;}}
+        if(!ultraFps)for(Mob m:mobs){
+            m.aiT++;
+            if(m.aiT>120){m.aiT=0;if(Math.random()<0.3)m.x+=(Math.random()-0.5)*TILE;if(Math.random()<0.3)m.x-=(Math.random()-0.5)*TILE;}
+            if(isSolid((int)(m.x/TILE),(int)((m.y+playerH/2)/TILE)))m.y-=2;else m.y+=1;
+        }
         bobFrame++;if(walking&&!ultraFps)bobFrame+=2;
         for(int i=0;i<10;i++)if(keys[KeyEvent.VK_1+i]){
             if(survival)selBlock=Math.min(i+1,BLOCK_COUNT-1);
@@ -585,7 +602,9 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         drawBtn(g2,"Singleplayer",w/2-100,140,200,40,menuHover==0);drawBtn(g2,"Multiplayer",w/2-100,190,200,40,menuHover==1);
         drawBtn(g2,"Options",w/2-100,240,200,40,menuHover==2);drawBtn(g2,"Mods",w/2-100,290,200,40,menuHover==3);
         drawBtn(g2,"Quit",w/2-100,340,200,40,menuHover==4);
-        drawBtn(g2,"Discord",w/2-100,390,95,32,menuHover==5);drawBtn(g2,"GitHub",w/2+5,390,95,32,menuHover==6);
+        drawBtn(g2," Discord",w/2-100,390,95,32,menuHover==5);drawBtn(g2," GitHub",w/2+5,390,95,32,menuHover==6);
+        if(discIcon!=null)g2.drawImage(discIcon,w/2-92,392,24,24,null);
+        if(ghIcon!=null)g2.drawImage(ghIcon,w/2+13,392,24,24,null);
     }
 
     private void drawWorldList(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
@@ -722,6 +741,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             int cx=((int)(500+i*300+frame*2)%(w+600))-300;
             g2.fillOval(cx,30-i*10,80+i*15,20+i*8);g2.fillOval(cx+40,34-i*8,50+i*10,14+i*5);
         }
+        if(worldTime>3000&&worldTime<9000&&!ultraFps){
+            g2.setColor(new Color(100,140,200,60));
+            for(int i=0;i<60;i++){int rx=(i*117+frame*3)%w,ry=(i*83+frame*5)%h;g2.drawLine(rx,ry,rx,ry+8);}
+        }
         int sx=camX/TILE,sy=camY/TILE,ex=Math.min(W,sx+gameFov+2),ey=Math.min(H,sy+gameFov*18/25+2);
         for(int x=sx;x<ex;x++)for(int y=sy;y<ey;y++)if(world[x][y]>0)g2.drawImage(tex[Math.min(world[x][y],BLOCK_COUNT-1)],x*TILE-camX,y*TILE-camY,null);
         int pxOff=(int)(px-camX),pyOff=(int)(py-camY);
@@ -738,6 +761,13 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             g2.fillRect((int)(pt.x-camX),(int)(pt.y-camY),2+pt.life/5,2+pt.life/5);
         }
         for(DropItem d:drops){int dbob=(int)(Math.sin(d.life*0.1)*2);g2.drawImage(tex[Math.min(d.block,BLOCK_COUNT-1)],(int)(d.x-camX)-6,(int)(d.y-camY)-6+dbob,null);}
+        for(Mob m:mobs){
+            int mx=(int)(m.x-camX),my=(int)(m.y-camY);
+            g2.setColor(m.type==0?new Color(140,100,60):new Color(220,150,180));
+            g2.fillRect(mx-10,my-10,20,20);
+            g2.setColor(Color.BLACK);
+            g2.drawString(m.type==0?"Cow":"Pig",mx-10,my-14);
+        }
 
         if(mouseIn&&breakX<0){int hx=(mx+camX)/TILE,hy=(my+camY)/TILE;if(isIn(hx,hy)){g2.setColor(new Color(255,255,255,100));g2.drawRect(hx*TILE-camX,hy*TILE-camY,TILE,TILE);}}
         if(breakX>=0){g2.setColor(new Color(255,255,255,100));g2.drawRect(breakX*TILE-camX,breakY*TILE-camY,TILE,TILE);float pct=Math.min(1f,(float)breakTimer/(float)Math.max(1,breakTime));g2.setColor(new Color(0,0,0,80));g2.fillRect(breakX*TILE-camX,breakY*TILE-camY,(int)(TILE*pct),3);}
