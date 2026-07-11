@@ -18,6 +18,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private static final String TEX_DIR = System.getProperty("user.dir") + "/textures/";
 
     private BufferedImage[] tex, steveImg, heartImg, hungerImg;
+    private BufferedImage logoImg;
     private int playerW=28, playerH=28;
 
     private static final int AIR=0,GRASS=1,DIRT=2,STONE=3,COBBLESTONE=4,BEDROCK=5,SAND=6,GRAVEL=7;
@@ -158,6 +159,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         steveImg[0]=makeSteve();}
         heartImg=new BufferedImage[1];heartImg[0]=makeIcon(new Color(200,0,0),9);
         hungerImg=new BufferedImage[1];hungerImg[0]=makeIcon(new Color(180,120,40),9);
+        try{logoImg=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/MINICRAFT.png"));}catch(Exception e){logoImg=null;}
         new File(DATA_DIR).mkdirs();
         try{GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(Font.createFont(Font.TRUETYPE_FONT,new File(System.getProperty("user.dir")+"/PixelPurl.ttf")));}catch(Exception e){}
         refreshWorldList();
@@ -235,7 +237,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     private void loadTex(){tex=new BufferedImage[BLOCK_COUNT];for(int i=0;i<BLOCK_COUNT;i++){try{tex[i]=javax.imageio.ImageIO.read(new File(TEX_DIR+TF[i]+".png"));
         if(i==WATER){BufferedImage wt=new BufferedImage(TILE,TILE,BufferedImage.TYPE_INT_ARGB);Graphics2D g=wt.createGraphics();g.drawImage(tex[i],0,0,null);g.setColor(new Color(60,60,200,120));g.fillRect(0,0,TILE,TILE);g.dispose();tex[i]=wt;}
-        if(i>=COAL_ORE&&i<=COPPER_ORE){BufferedImage ot=new BufferedImage(TILE,TILE,BufferedImage.TYPE_INT_ARGB);Graphics2D g=ot.createGraphics();g.drawImage(tex[i],0,0,null);Color oc=FB[i];g.setColor(new Color(oc.getRed(),oc.getGreen(),oc.getBlue(),50));g.fillRect(0,0,TILE,TILE);g.dispose();tex[i]=ot;}
+        if(i>=COAL_ORE&&i<=COPPER_ORE){BufferedImage ot=new BufferedImage(TILE,TILE,BufferedImage.TYPE_INT_ARGB);Graphics2D g=ot.createGraphics();g.drawImage(tex[i],0,0,null);Color oc=FB[i];g.setColor(new Color(oc.getRed(),oc.getGreen(),oc.getBlue(),80));g.fillRect(0,0,TILE,TILE);g.dispose();tex[i]=ot;}
     }catch(Exception e){tex[i]=new BufferedImage(TILE,TILE,BufferedImage.TYPE_INT_ARGB);Graphics2D g=tex[i].createGraphics();g.setColor(FB[i]);g.fillRect(0,0,TILE,TILE);g.dispose();}}}
     private void refreshWorldList(){worldList.clear();File[] f=new File(DATA_DIR).listFiles((d,n)->n.endsWith(".mcw"));if(f!=null)for(File x:f)worldList.add(x.getName().replace(".mcw",""));}
 
@@ -474,15 +476,15 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private boolean inBtn(int mx,int my,int x,int y,int w,int h){return mx>=x&&mx<x+w&&my>=y&&my<y+h;}
 
     private void drawMenu(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
-        g2.setFont(new Font("PixelPurl",Font.PLAIN,18));
-        g2.setColor(new Color(255,220,60));
-        String t1="MiniCraft",t2="v"+VERSION;
-        int tw1=g2.getFontMetrics().stringWidth(t1)/2;
-        g2.setFont(new Font("PixelPurl",Font.PLAIN,36));
-        g2.setColor(new Color(60,60,60));g2.drawString(t1,w/2-120,71);
-        g2.setColor(new Color(255,220,60));g2.drawString(t1,w/2-123,68);
-        g2.setFont(new Font("PixelPurl",Font.PLAIN,14));
-        g2.setColor(new Color(180,180,180));g2.drawString(t2,w/2+85,78);
+        if(logoImg!=null){
+            int lw=320,lh=84;
+            g2.drawImage(logoImg,w/2-lw/2,20,lw,lh,null);
+        }else{
+            g2.setFont(new Font("PixelPurl",Font.PLAIN,36));g2.setColor(new Color(255,220,60));
+            String t1="MiniCraft";g2.drawString(t1,w/2-120,68);
+        }
+        String t2="v"+VERSION;g2.setFont(new Font("PixelPurl",Font.PLAIN,14));g2.setColor(new Color(180,180,180));g2.drawString(t2,w/2+80,108);
+        if(updateAvailable){g2.setFont(new Font("PixelPurl",Font.PLAIN,14));g2.setColor(Color.YELLOW);g2.drawString("Update v"+updateVersion+" available! (Options -> U)",w/2-200,130);}
         drawBtn(g2,"Singleplayer",w/2-100,140,200,40,menuHover==0);drawBtn(g2,"Multiplayer",w/2-100,190,200,40,menuHover==1);
         drawBtn(g2,"Options",w/2-100,240,200,40,menuHover==2);drawBtn(g2,"Mods",w/2-100,290,200,40,menuHover==3);
         drawBtn(g2,"Quit",w/2-100,340,200,40,menuHover==4);
