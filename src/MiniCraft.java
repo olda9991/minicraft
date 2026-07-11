@@ -9,6 +9,9 @@ import java.util.ArrayList;
 
 public class MiniCraft extends JPanel implements ActionListener, KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
     private static final int TILE = 32, W = 128, H = 64, VW = 25, VH = 18;
+    private static final String VERSION = "3.1";
+    private static final String GITHUB_API = "https://api.github.com/repos/olda9991/minicraft/commits/main";
+    private static final String GITHUB_RAW = "https://raw.githubusercontent.com/olda9991/minicraft/main/src/MiniCraft.java";
     private static final String DATA_DIR = System.getProperty("user.dir") + "/worlds/";
     private static final String TEX_DIR = System.getProperty("user.dir") + "/textures/";
 
@@ -57,6 +60,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private boolean showFps=false, showCoords=true, noclip=false, fullscreen=false;
     private int gameFov=25, settingSel=-1;
     private boolean nameEditing=false;
+    private boolean updateAvailable=false;
+    private String updateVersion="";
     private int fps=0, fpsCount=0;
     private long fpsTimer=0;
     private boolean chatOpen=false;
@@ -148,6 +153,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         refreshWorldList();
         loadSettings();
         timer=new javax.swing.Timer(16,this);timer.start();
+        new Thread(()->checkUpdate()).start();
     }
 
     private BufferedImage makeIcon(Color c,int s){BufferedImage img=new BufferedImage(s,s,BufferedImage.TYPE_INT_ARGB);Graphics2D g=img.createGraphics();g.setColor(c);g.fillOval(1,1,s-2,s-2);g.setColor(c.brighter());g.fillOval(2,1,s-4,s-3);g.dispose();return img;}
@@ -157,6 +163,49 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         int[] c={0,0x8B5E3C,0x3B7A9E,0xF0E8D8,0x1A1A1A,0x6B3A1F,0xFFFFFF,0x000000};
         for(int yy=0;yy<p.length;yy++)for(int xx=0;xx<p[yy].length;xx++){int v=p[yy][xx];if(v==0)continue;g.setColor(new Color(c[v]));g.fillRect(xx*(TILE-4)/28,yy*(TILE-4)/28,(TILE-4)/28+1,(TILE-4)/28+1);}
         g.dispose();return img;
+    }
+
+    private void checkUpdate(){
+        try{
+            java.net.URL url=new java.net.URL(GITHUB_API);
+            java.net.HttpURLConnection conn=(java.net.HttpURLConnection)url.openConnection();
+            conn.setConnectTimeout(5000);conn.setReadTimeout(5000);
+            BufferedReader br=new BufferedReader(new java.io.InputStreamReader(conn.getInputStream()));
+            String line;StringBuilder sb=new StringBuilder();
+            while((line=br.readLine())!=null)sb.append(line);
+            br.close();
+            String json=sb.toString();
+            int ci=json.indexOf("\"sha\":\"");if(ci<0)return;
+            String latestSha=json.substring(ci+7,ci+47);
+            String localSha="";
+            File sf=new File(System.getProperty("user.dir")+"/src/MiniCraft.java");
+            if(sf.exists()){
+                BufferedReader lr=new BufferedReader(new FileReader(sf));
+                String fl;while((fl=lr.readLine())!=null){if(fl.contains("//sha:")){localSha=fl.replaceAll(".*//sha:","").trim();break;}}
+                lr.close();
+            }
+            if(!localSha.equals(latestSha)){updateAvailable=true;updateVersion=latestSha.substring(0,8);}
+        }catch(Exception e){}
+    }
+
+    private void doUpdate(){
+        try{
+            java.net.URL url=new java.net.URL(GITHUB_RAW);
+            java.net.HttpURLConnection conn=(java.net.HttpURLConnection)url.openConnection();
+            conn.setConnectTimeout(10000);conn.setReadTimeout(10000);
+            BufferedReader br=new BufferedReader(new java.io.InputStreamReader(conn.getInputStream()));
+            StringBuilder sb=new StringBuilder();
+            String line;while((line=br.readLine())!=null)sb.append(line).append("\n");
+            br.close();
+            String code=sb.toString();
+            code=code.replace("public class MiniCraft","//sha:"+updateVersion+"\npublic class MiniCraft");
+            FileWriter fw=new FileWriter(System.getProperty("user.dir")+"/src/MiniCraft.java");
+            fw.write(code);fw.close();
+            String javacPath=System.getProperty("user.dir")+"/build/";
+            ProcessBuilder pb=new ProcessBuilder("javac","-d",javacPath,System.getProperty("user.dir")+"/src/MiniCraft.java");
+            Process p=pb.start();p.waitFor();
+            updateAvailable=false;
+        }catch(Exception e){e.printStackTrace();}
     }
 
     private void loadTex(){tex=new BufferedImage[BLOCK_COUNT];for(int i=0;i<BLOCK_COUNT;i++){try{tex[i]=javax.imageio.ImageIO.read(new File(TEX_DIR+TF[i]+".png"));if(i==WATER){BufferedImage wt=new BufferedImage(TILE,TILE,BufferedImage.TYPE_INT_ARGB);Graphics2D g=wt.createGraphics();g.drawImage(tex[i],0,0,null);g.setColor(new Color(60,60,200,120));g.fillRect(0,0,TILE,TILE);g.dispose();tex[i]=wt;}}catch(Exception e){tex[i]=new BufferedImage(TILE,TILE,BufferedImage.TYPE_INT_ARGB);Graphics2D g=tex[i].createGraphics();g.setColor(FB[i]);g.fillRect(0,0,TILE,TILE);g.dispose();}}}
@@ -389,7 +438,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private void drawMenu(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
         g2.setFont(new Font("PixelPurl",Font.PLAIN,18));
         g2.setColor(new Color(255,220,60));
-        String t1="MiniCraft",t2="Alpha v3.0";
+        String t1="MiniCraft",t2="v"+VERSION;
         int tw1=g2.getFontMetrics().stringWidth(t1)/2;
         g2.setFont(new Font("PixelPurl",Font.PLAIN,36));
         g2.setColor(new Color(60,60,60));g2.drawString(t1,w/2-120,71);
@@ -460,7 +509,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
 
     private void drawSettings(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
-        g2.setFont(new Font("PixelPurl",Font.BOLD,28));g2.setColor(new Color(100,200,60));g2.drawString("Options",w/2-60,60);
+        g2.setFont(new Font("PixelPurl",Font.BOLD,28));g2.setColor(new Color(100,200,60));g2.drawString("Options  v"+VERSION,w/2-90,60);
         g2.setFont(new Font("PixelPurl",Font.PLAIN,18));g2.setColor(Color.WHITE);
         String[] opts={
             "[F1] FPS: "+(showFps?"ON":"OFF"),
@@ -469,7 +518,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             "[F] Mode: "+(survival?"Survival":"Creative"),
             "[F11] Fullscreen: "+(fullscreen?"ON":"OFF"),
             "[N] Name: "+playerName+(nameEditing?(System.currentTimeMillis()/500%2==0?"_":""):""),
-            "[< >] FOV: "+gameFov
+            "[< >] FOV: "+gameFov,
+            "[U] Update: "+(updateAvailable?"v"+updateVersion+" AVAILABLE!":"Check GitHub")
         };
         for(int i=0;i<opts.length;i++){
             g2.setColor(i==settingSel?new Color(255,255,100):Color.WHITE);
@@ -615,6 +665,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             if(e.getKeyCode()==KeyEvent.VK_N){settingSel=5;nameEditing=true;return;}
             if(e.getKeyCode()==KeyEvent.VK_COMMA||e.getKeyCode()==KeyEvent.VK_LEFT){gameFov=Math.max(10,gameFov-1);return;}
             if(e.getKeyCode()==KeyEvent.VK_PERIOD||e.getKeyCode()==KeyEvent.VK_RIGHT){gameFov=Math.min(50,gameFov+1);return;}
+            if(e.getKeyCode()==KeyEvent.VK_U){if(updateAvailable)doUpdate();else{new Thread(()->checkUpdate()).start();}}
             return;
         }
         if(e.getKeyCode()>=0&&e.getKeyCode()<keys.length)keys[e.getKeyCode()]=true;
