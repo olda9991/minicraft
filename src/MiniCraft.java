@@ -7,6 +7,8 @@ import java.net.*;
 import java.util.Random;
 import java.util.ArrayList;
 
+//sha:490a9905
+//sha:490a9905
 public class MiniCraft extends JPanel implements ActionListener, KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
     private static final int TILE = 32, W = 128, H = 64, VW = 25, VH = 18;
     private static final String VERSION = "3.1";
@@ -198,13 +200,29 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             String line;while((line=br.readLine())!=null)sb.append(line).append("\n");
             br.close();
             String code=sb.toString();
-            code=code.replace("public class MiniCraft","//sha:"+updateVersion+"\npublic class MiniCraft");
+            code=code.replaceAll("(?s)//sha:.*?\npublic class MiniCraft","//sha:%s\npublic class MiniCraft".formatted(updateVersion));
+            if(!code.contains("//sha:"+updateVersion))return;
             FileWriter fw=new FileWriter(System.getProperty("user.dir")+"/src/MiniCraft.java");
             fw.write(code);fw.close();
-            String javacPath=System.getProperty("user.dir")+"/build/";
-            ProcessBuilder pb=new ProcessBuilder("javac","-d",javacPath,System.getProperty("user.dir")+"/src/MiniCraft.java");
-            Process p=pb.start();p.waitFor();
-            updateAvailable=false;
+            String homebrewJava="/home/linuxbrew/.linuxbrew/opt/openjdk@21/bin/javac";
+            ProcessBuilder pb=new ProcessBuilder(homebrewJava,"-d",System.getProperty("user.dir")+"/build",System.getProperty("user.dir")+"/src/MiniCraft.java");
+            pb.redirectErrorStream(true);
+            Process p=pb.start();
+            BufferedReader pbr=new BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
+            while(pbr.readLine()!=null);
+            p.waitFor();
+            if(p.exitValue()==0){
+                updateAvailable=false;
+                SwingUtilities.invokeLater(()->{
+                    JOptionPane.showMessageDialog(this,"Update complete! Restarting...");
+                    try{
+                        String javaBin=System.getProperty("java.home")+"/bin/java";
+                        String classpath=System.getProperty("user.dir")+"/build";
+                        Runtime.getRuntime().exec(new String[]{javaBin,"-cp",classpath,"MiniCraft"});
+                        System.exit(0);
+                    }catch(Exception ex){ex.printStackTrace();}
+                });
+            }
         }catch(Exception e){e.printStackTrace();}
     }
 
