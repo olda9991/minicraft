@@ -1,0 +1,60 @@
+# MiniCraft v4.0 - TODO
+
+## Done
+- [x] 60+ block types with Minecraft textures
+- [x] World generation (terrain, trees, caves, ores, water lakes)
+- [x] Player with sprite, survival/creative modes
+- [x] Day/night cycle, sky gradient, mountains, stars, sun/moon
+- [x] Weather (rain) + clouds
+- [x] Particles (block breaking) + smooth camera
+- [x] Walking animation (bob)
+- [x] Music player (WAV/MP3/MP4/OGG) + Minecraft sound effects
+- [x] Multiplayer (TCP servers, LAN discovery, bore tunnel, chat)
+- [x] Settings (FPS, coords, noclip, fullscreen, FOV, music, ultra FPS, name)
+- [x] Auto-updater from GitHub (+ update.sh / update.bat)
+- [x] Pause menu (ESC)
+- [x] Discord & GitHub buttons on menu
+- [x] Real gravity (acceleration-based)
+- [x] Mobs: Cows, Pigs, Sheep, Chickens (passive), Zombies (melee), Skeletons (ranged)
+- [x] Combat: click to attack, critical hits (jump), knockback
+- [x] Health bars on mobs + damage numbers
+- [x] Mob drops (raw beef, pork, wool etc.)
+- [x] XP orbs from mob kills
+- [x] Tools (sword, pickaxe, axe, shovel)
+- [x] Food items (raw/cooked beef, pork) + eating
+- [x] Bed (craft + skip night)
+- [x] Commands (/time, /tp, /heal, /give, etc.)
+- [x] Water with swimming physics
+- [x] Item drops on ground when breaking blocks
+- [x] Windows EXE launcher + JAR
+- [x] PixelPurl font (Minecraft-like)
+- [x] Settings save/load
+- [x] Cross-platform updater
+
+## To Do
+- [ ] Fix chat: WASD shouldn't move player while typing
+- [ ] Discord Rich Presence (show "Playing MiniCraft" on Discord)
+- [ ] Furnace GUI (smelting interface)
+- [ ] Chests (storage containers)
+- [ ] Armor system (leather, iron, diamond chestplates)
+- [ ] Better crafting recipe book / guide
+- [ ] Sprint key (shift to run)
+- [ ] Item tooltips on hotbar hover
+- [ ] Better mob pixel art graphics
+- [ ] More sound effects (mob sounds, eating, etc.)
+- [ ] XP bar on HUD
+- [ ] Achievement system
+- [ ] Proper inventory GUI with armor slots
+- [ ] More commands (/weather, /gamemode, /spawn)
+- [ ] Biomes (desert, snow, forest color differences)
+- [ ] Doors, trapdoors, fences, gates
+- [ ] Boats / minecarts
+- [ ] Enchanting / potions
+- [ ] Redstone / mechanisms
+- [ ] Dimensions (Nether, End)
+- [ ] Villages / structures
+- [ ] Boss mobs (Ender Dragon-style)
+- [ ] Multi-world support
+- [ ] Dedicated server mode
+- [ ] Player skins
+- [ ] Spectator mode
