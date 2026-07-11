@@ -1,4 +1,4 @@
-//sha:8054e471
+//sha:0f8246f4
 //sha:188fb1df
 //sha:b1df95eb
 import javax.swing.*;
@@ -203,13 +203,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
 
     private void doUpdate(){
-        final int w=getWidth(),h=getHeight();
-        new Thread(()->{
         try{
             java.net.URL url=new java.net.URL(GITHUB_RAW);
             java.net.HttpURLConnection conn=(java.net.HttpURLConnection)url.openConnection();
             conn.setConnectTimeout(10000);conn.setReadTimeout(10000);
-            if(conn.getResponseCode()!=200){showMsg("Download failed! (HTTP "+conn.getResponseCode()+")");return;}
             BufferedReader br=new BufferedReader(new java.io.InputStreamReader(conn.getInputStream()));
             StringBuilder sb=new StringBuilder();
             String line;while((line=br.readLine())!=null)sb.append(line).append("\n");
@@ -217,26 +214,26 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             String code="//sha:"+updateVersion+"\n"+sb.toString();
             FileWriter fw=new FileWriter(System.getProperty("user.dir")+"/src/MiniCraft.java");
             fw.write(code);fw.close();
-            showMsg("Downloaded! Compiling...");
-            String dir=System.getProperty("user.dir");
-            ProcessBuilder pb=new ProcessBuilder("/home/linuxbrew/.linuxbrew/opt/openjdk@21/bin/javac","-d",dir+"/build",dir+"/src/MiniCraft.java");
-            pb.directory(new File(dir));pb.redirectErrorStream(true);
+            String javacPath="/home/linuxbrew/.linuxbrew/opt/openjdk@21/bin/javac";
+            ProcessBuilder pb=new ProcessBuilder(javacPath,"-d",System.getProperty("user.dir")+"/build",System.getProperty("user.dir")+"/src/MiniCraft.java");
+            pb.redirectErrorStream(true);
             Process p=pb.start();p.waitFor();
             if(p.exitValue()!=0){
-                java.io.BufferedReader err=new java.io.BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
-                String errLine,errOut="";while((errLine=err.readLine())!=null)errOut+=errLine+"\n";
-                showMsg("Compile failed:\n"+errOut);return;
+                SwingUtilities.invokeLater(()->JOptionPane.showMessageDialog(this,"Update failed! Check console for errors."));
+                return;
             }
-            showMsg("Done! Restarting...");
-            Thread.sleep(500);
-            try{new ProcessBuilder("/home/linuxbrew/.linuxbrew/opt/openjdk@21/bin/java","-cp",dir+"/build","MiniCraft").directory(new File(dir)).start();}catch(Exception ex){}
-            Thread.sleep(500);
-            System.exit(0);
-        }catch(Exception e){showMsg("Error: "+e.getMessage());}
-        }).start();
-    }
-    private void showMsg(String msg){
-        SwingUtilities.invokeLater(()->JOptionPane.showMessageDialog(this,msg,"MiniCraft Update",JOptionPane.INFORMATION_MESSAGE));
+            updateAvailable=false;
+            SwingUtilities.invokeLater(()->{
+                JOptionPane.showMessageDialog(this,"Update complete! Game will restart...");
+                try{
+                    String javaBin="/home/linuxbrew/.linuxbrew/opt/openjdk@21/bin/java";
+                    String cp=System.getProperty("user.dir")+"/build";
+                    String env="_JAVA_AWT_WM_NONREPARENTING=1";
+                    Runtime.getRuntime().exec(new String[]{"/bin/bash","-c",env+" "+javaBin+" -cp "+cp+" MiniCraft & disown"});
+                    Timer t=new javax.swing.Timer(500,ev->System.exit(0));t.setRepeats(false);t.start();
+                }catch(Exception ex){ex.printStackTrace();}
+            });
+        }catch(Exception e){e.printStackTrace();}
     }
 
     private void loadTex(){tex=new BufferedImage[BLOCK_COUNT];for(int i=0;i<BLOCK_COUNT;i++){try{tex[i]=javax.imageio.ImageIO.read(new File(TEX_DIR+TF[i]+".png"));
@@ -292,9 +289,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
         for(int x=0;x<W;x++){
             int s=hm[x];int bedrock=H-r.nextInt(3);
-            int waterLevel=H/3;
+            int oceanLevel=H/3+3;
             for(int y=0;y<H;y++){
-                if(y<s&&y>=waterLevel&&s<waterLevel+2){world[x][y]=WATER;}
+                if(y>=oceanLevel&&world[x][y]==0){world[x][y]=WATER;}
+                else if(y<s&&y>=oceanLevel&&s<oceanLevel+2){world[x][y]=WATER;}
                 else if(y==s)world[x][y]=GRASS;
                 else if(y>s&&y<=s+4)world[x][y]=DIRT;
                 else if(y>s+4&&y<bedrock)world[x][y]=r.nextInt(8)==0?COBBLESTONE:STONE;
@@ -379,6 +377,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(screen==Screen.DEATH||screen==Screen.CRAFTING){repaint();return;}
         if(screen!=Screen.PLAY)return;
         double speed=survival&&hunger<=0?1.5:3.0;
+        int pfoot=(int)((py+playerH/2)/TILE);
+        if(pfoot>=0&&pfoot<H&&world[(int)(px/TILE)][pfoot]==WATER)speed*=0.4;
         double dx=0,dy=0;
         if(keys[KeyEvent.VK_A]||keys[KeyEvent.VK_LEFT])dx-=speed;
         if(keys[KeyEvent.VK_D]||keys[KeyEvent.VK_RIGHT])dx+=speed;
@@ -906,8 +906,13 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                             name=p.length>1?p[1]:"Player";
                             synchronized(remotePlayers){remotePlayers.add(new RemotePlayer(name,(int)px,(int)py));}
                             out.println("W "+W+" "+H);
-                            for(int x=0;x<W;x++)for(int y=0;y<H;y++)out.println("D "+x+" "+y+" "+world[x][y]);
-                            out.println("WD");
+                            StringBuilder batch=new StringBuilder();
+                            for(int x=0;x<W;x++)for(int y=0;y<H;y++){
+                                batch.append("D ").append(x).append(" ").append(y).append(" ").append(world[x][y]).append("\n");
+                                if(batch.length()>5000){out.print(batch.toString());out.flush();batch.setLength(0);}
+                            }
+                            if(batch.length()>0){out.print(batch.toString());out.flush();}
+                            out.println("WD");out.flush();
                             out.println("S "+(int)px+" "+(int)py);
                             out.println("J "+playerName);
                             for(ClientHandler ch:clients)if(ch!=this&&ch.name!=null)out.println("J "+ch.name);

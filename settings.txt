@@ -1,6 +1,6 @@
 showFps=false
 showCoords=true
 noclip=false
-fullscreen=false
+fullscreen=true
 fov=25
 name=olda9991
