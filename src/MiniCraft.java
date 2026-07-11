@@ -196,7 +196,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 sock=sc.socket();
                 if(sock==null)return;
                 out=new java.io.PrintWriter(sock.getOutputStream(),true);in=new java.io.BufferedReader(new java.io.InputStreamReader(sock.getInputStream()));
-                out.print("{\"v\":1,\"client_id\":\"1336142185340932106\"}\n");out.flush();
+                out.print("{\"v\":1,\"client_id\":\"1512377902195540018\"}\n");out.flush();
                 in.readLine();
                 updatePresence();
                 while(running){try{Thread.sleep(15000);updatePresence();}catch(Exception e){break;}}
