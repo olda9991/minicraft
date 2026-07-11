@@ -131,6 +131,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private boolean isHost=false;
     private int serverPort=25565;
     private String serverIP="localhost";
+    private Process webProcess, boreProcess;
 
     public MiniCraft(){
         setPreferredSize(new Dimension(VW*TILE,VH*TILE));
@@ -145,6 +146,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         new File(DATA_DIR).mkdirs();
         try{GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(Font.createFont(Font.TRUETYPE_FONT,new File(System.getProperty("user.dir")+"/PixelPurl.ttf")));}catch(Exception e){}
         refreshWorldList();
+        loadSettings();
         timer=new javax.swing.Timer(16,this);timer.start();
     }
 
@@ -159,6 +161,42 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     private void loadTex(){tex=new BufferedImage[BLOCK_COUNT];for(int i=0;i<BLOCK_COUNT;i++){try{tex[i]=javax.imageio.ImageIO.read(new File(TEX_DIR+TF[i]+".png"));if(i==WATER){BufferedImage wt=new BufferedImage(TILE,TILE,BufferedImage.TYPE_INT_ARGB);Graphics2D g=wt.createGraphics();g.drawImage(tex[i],0,0,null);g.setColor(new Color(60,60,200,120));g.fillRect(0,0,TILE,TILE);g.dispose();tex[i]=wt;}}catch(Exception e){tex[i]=new BufferedImage(TILE,TILE,BufferedImage.TYPE_INT_ARGB);Graphics2D g=tex[i].createGraphics();g.setColor(FB[i]);g.fillRect(0,0,TILE,TILE);g.dispose();}}}
     private void refreshWorldList(){worldList.clear();File[] f=new File(DATA_DIR).listFiles((d,n)->n.endsWith(".mcw"));if(f!=null)for(File x:f)worldList.add(x.getName().replace(".mcw",""));}
+
+    private void saveSettings(){
+        try{PrintWriter pw=new PrintWriter(new FileWriter(System.getProperty("user.dir")+"/settings.txt"));
+            pw.println("showFps="+showFps);pw.println("showCoords="+showCoords);pw.println("noclip="+noclip);
+            pw.println("fullscreen="+fullscreen);pw.println("fov="+gameFov);pw.println("name="+playerName);
+            pw.close();
+        }catch(Exception e){}
+    }
+
+    private void loadSettings(){
+        try{BufferedReader br=new BufferedReader(new FileReader(System.getProperty("user.dir")+"/settings.txt"));
+            String line;
+            while((line=br.readLine())!=null){
+                String[] p=line.split("=",2);if(p.length<2)continue;
+                if(p[0].equals("showFps"))showFps=Boolean.parseBoolean(p[1]);
+                if(p[0].equals("showCoords"))showCoords=Boolean.parseBoolean(p[1]);
+                if(p[0].equals("noclip"))noclip=Boolean.parseBoolean(p[1]);
+                if(p[0].equals("fullscreen"))fullscreen=Boolean.parseBoolean(p[1]);
+                if(p[0].equals("fov"))gameFov=Integer.parseInt(p[1]);
+                if(p[0].equals("name"))playerName=p[1];
+            }
+            br.close();
+        }catch(Exception e){}
+    }
+
+    private void startWebServer(){
+        try{String dir=System.getProperty("user.dir");
+            webProcess=new ProcessBuilder("python3",dir+"/webserver.py").redirectErrorStream(true).start();
+            boreProcess=new ProcessBuilder("bore","local","25565","--to","bore.pub").redirectErrorStream(true).start();
+        }catch(Exception e){}
+    }
+
+    private void stopWebServer(){
+        if(boreProcess!=null){boreProcess.destroy();boreProcess=null;}
+        if(webProcess!=null){webProcess.destroy();webProcess=null;}
+    }
 
     private void genWorld(long seed){
         world=new int[W][H];Random r=new Random(seed);
@@ -602,7 +640,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
         if(screen==Screen.PLAY&&e.getKeyCode()==KeyEvent.VK_E){craftingOpen=!craftingOpen;screen=craftingOpen?Screen.CRAFTING:Screen.PLAY;return;}
         if(screen==Screen.PLAY&&e.getKeyCode()==KeyEvent.VK_F){survival=!survival;return;}
-        if(screen==Screen.PLAY&&e.getKeyCode()==KeyEvent.VK_ESCAPE){saveWorld(worldName.isEmpty()?"world_"+System.currentTimeMillis():worldName);refreshWorldList();stopNetworking();screen=Screen.WORLD_LIST;return;}
+        if(screen==Screen.PLAY&&e.getKeyCode()==KeyEvent.VK_ESCAPE){saveWorld(worldName.isEmpty()?"world_"+System.currentTimeMillis():worldName);saveSettings();refreshWorldList();stopNetworking();screen=Screen.WORLD_LIST;return;}
         if(screen==Screen.DEATH&&e.getKeyCode()==KeyEvent.VK_ENTER){px=W/2.0*TILE;py=getGround(W/2)*TILE-playerH/2;health=20;hunger=20;dead=false;fallDist=0;screen=Screen.PLAY;}
         if(screen==Screen.CRAFTING&&e.getKeyCode()==KeyEvent.VK_E){craftingOpen=false;screen=Screen.PLAY;return;}
         if(screen==Screen.CRAFTING&&e.getKeyCode()==KeyEvent.VK_SPACE){int[] r=getCraft();if(r[0]>0){boolean h=true;for(int i=0;i<4;i++)if(craftGrid[i]>0&&!takeFromInv(craftGrid[i],craftCount[i]))h=false;if(h){addToInv(r[0],r[1]);for(int i=0;i<4;i++){craftGrid[i]=0;craftCount[i]=0;}}}}
@@ -612,6 +650,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     @Override public void keyTyped(KeyEvent e){}
 
     private void stopNetworking(){
+        stopWebServer();
         if(isHost&&server!=null){server.stopServer();server=null;isHost=false;}
         if(responder!=null){responder.stopDisc();responder=null;}
         if(client!=null){client.disconnect();client=null;}
@@ -704,6 +743,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                     server=new MiniServer(serverPort);isHost=true;server.start();
                     if(responder!=null)responder.stopDisc();responder=new DiscoveryResponder();responder.start();
                     if(!loadUnconnectedWorld()){genWorld(System.currentTimeMillis());worldName="host_"+System.currentTimeMillis();}
+                    startWebServer();
                     screen=Screen.PLAY;
                 }
             }else if(inBtn(wx,wy,w-60,360,120,36)){stopNetworking();screen=Screen.MULTIPLAYER;}return;
@@ -875,5 +915,6 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         boolean isConnected(){return connected;}
     }
 
-    public static void main(String[] args){JFrame f=new JFrame("MiniCraft");MiniCraft g=new MiniCraft();f.add(g);f.pack();f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);f.setLocationRelativeTo(null);f.setResizable(false);f.setVisible(true);}
+    public static void main(String[] args){JFrame f=new JFrame("MiniCraft");MiniCraft g=new MiniCraft();f.add(g);f.pack();f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);f.setLocationRelativeTo(null);f.setResizable(false);f.setVisible(true);
+        f.addWindowListener(new java.awt.event.WindowAdapter(){public void windowClosing(java.awt.event.WindowEvent e){g.saveSettings();g.stopNetworking();}});}
 }
