@@ -10,6 +10,7 @@ import java.io.*;
 import java.net.*;
 import java.util.Random;
 import java.util.ArrayList;
+import javax.sound.sampled.*;
 
 public class MiniCraft extends JPanel implements ActionListener, KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
     private static final int TILE = 32, W = 128, H = 64, VW = 25, VH = 18;
@@ -81,6 +82,9 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private String chatText="";
     private ArrayList<String> chatMessages=new ArrayList<>();
     private int chatTimer=0;
+    private boolean musicOn=true;
+    private javax.sound.sampled.Clip musicClip;
+    private java.util.ArrayList<String> musicFiles=new java.util.ArrayList<>();
     private ArrayList<DiscoveredServer> discoveredServers=new ArrayList<>();
     private int selectedServer=-1;
     private DiscoveryThread discovery;
@@ -168,6 +172,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         loadSettings();
         timer=new javax.swing.Timer(16,this);timer.start();
         new Thread(()->checkUpdate()).start();
+        new Thread(()->{try{Thread.sleep(1000);loadMusic();}catch(Exception e){}}).start();
     }
 
     private BufferedImage makeIcon(Color c,int s){BufferedImage img=new BufferedImage(s,s,BufferedImage.TYPE_INT_ARGB);Graphics2D g=img.createGraphics();g.setColor(c);g.fillOval(1,1,s-2,s-2);g.setColor(c.brighter());g.fillOval(2,1,s-4,s-3);g.dispose();return img;}
@@ -277,6 +282,38 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             webProcess=new ProcessBuilder("python3",dir+"/webserver.py").redirectErrorStream(true).start();
             boreProcess=new ProcessBuilder("bore","local","25565","--to","bore.pub").redirectErrorStream(true).start();
         }catch(Exception e){}
+    }
+
+    private void loadMusic(){
+        try{
+            File mdir=new File(System.getProperty("user.dir")+"/music");
+            if(!mdir.exists())return;
+            File[] files=mdir.listFiles((d,n)->n.endsWith(".wav"));
+            if(files==null||files.length==0)return;
+            musicFiles.clear();
+            for(File f:files)musicFiles.add(f.getAbsolutePath());
+            playNext();
+        }catch(Exception e){}
+    }
+
+    private void playNext(){
+        if(!musicOn||musicFiles.isEmpty())return;
+        new Thread(()->{
+            try{
+                String path=musicFiles.get((int)(Math.random()*musicFiles.size()));
+                javax.sound.sampled.AudioInputStream ais=javax.sound.sampled.AudioSystem.getAudioInputStream(new File(path));
+                musicClip=javax.sound.sampled.AudioSystem.getClip();
+                musicClip.open(ais);
+                musicClip.start();
+                musicClip.addLineListener(ev->{if(ev.getType()==javax.sound.sampled.LineEvent.Type.STOP)playNext();});
+            }catch(Exception e){}
+        }).start();
+    }
+
+    private void toggleMusic(){
+        musicOn=!musicOn;
+        if(musicOn)playNext();
+        else if(musicClip!=null){musicClip.stop();musicClip.close();}
     }
 
     private void stopWebServer(){
@@ -563,6 +600,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             "[F1] FPS: "+(showFps?"ON":"OFF"),
             "[F2] Coords: "+(showCoords?"ON":"OFF"),
             "[G] Noclip: "+(noclip?"ON":"OFF"),
+            "[M] Music: "+(musicOn?"ON":"OFF"),
             "[F] Mode: "+(survival?"Survival":"Creative"),
             "[F11] Fullscreen: "+(fullscreen?"ON":"OFF"),
             "[N] Name: "+playerName+(nameEditing?(System.currentTimeMillis()/500%2==0?"_":""):""),
@@ -704,6 +742,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     @Override public void keyPressed(KeyEvent e){
         if(e.getKeyCode()==KeyEvent.VK_F1){showFps=!showFps;return;}
         if(e.getKeyCode()==KeyEvent.VK_F2){showCoords=!showCoords;return;}
+        if(e.getKeyCode()==KeyEvent.VK_M){toggleMusic();return;}
         if(e.getKeyCode()==KeyEvent.VK_F11&&(screen==Screen.PLAY||screen==Screen.SETTINGS)){
             fullscreen=!fullscreen;
             JFrame f=(JFrame)SwingUtilities.getWindowAncestor(this);
