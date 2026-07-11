@@ -59,7 +59,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private javax.swing.Timer timer;
     private int camX,camY,mx=-999,my=-999;
     private boolean mouseIn=false;
-    private int health=20,hunger=20,xp=0;
+    private int health=20,hunger=20,xp=0,armor=0;
     private boolean dead=false;
     private int fallDist=0,breakTimer=0,breakX=-1,breakY=-1,breakTime=0;
     private boolean craftingOpen=false,survival=true;
@@ -562,7 +562,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(!ultraFps)for(int i=0;i<particles.size();i++){Particle pt=particles.get(i);pt.x+=pt.vx;pt.y+=pt.vy;pt.vy+=0.2;pt.life--;if(pt.life<=0){particles.remove(i);i--;}}
         if(!ultraFps)for(int i=0;i<drops.size();i++){DropItem d=drops.get(i);d.y+=d.vy;d.vy+=0.1;d.life--;if(Math.abs(d.x-px)<24&&Math.abs(d.y-py)<24){if(d.block==EXP_ORB){xp++;}else addToInv(d.block,1);drops.remove(i);i--;}else if(d.life<=0){drops.remove(i);i--;}}
         for(int i=0;i<dmgNums.size();i++){DmgNum dn=dmgNums.get(i);dn.y-=1.5;dn.life--;if(dn.life<=0){dmgNums.remove(i);i--;}}
-        for(int i=0;i<arrows.size();i++){Arrow a=arrows.get(i);a.x+=a.vx;a.y+=a.vy;a.life--;if(Math.abs(a.x-px)<16&&Math.abs(a.y-py)<16){health--;if(health<=0){dead=true;screen=Screen.DEATH;}arrows.remove(i);i--;}else if(a.life<=0||isSolid((int)(a.x/TILE),(int)(a.y/TILE))){arrows.remove(i);i--;}}
+        for(int i=0;i<arrows.size();i++){Arrow a=arrows.get(i);a.x+=a.vx;a.y+=a.vy;a.life--;if(Math.abs(a.x-px)<16&&Math.abs(a.y-py)<16){health-=Math.max(1,3-armor);if(health<=0){dead=true;screen=Screen.DEATH;}arrows.remove(i);i--;}else if(a.life<=0||isSolid((int)(a.x/TILE),(int)(a.y/TILE))){arrows.remove(i);i--;}}
         if(!ultraFps)for(Mob m:mobs){
             m.aiT++;if(m.hurtT>0)m.hurtT--;
             double ndark=Math.abs(worldTime-12000)/12000.0;
@@ -571,7 +571,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             else if(m.aiT>100){m.aiT=0;if(Math.random()<0.3)m.x+=(Math.random()-0.5)*TILE;}
             else if(m.aiT>100){m.aiT=0;if(Math.random()<0.3)m.x+=(Math.random()-0.5)*TILE;}
             if(isSolid((int)(m.x/TILE),(int)((m.y+20)/TILE))){m.aiT=-10;}else m.y+=1.5;
-            if(m.type==2&&ndark>0.3&&Math.abs(m.x-px)<24&&Math.abs(m.y-py)<24&&m.hurtT<=0){health--;m.hurtT=40;if(health<=0){dead=true;screen=Screen.DEATH;}}
+            if(m.type==2&&ndark>0.3&&Math.abs(m.x-px)<24&&Math.abs(m.y-py)<24&&m.hurtT<=0){health-=Math.max(1,3-armor);m.hurtT=40;if(health<=0){dead=true;screen=Screen.DEATH;}}
         }
         bobFrame++;if(walking&&!ultraFps)bobFrame+=2;
         for(int i=0;i<10;i++)if(keys[KeyEvent.VK_1+i]){
@@ -882,6 +882,9 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 g2.setFont(new Font("PixelPurl",Font.PLAIN,9));g2.setColor(Color.WHITE);
                 g2.drawString("XP:"+xp,8,bh-62);
             }
+            if(armor>0){
+                for(int i=0;i<armor;i++){g2.setColor(new Color(80,80,80));g2.fillRect(8+i*12,bh-56,10,10);g2.setColor(Color.BLUE);g2.drawRect(8+i*12,bh-56,10,10);}
+            }
         }
         int hs=24,slots=Math.min(9,BLOCK_COUNT);
         int hotbarW=slots*hs+2,hbX=(sw-hotbarW)/2,hbY=bh-hs-4;
@@ -1116,6 +1119,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             else if(e.getButton()==MouseEvent.BUTTON3&&selBlock>=0&&(!survival||getInvCount(selBlock)>0)){
                 if(survival&&(selBlock==RAW_BEEF||selBlock==COOKED_BEEF||selBlock==RAW_PORK||selBlock==COOKED_PORK)){hunger=Math.min(20,hunger+(selBlock==COOKED_BEEF||selBlock==COOKED_PORK?8:4));takeFromInv(selBlock,1);}
                 else if(survival&&selBlock==BED){worldTime=6000;addChat("Bed","Good morning!");}
+                else if(survival&&selBlock==FURNACE_ITEM&&getInvCount(IRON_ORE)>=1&&getInvCount(COAL_ORE)>=1){takeFromInv(IRON_ORE,1);takeFromInv(COAL_ORE,1);addToInv(IRON_INGOT,1);addChat("Furnace","Smelted Iron Ingot!");}
+                else if(survival&&selBlock==FURNACE_ITEM&&getInvCount(GOLD_ORE)>=1&&getInvCount(COAL_ORE)>=1){takeFromInv(GOLD_ORE,1);takeFromInv(COAL_ORE,1);addToInv(GOLD_INGOT,1);addChat("Furnace","Smelted Gold Ingot!");}
+                else if(survival&&selBlock==IRON_INGOT){takeFromInv(IRON_INGOT,1);armor=Math.max(armor,2);addChat("Armor","Iron Chestplate! +2 Def");}
+                else if(survival&&selBlock==DIAMOND_GEM){takeFromInv(DIAMOND_GEM,1);armor=Math.max(armor,3);addChat("Armor","Diamond Chestplate! +3 Def");}
                 else{world[tx][ty]=selBlock;if(survival)takeFromInv(selBlock,1);syncBlock(tx,ty,selBlock);}
             }
         }
