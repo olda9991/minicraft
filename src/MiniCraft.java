@@ -1,3 +1,4 @@
+//sha:ad452c41
 //sha:b1df95eb
 import javax.swing.*;
 import java.awt.*;
@@ -191,10 +192,12 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
 
     private void doUpdate(){
+        new Thread(()->{
         try{
             java.net.URL url=new java.net.URL(GITHUB_RAW);
             java.net.HttpURLConnection conn=(java.net.HttpURLConnection)url.openConnection();
             conn.setConnectTimeout(10000);conn.setReadTimeout(10000);
+            if(conn.getResponseCode()!=200){showMsg("Download failed! HTTP "+conn.getResponseCode());return;}
             BufferedReader br=new BufferedReader(new java.io.InputStreamReader(conn.getInputStream()));
             StringBuilder sb=new StringBuilder();
             String line;while((line=br.readLine())!=null)sb.append(line).append("\n");
@@ -202,26 +205,29 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             String code="//sha:"+updateVersion+"\n"+sb.toString();
             FileWriter fw=new FileWriter(System.getProperty("user.dir")+"/src/MiniCraft.java");
             fw.write(code);fw.close();
+            showMsg("Downloaded! Compiling...");
             String javacPath="/home/linuxbrew/.linuxbrew/opt/openjdk@21/bin/javac";
-            ProcessBuilder pb=new ProcessBuilder(javacPath,"-d",System.getProperty("user.dir")+"/build",System.getProperty("user.dir")+"/src/MiniCraft.java");
+            String src=System.getProperty("user.dir")+"/src/MiniCraft.java";
+            String out=System.getProperty("user.dir")+"/build";
+            ProcessBuilder pb=new ProcessBuilder(javacPath,"-d",out,src);
+            pb.directory(new File(System.getProperty("user.dir")));
             pb.redirectErrorStream(true);
-            Process p=pb.start();p.waitFor();
-            if(p.exitValue()!=0){
-                SwingUtilities.invokeLater(()->JOptionPane.showMessageDialog(this,"Update failed! Check console for errors."));
-                return;
-            }
-            updateAvailable=false;
-            SwingUtilities.invokeLater(()->{
-                JOptionPane.showMessageDialog(this,"Update complete! Game will restart...");
-                try{
-                    String javaBin="/home/linuxbrew/.linuxbrew/opt/openjdk@21/bin/java";
-                    String cp=System.getProperty("user.dir")+"/build";
-                    String env="_JAVA_AWT_WM_NONREPARENTING=1";
-                    Runtime.getRuntime().exec(new String[]{"/bin/bash","-c",env+" "+javaBin+" -cp "+cp+" MiniCraft & disown"});
-                    Timer t=new javax.swing.Timer(500,ev->System.exit(0));t.setRepeats(false);t.start();
-                }catch(Exception ex){ex.printStackTrace();}
-            });
-        }catch(Exception e){e.printStackTrace();}
+            Process p=pb.start();
+            StringBuilder compOut=new StringBuilder();
+            BufferedReader pbr=new BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
+            String cl;while((cl=pbr.readLine())!=null)compOut.append(cl).append("\n");
+            p.waitFor();
+            if(p.exitValue()!=0){showMsg("Compile failed:\n"+compOut.toString());return;}
+            showMsg("Done! Restarting...");
+            String javaBin="/home/linuxbrew/.linuxbrew/opt/openjdk@21/bin/java";
+            String cp=out;
+            new ProcessBuilder(javaBin,"-cp",cp,"MiniCraft").directory(new File(System.getProperty("user.dir"))).start();
+            System.exit(0);
+        }catch(Exception e){showMsg("Update error: "+e.getMessage());}
+        }).start();
+    }
+    private void showMsg(String msg){
+        SwingUtilities.invokeLater(()->JOptionPane.showMessageDialog(this,msg,"MiniCraft Update",JOptionPane.INFORMATION_MESSAGE));
     }
 
     private void loadTex(){tex=new BufferedImage[BLOCK_COUNT];for(int i=0;i<BLOCK_COUNT;i++){try{tex[i]=javax.imageio.ImageIO.read(new File(TEX_DIR+TF[i]+".png"));if(i==WATER){BufferedImage wt=new BufferedImage(TILE,TILE,BufferedImage.TYPE_INT_ARGB);Graphics2D g=wt.createGraphics();g.drawImage(tex[i],0,0,null);g.setColor(new Color(60,60,200,120));g.fillRect(0,0,TILE,TILE);g.dispose();tex[i]=wt;}}catch(Exception e){tex[i]=new BufferedImage(TILE,TILE,BufferedImage.TYPE_INT_ARGB);Graphics2D g=tex[i].createGraphics();g.setColor(FB[i]);g.fillRect(0,0,TILE,TILE);g.dispose();}}}

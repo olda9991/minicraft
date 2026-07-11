@@ -1,0 +1,6 @@
+showFps=false
+showCoords=true
+noclip=false
+fullscreen=false
+fov=25
+name=Steve
