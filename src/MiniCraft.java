@@ -1,3 +1,4 @@
+//sha:983eb6c2
 //sha:be9b7f3f
 //sha:0ba84a1b
 //sha:957102da
@@ -87,8 +88,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     class DropItem{double x,y,vy;int block,life;
         DropItem(double x,double y,int b){this.x=x;this.y=y;block=b;life=600;vy=-2;}
     }
-    class Mob{double x,y;int health=6;int type;int aiT;
-        Mob(double x,double y,int t){this.x=x;this.y=y;type=t;aiT=(int)(Math.random()*60);}
+    class Mob{double x,y;int health=6;int maxHealth=6;int type;int aiT;int hurtT;
+        Mob(double x,double y,int t){this.x=x;this.y=y;type=t;maxHealth=t==2?10:6;health=maxHealth;aiT=(int)(Math.random()*60);}
     }
     private java.util.ArrayList<DropItem> drops=new java.util.ArrayList<>();
     private java.util.ArrayList<Mob> mobs=new java.util.ArrayList<>();
@@ -433,9 +434,13 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         px=W/2.0*TILE;py=getGround(W/2)*TILE-playerH/2;health=20;hunger=20;dead=false;fallDist=0;survival=true;
         for(int i=0;i<inv.length;i++){inv[i]=0;invCount[i]=0;}
         mobs.clear();
-        for(int i=0;i<15;i++){
+        for(int i=0;i<10;i++){
             int mx=10+(int)(Math.random()*(W-20)),my=getGround(mx);
             if(world[mx][my]==GRASS)mobs.add(new Mob(mx*TILE,my*TILE-playerH/2,(int)(Math.random()*2)));
+        }
+        for(int i=0;i<5;i++){
+            int mx=10+(int)(Math.random()*(W-20)),my=getGround(mx);
+            if(world[mx][my]==GRASS)mobs.add(new Mob(mx*TILE,my*TILE-playerH/2,2));
         }
     }
 
@@ -516,9 +521,12 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(!ultraFps)for(int i=0;i<particles.size();i++){Particle pt=particles.get(i);pt.x+=pt.vx;pt.y+=pt.vy;pt.vy+=0.2;pt.life--;if(pt.life<=0){particles.remove(i);i--;}}
         if(!ultraFps)for(int i=0;i<drops.size();i++){DropItem d=drops.get(i);d.y+=d.vy;d.vy+=0.1;d.life--;if(Math.abs(d.x-px)<20&&Math.abs(d.y-py)<20){addToInv(d.block,1);drops.remove(i);i--;}else if(d.life<=0){drops.remove(i);i--;}}
         if(!ultraFps)for(Mob m:mobs){
-            m.aiT++;
-            if(m.aiT>120){m.aiT=0;if(Math.random()<0.3)m.x+=(Math.random()-0.5)*TILE;if(Math.random()<0.3)m.x-=(Math.random()-0.5)*TILE;}
-            if(isSolid((int)(m.x/TILE),(int)((m.y+playerH/2)/TILE)))m.y-=2;else m.y+=1;
+            m.aiT++;if(m.hurtT>0)m.hurtT--;
+            double ndark=Math.abs(worldTime-12000)/12000.0;
+            if(m.type==2&&ndark>0.3){double ddx=px-m.x,ddy=py-m.y,dist=Math.sqrt(ddx*ddx+ddy*ddy);if(dist>8){m.x+=ddx/dist*1.5;m.y+=ddy/dist*0.5;}}
+            else if(m.aiT>100){m.aiT=0;if(Math.random()<0.3)m.x+=(Math.random()-0.5)*TILE;}
+            if(isSolid((int)(m.x/TILE),(int)((m.y+20)/TILE)))m.y-=2;else m.y+=1;
+            if(m.type==2&&ndark>0.3&&Math.abs(m.x-px)<24&&Math.abs(m.y-py)<24&&m.hurtT<=0){health--;m.hurtT=40;if(health<=0){dead=true;screen=Screen.DEATH;}}
         }
         bobFrame++;if(walking&&!ultraFps)bobFrame+=2;
         for(int i=0;i<10;i++)if(keys[KeyEvent.VK_1+i]){
@@ -764,10 +772,12 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         for(DropItem d:drops){int dbob=(int)(Math.sin(d.life*0.1)*2);g2.drawImage(tex[Math.min(d.block,BLOCK_COUNT-1)],(int)(d.x-camX)-6,(int)(d.y-camY)-6+dbob,null);}
         for(Mob m:mobs){
             int mx=(int)(m.x-camX),my=(int)(m.y-camY);
-            g2.setColor(m.type==0?new Color(140,100,60):new Color(220,150,180));
-            g2.fillRect(mx-10,my-10,20,20);
-            g2.setColor(Color.BLACK);
-            g2.drawString(m.type==0?"Cow":"Pig",mx-10,my-14);
+            g2.setColor(m.type==0?new Color(140,100,60):m.type==1?new Color(220,150,180):new Color(80,120,60));
+            g2.fillRect(mx-10,my-14,20,24);
+            g2.setColor(Color.WHITE);g2.drawString(m.type==0?"Cow":m.type==1?"Pig":"Zomb",mx-10,my-18);
+            g2.setColor(new Color(0,0,0,100));g2.fillRect(mx-12,my-24,24,3);
+            g2.setColor(new Color(255,0,0));g2.fillRect(mx-12,my-24,m.health*24/m.maxHealth,3);
+            if(m.hurtT>0)g2.setColor(new Color(255,0,0,100));g2.fillRect(mx-10,my-14,20,24);
         }
 
         if(mouseIn&&breakX<0){int hx=(mx+camX)/TILE,hy=(my+camY)/TILE;if(isIn(hx,hy)){g2.setColor(new Color(255,255,255,100));g2.drawRect(hx*TILE-camX,hy*TILE-camY,TILE,TILE);}}
@@ -1020,7 +1030,11 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(screen==Screen.DEATH)return;
         if(screen==Screen.CRAFTING){int cx=(wx-30)/60,cy=(wy-50)/60,idx=cx+cy*2;if(cx>=0&&cx<2&&cy>=0&&cy<2&&idx>=0&&idx<4){if(craftGrid[idx]>0){addToInv(craftGrid[idx],craftCount[idx]);craftGrid[idx]=0;craftCount[idx]=0;return;}for(int i=0;i<inv.length;i++){int ix=30+(i%8)*60,iy=220+(i/8)*60;if(wx>=ix&&wx<ix+50&&wy>=iy&&wy<iy+50&&inv[i]>0){craftGrid[idx]=inv[i];craftCount[idx]=1;invCount[i]--;if(invCount[i]<=0)inv[i]=0;return;}}}return;}
         if(screen==Screen.PLAY){int tx=(mx+camX)/TILE,ty=(my+camY)/TILE;if(!isIn(tx,ty))return;int pt=(int)(px/TILE),pyt=(int)(py/TILE);if(Math.abs(tx-pt)+Math.abs(ty-pyt)<2)return;
-            if(e.getButton()==MouseEvent.BUTTON1){if(survival&&world[tx][ty]>0){breakX=tx;breakY=ty;breakTimer=0;breakTime=BT[Math.min(world[tx][ty],BT.length-1)];}else if(!survival){world[tx][ty]=0;syncBlock(tx,ty,0);}}
+            if(e.getButton()==MouseEvent.BUTTON1){
+                boolean hitMob=false;
+                for(Mob m:mobs){if(Math.abs((mx+camX)-m.x)<24&&Math.abs((my+camY)-m.y)<24){m.health-=3;m.hurtT=10;if(m.health<=0){mobs.remove(m);break;}hitMob=true;break;}}
+                if(!hitMob){if(survival&&world[tx][ty]>0){breakX=tx;breakY=ty;breakTimer=0;breakTime=BT[Math.min(world[tx][ty],BT.length-1)];}else if(!survival){world[tx][ty]=0;syncBlock(tx,ty,0);}}
+            }
             else if(e.getButton()==MouseEvent.BUTTON3&&selBlock>=0&&(!survival||getInvCount(selBlock)>0)){world[tx][ty]=selBlock;if(survival)takeFromInv(selBlock,1);syncBlock(tx,ty,selBlock);}
         }
     }
