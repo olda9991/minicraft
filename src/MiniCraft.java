@@ -1,4 +1,4 @@
-//sha:736d0132
+//sha:687d9e58
 //sha:f9555418
 //sha:2fc5bec4
 //sha:4273ac79
@@ -259,7 +259,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             br.close();
             String json=sb.toString();
             int ci=json.indexOf("\"sha\":\"");if(ci<0)return;
-            String latestSha=json.substring(ci+7,ci+47);
+            String latestSha=json.substring(ci+7,ci+15);
             String localSha="";
             File sf=new File(System.getProperty("user.dir")+"/src/MiniCraft.java");
             if(sf.exists()){
