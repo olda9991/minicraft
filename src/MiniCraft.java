@@ -594,15 +594,11 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
         if(ultraFps||posTime%3!=0){}else{
             for(int y=H-2;y>=0;y--)for(int x=W-1;x>=0;x--){
-                if(world[x][y]==SAND||world[x][y]==GRAVEL||world[x][y]==WATER){
-                    if(y+1<H&&world[x][y+1]==0){world[x][y+1]=world[x][y];world[x][y]=0;}
-                    else if(world[x][y]==WATER){
-                        for(int dir=-1;dir<=1;dir+=2){
-                            if(x+dir>=0&&x+dir<W&&y+1<H&&world[x+dir][y+1]==0){world[x+dir][y+1]=WATER;world[x][y]=0;break;}
-                            if(x+dir>=0&&x+dir<W&&world[x+dir][y]==0){world[x+dir][y]=WATER;world[x][y]=0;break;}
-                            if(rtxMode&&x+dir>=0&&x+dir<W&&y>0&&world[x+dir][y-1]==0){world[x+dir][y-1]=WATER;}
-                        }
-                        if(rtxMode||rtxWater){if(y>0&&world[x][y-1]==0)world[x][y-1]=WATER;}
+                if(world[x][y]==SAND||world[x][y]==GRAVEL){if(y+1<H&&world[x][y+1]==0){world[x][y+1]=world[x][y];world[x][y]=0;}}
+                else if(world[x][y]==WATER){
+                    if(y+1<H&&world[x][y+1]==0){world[x][y+1]=WATER;world[x][y]=0;}
+                    else if(isSolid(x,y+1)){
+                        for(int dir=-1;dir<=1;dir+=2)if(x+dir>=0&&x+dir<W&&world[x+dir][y]==0){world[x+dir][y]=WATER;break;}
                     }
                 }
             }
