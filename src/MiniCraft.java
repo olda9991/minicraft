@@ -1,3 +1,4 @@
+//sha:38d1732a
 //sha:983eb6c2
 //sha:be9b7f3f
 //sha:0ba84a1b
@@ -82,6 +83,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private int bobFrame=0;
     private double camSmoothX=0, camSmoothY=0;
     private boolean walking=false;
+    private double playerVy=0;
     private long worldTime=12000;
     private int[] mountains;
 
@@ -517,7 +519,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             int fx=(int)((px+gx)/TILE),fy=(int)((py+playerH/2)/TILE);
             if(isSolid(fx,fy)){og=true;break;}
         }
-        if(survival&&!og&&!noclip){py+=2.0;fallDist++;}else if(survival&&!noclip){if(fallDist>20){health-=(fallDist-20)/2;if(health<=0){dead=true;screen=Screen.DEATH;}}fallDist=0;}
+        if(survival&&!og&&!noclip){playerVy+=0.4;py+=playerVy;fallDist++;}else if(survival&&!noclip){if(playerVy>6){health-=(int)(playerVy-6)/3;if(health<=0){dead=true;screen=Screen.DEATH;}}playerVy=0;fallDist=0;}
         int targetX=Math.max(0,Math.min(W*TILE-VW*TILE,(int)(px-VW*TILE/2)));
         int targetY=Math.max(0,Math.min(H*TILE-VH*TILE,(int)(py-VH*TILE/2)));
         if(ultraFps){camX=targetX;camY=targetY;}else{if(camSmoothX==0){camSmoothX=targetX;camSmoothY=targetY;}camSmoothX+=(targetX-camSmoothX)*0.15;camSmoothY+=(targetY-camSmoothY)*0.15;camX=(int)camSmoothX;camY=(int)camSmoothY;}
@@ -528,7 +530,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             double ndark=Math.abs(worldTime-12000)/12000.0;
             if(m.type==2&&ndark>0.3){double ddx=px-m.x,ddy=py-m.y,dist=Math.sqrt(ddx*ddx+ddy*ddy);if(dist>8){m.x+=ddx/dist*1.5;m.y+=ddy/dist*0.5;}}
             else if(m.aiT>100){m.aiT=0;if(Math.random()<0.3)m.x+=(Math.random()-0.5)*TILE;}
-            if(isSolid((int)(m.x/TILE),(int)((m.y+20)/TILE)))m.y-=2;else m.y+=1;
+            if(isSolid((int)(m.x/TILE),(int)((m.y+20)/TILE))){m.aiT=-10;}else m.y+=1.5;
             if(m.type==2&&ndark>0.3&&Math.abs(m.x-px)<24&&Math.abs(m.y-py)<24&&m.hurtT<=0){health--;m.hurtT=40;if(health<=0){dead=true;screen=Screen.DEATH;}}
         }
         bobFrame++;if(walking&&!ultraFps)bobFrame+=2;
