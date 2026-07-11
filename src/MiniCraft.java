@@ -1,3 +1,4 @@
+//sha:f9555418
 //sha:2fc5bec4
 //sha:4273ac79
 //sha:d85ea93f
@@ -649,8 +650,22 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private void addToInv(int block,int count){if(block<=0)return;for(int i=0;i<inv.length;i++)if(inv[i]==block){invCount[i]+=count;return;}for(int i=0;i<inv.length;i++)if(inv[i]==0){inv[i]=block;invCount[i]=count;return;}}
     private void spawnParticles(int bx,int by,int block){
         if(ultraFps)return;
+        if(block==WATER){removeConnectedWater(bx,by);return;}
         for(int i=0;i<8;i++)particles.add(new Particle(bx*TILE+TILE/2+Math.random()*TILE/2-TILE/4,by*TILE+TILE/2+Math.random()*TILE/2-TILE/4,block));
         drops.add(new DropItem(bx*TILE+TILE/2,by*TILE+TILE/2,block));
+    }
+
+    private void removeConnectedWater(int x,int y){
+        if(x<0||x>=W||y<0||y>=H||world[x][y]!=WATER)return;
+        java.util.ArrayDeque<int[]> q=new java.util.ArrayDeque<>();
+        q.add(new int[]{x,y});
+        while(!q.isEmpty()){
+            int[] p=q.poll();int cx=p[0],cy=p[1];
+            if(cx<0||cx>=W||cy<0||cy>=H||world[cx][cy]!=WATER)continue;
+            world[cx][cy]=0;
+            q.add(new int[]{cx-1,cy});q.add(new int[]{cx+1,cy});
+            q.add(new int[]{cx,cy-1});q.add(new int[]{cx,cy+1});
+        }
     }
     private boolean takeFromInv(int block,int count){for(int i=0;i<inv.length;i++)if(inv[i]==block&&invCount[i]>=count){invCount[i]-=count;if(invCount[i]<=0)inv[i]=0;return true;}return false;}
     private int getInvCount(int block){for(int i=0;i<inv.length;i++)if(inv[i]==block)return invCount[i];return 0;}
