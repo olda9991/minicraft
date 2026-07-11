@@ -1,3 +1,4 @@
+//sha:957102da
 //sha:e63cb844
 //sha:605f5dba
 //sha:903cdcfa
@@ -387,13 +388,12 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             if(x>2&&x<W-3&&s>hm[x-1]+2&&s>hm[x+1]+2){
                 int wl=Math.min(hm[x-1],hm[x+1])+1;
                 for(int y=wl;y<s;y++)world[x][y]=WATER;
-                if(hm[x-1]==hm[x+1])s=hm[x-1];
             }
             int beach=r.nextInt(30);
             if(beach<2&&s<H/2-2){
                 for(int by=s;by<=s+2;by++)if(by>=0&&by<H)world[x][by]=SAND;
             }
-            if(s<H-6&&r.nextInt(14)==0&&x>3&&x<W-4){
+            if(s<H-6&&r.nextInt(14)==0&&x>3&&x<W-4&&world[x][s-1]!=WATER){
                 int tt=r.nextInt(6),lg=OAK_LOG+tt,lf=OAK_LEAVES+tt;
                 int th=4+r.nextInt(4);
                 for(int ty=s-1;ty>s-th-1&&ty>=0;ty--)world[x][ty]=lg;
@@ -415,7 +415,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 else if(v<45)world[x][y]=COAL_ORE;
             }
         }
-        for(int x=2;x<W-2;x++)for(int y=getHeight(x)+5;y<H-3;y++){
+        for(int x=2;x<W-2;x++)for(int y=getHeight(x)+10;y<H-3;y++){
             if((world[x][y]==STONE||world[x][y]==COBBLESTONE)&&r.nextInt(50)==0){
                 int sz=2+r.nextInt(4);
                 for(int cx=x;cx<x+sz&&cx<W;cx++)for(int cy=y;cy<y+sz/2&&cy<H;cy++)if(cx>=0&&cx<W&&cy>=0&&cy<H)world[cx][cy]=0;
@@ -496,8 +496,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             if(isSolid(fx,fy)){og=true;break;}
         }
         if(survival&&!og&&!noclip){py+=2.0;fallDist++;}else if(survival&&!noclip){if(fallDist>20){health-=(fallDist-20)/2;if(health<=0){dead=true;screen=Screen.DEATH;}}fallDist=0;}
-        int targetX=Math.max(0,Math.min(W*TILE-gameFov*TILE,(int)(px-gameFov*TILE/2)));
-        int targetY=Math.max(0,Math.min(H*TILE-gameFov*18/25*TILE,(int)(py-gameFov*18/25*TILE/2)));
+        int targetX=Math.max(0,Math.min(W*TILE-VW*TILE,(int)(px-VW*TILE/2)));
+        int targetY=Math.max(0,Math.min(H*TILE-VH*TILE,(int)(py-VH*TILE/2)));
         if(ultraFps){camX=targetX;camY=targetY;}else{if(camSmoothX==0){camSmoothX=targetX;camSmoothY=targetY;}camSmoothX+=(targetX-camSmoothX)*0.15;camSmoothY+=(targetY-camSmoothY)*0.15;camX=(int)camSmoothX;camY=(int)camSmoothY;}
         if(!ultraFps)for(int i=0;i<particles.size();i++){Particle pt=particles.get(i);pt.x+=pt.vx;pt.y+=pt.vy;pt.vy+=0.2;pt.life--;if(pt.life<=0){particles.remove(i);i--;}}
         if(!ultraFps)for(int i=0;i<drops.size();i++){DropItem d=drops.get(i);d.y+=d.vy;d.vy+=0.1;d.life--;if(Math.abs(d.x-px)<20&&Math.abs(d.y-py)<20){addToInv(d.block,1);drops.remove(i);i--;}else if(d.life<=0){drops.remove(i);i--;}}

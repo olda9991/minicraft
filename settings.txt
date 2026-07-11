@@ -3,5 +3,5 @@ showCoords=true
 noclip=true
 fullscreen=false
 fov=24
-name=olda9991
+name=olda99912
 ultraFps=false
