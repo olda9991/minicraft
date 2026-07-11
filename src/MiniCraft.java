@@ -563,12 +563,12 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             int fx=(int)((px+gx)/TILE),fy=(int)((py+playerH/2)/TILE);
             if(isSolid(fx,fy)){og=true;break;}
         }
-        if(survival&&!og&&!noclip){playerVy+=0.4;py+=playerVy;fallDist++;}else if(survival&&!noclip){if(playerVy>6){health-=(int)(playerVy-6)/3;if(health<=0){dead=true;screen=Screen.DEATH;}}playerVy=0;fallDist=0;}
+        if(survival&&!og&&!noclip&&physicsOn){playerVy+=0.4;py+=playerVy;fallDist++;}else if(survival&&!noclip){if(playerVy>6){health-=(int)(playerVy-6)/3;if(health<=0){dead=true;screen=Screen.DEATH;}}playerVy=0;fallDist=0;}
         int targetX=Math.max(0,Math.min(W*TILE-VW*TILE,(int)(px-VW*TILE/2)));
         int targetY=Math.max(0,Math.min(H*TILE-VH*TILE,(int)(py-VH*TILE/2)));
         if(ultraFps){camX=targetX;camY=targetY;}else{if(camSmoothX==0){camSmoothX=targetX;camSmoothY=targetY;}camSmoothX+=(targetX-camSmoothX)*0.15;camSmoothY+=(targetY-camSmoothY)*0.15;camX=(int)camSmoothX;camY=(int)camSmoothY;}
         if(!ultraFps)for(int i=0;i<particles.size();i++){Particle pt=particles.get(i);pt.x+=pt.vx;pt.y+=pt.vy;pt.vy+=0.2;pt.life--;if(pt.life<=0){particles.remove(i);i--;}}
-        if(!ultraFps)for(int i=0;i<drops.size();i++){DropItem d=drops.get(i);d.y+=d.vy;d.vy+=0.1;d.life--;if(Math.abs(d.x-px)<24&&Math.abs(d.y-py)<24){if(d.block==EXP_ORB){xp++;}else addToInv(d.block,1);drops.remove(i);i--;}else if(d.life<=0){drops.remove(i);i--;}}
+        if(!ultraFps&&physicsOn)for(int i=0;i<drops.size();i++){DropItem d=drops.get(i);d.y+=d.vy;d.vy+=0.1;d.life--;if(Math.abs(d.x-px)<24&&Math.abs(d.y-py)<24){if(d.block==EXP_ORB){xp++;}else addToInv(d.block,1);drops.remove(i);i--;}else if(d.life<=0){drops.remove(i);i--;}}
         for(int i=0;i<dmgNums.size();i++){DmgNum dn=dmgNums.get(i);dn.y-=1.5;dn.life--;if(dn.life<=0){dmgNums.remove(i);i--;}}
         for(int i=0;i<arrows.size();i++){Arrow a=arrows.get(i);a.x+=a.vx;a.y+=a.vy;a.life--;if(Math.abs(a.x-px)<16&&Math.abs(a.y-py)<16){health-=Math.max(1,3-armor);if(health<=0){dead=true;screen=Screen.DEATH;}arrows.remove(i);i--;}else if(a.life<=0||isSolid((int)(a.x/TILE),(int)(a.y/TILE))){arrows.remove(i);i--;}}
         if(!ultraFps)for(Mob m:mobs){
@@ -578,7 +578,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             else if(m.type==4&&ndark>0.3){double ddx=px-m.x,ddy=py-m.y,dist=Math.sqrt(ddx*ddx+ddy*ddy);if(dist>60){m.x+=ddx/dist*2;}else if(m.aiT>60){m.aiT=0;if(dist<100){arrows.add(new Arrow(m.x,m.y,(px-m.x)/dist*6,(py-m.y)/dist*6));}}}
             else if(m.aiT>100){m.aiT=0;if(Math.random()<0.3)m.x+=(Math.random()-0.5)*TILE;}
             else if(m.aiT>100){m.aiT=0;if(Math.random()<0.3)m.x+=(Math.random()-0.5)*TILE;}
-            if(isSolid((int)(m.x/TILE),(int)((m.y+20)/TILE))){m.aiT=-10;}else m.y+=1.5;
+            if(isSolid((int)(m.x/TILE),(int)((m.y+20)/TILE))){m.aiT=-10;}else if(physicsOn)m.y+=1.5;
             if(m.type==2&&ndark>0.3&&Math.abs(m.x-px)<24&&Math.abs(m.y-py)<24&&m.hurtT<=0){health-=Math.max(1,3-armor);m.hurtT=40;if(health<=0){dead=true;screen=Screen.DEATH;}}
         }
         bobFrame++;if(walking&&!ultraFps)bobFrame+=2;
@@ -792,7 +792,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             "[F3] Ultra FPS: "+(ultraFps?"ON":"OFF"),
             "[F4] RTX Mode: "+(rtxMode?"ON":"OFF"),
             "[F5] RTX Water: "+(rtxWater?"ON":"OFF"),
-            "[F6] Physics: "+(physicsOn?"ON":"OFF"),
+            "[F6] Physics Engine: "+(physicsOn?"ON":"OFF"),
             "[F] Mode: "+(survival?"Survival":"Creative"),
             "[F11] Fullscreen: "+(fullscreen?"ON":"OFF"),
             "[N] Name: "+playerName+(nameEditing?(System.currentTimeMillis()/500%2==0?"_":""):""),
@@ -944,7 +944,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
         g2.setColor(new Color(0,0,0,150));g2.fillRect(10,10,280,24);
         g2.setColor(Color.WHITE);g2.setFont(new Font("PixelPurl",Font.BOLD,12));
-        g2.drawString(worldName+(!worldName.isEmpty()?" | ":"")+playerName+(noclip?" NOCLIP":"")+(survival?" S":" C"),15,25);
+        g2.drawString(worldName+(!worldName.isEmpty()?" | ":"")+playerName+(noclip?" NOCLIP":"")+(!physicsOn?" NO PHY":"")+(survival?" S":" C"),15,25);
         if(showCoords){g2.setColor(new Color(0,0,0,150));g2.fillRect(10,36,140,14);g2.setColor(new Color(200,200,200));g2.setFont(new Font("PixelPurl",Font.PLAIN,9));g2.drawString("X:"+(int)(px/TILE)+" Y:"+(int)(py/TILE),15,46);}
     }
 
