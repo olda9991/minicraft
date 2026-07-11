@@ -75,6 +75,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private int bobFrame=0;
     private double camSmoothX=0, camSmoothY=0;
     private boolean walking=false;
+    private long worldTime=12000;
+    private int[] mountains;
 
     class Particle{double x,y,vx,vy;int life,maxLife;int block;
         Particle(double x,double y,int b){this.x=x;this.y=y;block=b;life=maxLife=8+(int)(Math.random()*12);vx=(Math.random()-0.5)*4;vy=-Math.random()*5-2;}
@@ -679,7 +681,17 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private String getLocalIP(){try{return InetAddress.getLocalHost().getHostAddress();}catch(Exception e){return "127.0.0.1";}}
 
     private void drawGame(Graphics2D g2){int w=getWidth(),h=getHeight();
-        g2.setColor(new Color(100,180,255));g2.fillRect(0,0,w,h);
+        worldTime=(worldTime+1)%24000;
+        double night=Math.abs(worldTime-12000)/12000.0;
+        int skyR=(int)(150*(1-night)+10*night),skyG=(int)(200*(1-night)+20*night),skyB=(int)(255*(1-night)+40*night);
+        g2.setColor(new Color(skyR,skyG,skyB));g2.fillRect(0,0,w,h);
+        g2.setColor(new Color((int)(50*(1-night)+5*night),(int)(160*(1-night)+10*night),(int)(255*(1-night)+20*night)));g2.fillRect(0,0,w,h/4);
+        g2.setColor(new Color((int)(30*(1-night)+3*night),(int)(120*(1-night)+8*night),(int)(230*(1-night)+15*night)));g2.fillRect(0,0,w,h/8);
+        worldTime++;
+        int na=(int)(120*night);
+        if(mountains==null){mountains=new int[w];Random r=new Random(42);mountains[0]=h/4;for(int i=1;i<w;i++){int ch=r.nextInt(3)-1;mountains[i]=Math.max(h/6,Math.min(h/3,mountains[i-1]+ch));}}
+        g2.setColor(new Color(40,60,40,150-na));for(int x=0;x<w;x++){int mx=h-mountains[x]-20;g2.fillRect(x,mx,1,mountains[x]+20);}
+        g2.setColor(new Color(30,45,30,180-na));for(int x=0;x<w;x++){int mx2=h-mountains[x];g2.fillRect(x,mx2,1,mountains[x]);}
         int frame=bobFrame%240;
         for(int i=0;i<4;i++){
             g2.setColor(new Color(255,255,255,160));
