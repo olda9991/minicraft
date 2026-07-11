@@ -1,3 +1,4 @@
+//sha:0ba84a1b
 //sha:957102da
 //sha:e63cb844
 //sha:605f5dba
@@ -196,7 +197,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     private void checkUpdate(){
         try{
-            java.net.URL url=new java.net.URL(GITHUB_API);
+            java.net.URL url=java.net.URI.create(GITHUB_API).toURL();
             java.net.HttpURLConnection conn=(java.net.HttpURLConnection)url.openConnection();
             conn.setConnectTimeout(5000);conn.setReadTimeout(5000);
             BufferedReader br=new BufferedReader(new java.io.InputStreamReader(conn.getInputStream()));
@@ -221,7 +222,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private void doUpdate(){
         new Thread(()->{
         try{
-            java.net.URL url=new java.net.URL(GITHUB_RAW);
+            java.net.URL url=java.net.URI.create(GITHUB_RAW).toURL();
             java.net.HttpURLConnection conn=(java.net.HttpURLConnection)url.openConnection();
             conn.setConnectTimeout(10000);conn.setReadTimeout(10000);
             if(conn.getResponseCode()!=200){showPopup("Download failed (HTTP "+conn.getResponseCode()+")");return;}
