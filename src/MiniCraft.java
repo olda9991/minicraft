@@ -1,4 +1,4 @@
-//sha:73de21e9
+//sha:da2402a8
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -8,8 +8,6 @@ import java.net.*;
 import java.util.Random;
 import java.util.ArrayList;
 
-//sha:73de21e9
-//sha:73de21e9
 public class MiniCraft extends JPanel implements ActionListener, KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
     private static final int TILE = 32, W = 128, H = 64, VW = 25, VH = 18;
     private static final String VERSION = "3.1";
@@ -184,7 +182,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             File sf=new File(System.getProperty("user.dir")+"/src/MiniCraft.java");
             if(sf.exists()){
                 BufferedReader lr=new BufferedReader(new FileReader(sf));
-                String fl;while((fl=lr.readLine())!=null){if(fl.contains("//sha:73de21e9
+                String fl;while((fl=lr.readLine())!=null){if(fl.contains("//sha:")){localSha=fl.replaceAll(".*//sha:","").trim();break;}}
                 lr.close();
             }
             if(!localSha.isEmpty()&&localSha.equals(latestSha))return;
@@ -201,7 +199,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             StringBuilder sb=new StringBuilder();
             String line;while((line=br.readLine())!=null)sb.append(line).append("\n");
             br.close();
-            String code="//sha:73de21e9
+            String code="//sha:"+updateVersion+"\n"+sb.toString();
             FileWriter fw=new FileWriter(System.getProperty("user.dir")+"/src/MiniCraft.java");
             fw.write(code);fw.close();
             String javacPath="/home/linuxbrew/.linuxbrew/opt/openjdk@21/bin/javac";
