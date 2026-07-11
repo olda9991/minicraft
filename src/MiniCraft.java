@@ -585,6 +585,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         drawBtn(g2,"Singleplayer",w/2-100,140,200,40,menuHover==0);drawBtn(g2,"Multiplayer",w/2-100,190,200,40,menuHover==1);
         drawBtn(g2,"Options",w/2-100,240,200,40,menuHover==2);drawBtn(g2,"Mods",w/2-100,290,200,40,menuHover==3);
         drawBtn(g2,"Quit",w/2-100,340,200,40,menuHover==4);
+        drawBtn(g2,"Discord",w/2-100,390,95,32,menuHover==5);drawBtn(g2,"GitHub",w/2+5,390,95,32,menuHover==6);
     }
 
     private void drawWorldList(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
@@ -898,7 +899,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     @Override public void mouseMoved(MouseEvent e){mx=e.getX();my=e.getY();menuHover=-1;
         int w=getWidth()/2;
-        if(screen==Screen.MENU){if(inBtn(mx,my,w-100,140,200,40))menuHover=0;else if(inBtn(mx,my,w-100,190,200,40))menuHover=1;else if(inBtn(mx,my,w-100,240,200,40))menuHover=2;else if(inBtn(mx,my,w-100,290,200,40))menuHover=3;else if(inBtn(mx,my,w-100,340,200,40))menuHover=4;}
+        if(screen==Screen.MENU){if(inBtn(mx,my,w-100,140,200,40))menuHover=0;else if(inBtn(mx,my,w-100,190,200,40))menuHover=1;else if(inBtn(mx,my,w-100,240,200,40))menuHover=2;else if(inBtn(mx,my,w-100,290,200,40))menuHover=3;else if(inBtn(mx,my,w-100,340,200,40))menuHover=4;else if(inBtn(mx,my,w-100,390,95,32))menuHover=5;else if(inBtn(mx,my,w+5,390,95,32))menuHover=6;}
         if(screen==Screen.WORLD_LIST){int yy=Math.max(worldList.isEmpty()?130:100+worldList.size()*42+10,350);if(inBtn(mx,my,w-120,yy,240,36))menuHover=10;else if(selectedWorld>=0&&inBtn(mx,my,w-120,yy+46,240,36))menuHover=11;else if(selectedWorld>=0&&inBtn(mx,my,w-60,yy+92,120,36))menuHover=12;else if(inBtn(mx,my,w-60,yy+138,120,36))menuHover=13;}
         if(screen==Screen.CREATE_WORLD){if(inBtn(mx,my,w-60,280,120,36))menuHover=20;else if(inBtn(mx,my,w-60,330,120,36))menuHover=21;}
         if(screen==Screen.MULTIPLAYER){
@@ -926,7 +927,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             }
             else if(inBtn(wx,wy,w-100,240,200,40)){screen=Screen.SETTINGS;}
             else if(inBtn(wx,wy,w-100,290,200,40)){try{Runtime.getRuntime().exec(new String[]{"flatpak","run","org.prismlauncher.PrismLauncher"});}catch(Exception ex){try{Runtime.getRuntime().exec(new String[]{"/var/home/olda/PrismLauncher-Linux-x86_64.AppImage"});}catch(Exception ex2){}}}
-            else if(inBtn(wx,wy,w-100,340,200,40))System.exit(0);return;
+            else if(inBtn(wx,wy,w-100,340,200,40))System.exit(0);
+            else if(inBtn(wx,wy,w-100,390,95,32)){try{java.awt.Desktop.getDesktop().browse(java.net.URI.create("https://discord.gg/wAWrPCHR5z"));}catch(Exception ex){}}
+            else if(inBtn(wx,wy,w+5,390,95,32)){try{java.awt.Desktop.getDesktop().browse(java.net.URI.create("https://github.com/olda9991/minicraft"));}catch(Exception ex){}}
+            return;
         }
         if(screen==Screen.WORLD_LIST){int yy=100;for(int i=0;i<worldList.size();i++){if(inBtn(wx,wy,w-150,yy,300,36)){selectedWorld=i;return;}yy+=42;}if(worldList.isEmpty())yy+=30;yy=Math.max(yy+10,350);
             if(inBtn(wx,wy,w-120,yy,240,36)){typing="My World";screen=Screen.CREATE_WORLD;}
