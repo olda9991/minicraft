@@ -58,13 +58,13 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private int[] inv=new int[BLOCK_COUNT],invCount=new int[BLOCK_COUNT],craftGrid=new int[4],craftCount=new int[4];
     private Random rand=new Random();
 
-    private enum Screen{MENU,WORLD_LIST,CREATE_WORLD,PLAY,CRAFTING,DEATH,MULTIPLAYER,CONNECT,HOST,SETTINGS,CONNECTING};
+    private enum Screen{MENU,WORLD_LIST,CREATE_WORLD,PLAY,CRAFTING,DEATH,MULTIPLAYER,CONNECT,HOST,SETTINGS,CONNECTING,PAUSE};
     private Screen screen=Screen.MENU;
     private ArrayList<String> worldList=new ArrayList<>();
     private String typing="";
     private int selectedWorld=-1;
     private int menuHover=-1;
-    private boolean showFps=false, showCoords=true, noclip=false, fullscreen=false;
+    private boolean showFps=false, showCoords=true, noclip=false, fullscreen=false, ultraFps=false;
     private int gameFov=25, settingSel=-1;
     private boolean nameEditing=false;
     private boolean updateAvailable=false;
@@ -81,6 +81,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     class Particle{double x,y,vx,vy;int life,maxLife;int block;
         Particle(double x,double y,int b){this.x=x;this.y=y;block=b;life=maxLife=8+(int)(Math.random()*12);vx=(Math.random()-0.5)*4;vy=-Math.random()*5-2;}
     }
+    class DropItem{double x,y,vy;int block,life;
+        DropItem(double x,double y,int b){this.x=x;this.y=y;block=b;life=600;vy=-2;}
+    }
+    private java.util.ArrayList<DropItem> drops=new java.util.ArrayList<>();
     private boolean chatOpen=false;
     private String chatText="";
     private ArrayList<String> chatMessages=new ArrayList<>();
@@ -261,7 +265,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private void saveSettings(){
         try{PrintWriter pw=new PrintWriter(new FileWriter(System.getProperty("user.dir")+"/settings.txt"));
             pw.println("showFps="+showFps);pw.println("showCoords="+showCoords);pw.println("noclip="+noclip);
-            pw.println("fullscreen="+fullscreen);pw.println("fov="+gameFov);pw.println("name="+playerName);
+            pw.println("fullscreen="+fullscreen);pw.println("fov="+gameFov);pw.println("name="+playerName);pw.println("ultraFps="+ultraFps);
             pw.close();
         }catch(Exception e){}
     }
@@ -276,6 +280,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 if(p[0].equals("noclip"))noclip=Boolean.parseBoolean(p[1]);
                 if(p[0].equals("fullscreen"))fullscreen=Boolean.parseBoolean(p[1]);
                 if(p[0].equals("fov"))gameFov=Integer.parseInt(p[1]);
+                if(p[0].equals("ultraFps"))ultraFps=Boolean.parseBoolean(p[1]);
                 if(p[0].equals("name"))playerName=p[1];
             }
             br.close();
@@ -455,7 +460,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     @Override
     public void actionPerformed(ActionEvent e){
-        if(screen==Screen.MENU||screen==Screen.WORLD_LIST||screen==Screen.CREATE_WORLD||screen==Screen.MULTIPLAYER||screen==Screen.CONNECT||screen==Screen.HOST||screen==Screen.CONNECTING||screen==Screen.SETTINGS){repaint();return;}
+        if(screen==Screen.MENU||screen==Screen.WORLD_LIST||screen==Screen.CREATE_WORLD||screen==Screen.MULTIPLAYER||screen==Screen.CONNECT||screen==Screen.HOST||screen==Screen.CONNECTING||screen==Screen.SETTINGS||screen==Screen.PAUSE){repaint();return;}
         if(screen==Screen.DEATH||screen==Screen.CRAFTING){repaint();return;}
         if(screen!=Screen.PLAY)return;
         double speed=survival&&hunger<=0?1.5:3.0;
@@ -489,12 +494,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(survival&&!og&&!noclip){py+=2.0;fallDist++;}else if(survival&&!noclip){if(fallDist>20){health-=(fallDist-20)/2;if(health<=0){dead=true;screen=Screen.DEATH;}}fallDist=0;}
         int targetX=Math.max(0,Math.min(W*TILE-gameFov*TILE,(int)(px-gameFov*TILE/2)));
         int targetY=Math.max(0,Math.min(H*TILE-gameFov*18/25*TILE,(int)(py-gameFov*18/25*TILE/2)));
-        if(camSmoothX==0){camSmoothX=targetX;camSmoothY=targetY;}
-        camSmoothX+=(targetX-camSmoothX)*0.15;camSmoothY+=(targetY-camSmoothY)*0.15;
-        camX=(int)camSmoothX;camY=(int)camSmoothY;
-
-        for(int i=0;i<particles.size();i++){Particle pt=particles.get(i);pt.x+=pt.vx;pt.y+=pt.vy;pt.vy+=0.2;pt.life--;if(pt.life<=0){particles.remove(i);i--;}}
-        bobFrame++;if(walking)bobFrame+=2;
+        if(ultraFps){camX=targetX;camY=targetY;}else{if(camSmoothX==0){camSmoothX=targetX;camSmoothY=targetY;}camSmoothX+=(targetX-camSmoothX)*0.15;camSmoothY+=(targetY-camSmoothY)*0.15;camX=(int)camSmoothX;camY=(int)camSmoothY;}
+        if(!ultraFps)for(int i=0;i<particles.size();i++){Particle pt=particles.get(i);pt.x+=pt.vx;pt.y+=pt.vy;pt.vy+=0.2;pt.life--;if(pt.life<=0){particles.remove(i);i--;}}
+        if(!ultraFps)for(int i=0;i<drops.size();i++){DropItem d=drops.get(i);d.y+=d.vy;d.vy+=0.1;d.life--;if(Math.abs(d.x-px)<20&&Math.abs(d.y-py)<20){addToInv(d.block,1);drops.remove(i);i--;}else if(d.life<=0){drops.remove(i);i--;}}
+        bobFrame++;if(walking&&!ultraFps)bobFrame+=2;
         for(int i=0;i<10;i++)if(keys[KeyEvent.VK_1+i]){
             if(survival)selBlock=Math.min(i+1,BLOCK_COUNT-1);
             else{selBlock=Math.min(i+1+creativeOffset,BLOCK_COUNT-1);}
@@ -538,7 +541,9 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     private void addToInv(int block,int count){if(block<=0)return;for(int i=0;i<inv.length;i++)if(inv[i]==block){invCount[i]+=count;return;}for(int i=0;i<inv.length;i++)if(inv[i]==0){inv[i]=block;invCount[i]=count;return;}}
     private void spawnParticles(int bx,int by,int block){
+        if(ultraFps)return;
         for(int i=0;i<8;i++)particles.add(new Particle(bx*TILE+TILE/2+Math.random()*TILE/2-TILE/4,by*TILE+TILE/2+Math.random()*TILE/2-TILE/4,block));
+        drops.add(new DropItem(bx*TILE+TILE/2,by*TILE+TILE/2,block));
     }
     private boolean takeFromInv(int block,int count){for(int i=0;i<inv.length;i++)if(inv[i]==block&&invCount[i]>=count){invCount[i]-=count;if(invCount[i]<=0)inv[i]=0;return true;}return false;}
     private int getInvCount(int block){for(int i=0;i<inv.length;i++)if(inv[i]==block)return invCount[i];return 0;}
@@ -555,7 +560,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     @Override
     protected void paintComponent(Graphics g){super.paintComponent(g);Graphics2D g2=(Graphics2D)g;g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_OFF);
-        switch(screen){case MENU:drawMenu(g2);break;case WORLD_LIST:drawWorldList(g2);break;case CREATE_WORLD:drawCreateWorld(g2);break;case MULTIPLAYER:drawMultiplayer(g2);break;case CONNECT:drawConnect(g2);break;case HOST:drawHost(g2);break;case SETTINGS:drawSettings(g2);break;case CONNECTING:drawConnecting(g2);break;case DEATH:drawDeath(g2);break;case CRAFTING:drawCrafting(g2);break;case PLAY:drawGame(g2);break;}
+        switch(screen){case MENU:drawMenu(g2);break;case WORLD_LIST:drawWorldList(g2);break;case CREATE_WORLD:drawCreateWorld(g2);break;case MULTIPLAYER:drawMultiplayer(g2);break;case CONNECT:drawConnect(g2);break;case HOST:drawHost(g2);break;case SETTINGS:drawSettings(g2);break;case CONNECTING:drawConnecting(g2);break;case PAUSE:drawPause(g2);break;case DEATH:drawDeath(g2);break;case CRAFTING:drawCrafting(g2);break;case PLAY:drawGame(g2);break;}
     }
 
     private void drawDirtBG(Graphics2D g2,int w,int h){for(int x=0;x<w;x+=TILE)for(int y=0;y<h;y+=TILE)g2.drawImage(tex[DIRT],x,y,null);}
@@ -626,6 +631,15 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         drawBtn(g2,"Back",w/2-100,yy+138,200,36,menuHover==32);
     }
 
+    private void drawPause(Graphics2D g2){int w=getWidth(),h=getHeight();
+        g2.setColor(new Color(0,0,0,150));g2.fillRect(0,0,w,h);
+        g2.setFont(new Font("PixelPurl",Font.BOLD,36));g2.setColor(Color.WHITE);
+        String t="Game Paused";g2.drawString(t,(w-g2.getFontMetrics().stringWidth(t))/2,100);
+        drawBtn(g2,"Resume",w/2-80,170,160,36,menuHover==70);
+        drawBtn(g2,"Save & Quit",w/2-80,220,160,36,menuHover==72);
+        drawBtn(g2,"Quit",w/2-80,270,160,36,menuHover==73);
+    }
+
     private void drawConnect(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
         g2.setFont(new Font("PixelPurl",Font.BOLD,28));g2.setColor(new Color(100,200,60));g2.drawString("Connect",w/2-60,60);
         g2.setFont(new Font("PixelPurl",Font.PLAIN,18));g2.setColor(Color.WHITE);g2.drawString("Server Address",w/2-150,130);
@@ -643,6 +657,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             "[F2] Coords: "+(showCoords?"ON":"OFF"),
             "[G] Noclip: "+(noclip?"ON":"OFF"),
             "[M] Music: "+(musicOn?"ON":"OFF"),
+            "[F3] Ultra FPS: "+(ultraFps?"ON":"OFF"),
             "[F] Mode: "+(survival?"Survival":"Creative"),
             "[F11] Fullscreen: "+(fullscreen?"ON":"OFF"),
             "[N] Name: "+playerName+(nameEditing?(System.currentTimeMillis()/500%2==0?"_":""):""),
@@ -687,17 +702,19 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         g2.setColor(new Color(skyR,skyG,skyB));g2.fillRect(0,0,w,h);
         g2.setColor(new Color((int)(50*(1-night)+5*night),(int)(160*(1-night)+10*night),(int)(255*(1-night)+20*night)));g2.fillRect(0,0,w,h/4);
         g2.setColor(new Color((int)(30*(1-night)+3*night),(int)(120*(1-night)+8*night),(int)(230*(1-night)+15*night)));g2.fillRect(0,0,w,h/8);
-        worldTime++;
         int na=(int)(120*night);
         if(mountains==null){mountains=new int[w];Random r=new Random(42);mountains[0]=h/4;for(int i=1;i<w;i++){int ch=r.nextInt(3)-1;mountains[i]=Math.max(h/6,Math.min(h/3,mountains[i-1]+ch));}}
         g2.setColor(new Color(40,60,40,150-na));for(int x=0;x<w;x++){int mx=h-mountains[x]-20;g2.fillRect(x,mx,1,mountains[x]+20);}
         g2.setColor(new Color(30,45,30,180-na));for(int x=0;x<w;x++){int mx2=h-mountains[x];g2.fillRect(x,mx2,1,mountains[x]);}
+        if(night>0.5&&!ultraFps){g2.setColor(new Color(255,255,255,(int)(night*200-100)));for(int i=0;i<40;i++){int sx=(i*73+500)%w,sy=(i*47+200)%(h/2);g2.fillOval(sx,sy,2,2);}}
+        double sunAngle=(worldTime*Math.PI/12000);int sunX=(int)(w/2+Math.cos(sunAngle-Math.PI/2)*w*0.4);int sunY=(int)(h/4-Math.sin(sunAngle-Math.PI/2)*h*0.3);
+        if(night<0.5){g2.setColor(new Color(255,255,150,(int)(200*(1-night*2))));g2.fillOval(sunX-15,sunY-15,30,30);}else{g2.setColor(new Color(200,200,220,(int)(200*(night*2-1))));g2.fillOval(sunX-12,sunY-12,24,24);}
         int frame=bobFrame%240;
         for(int i=0;i<4;i++){
+            if(ultraFps)break;
             g2.setColor(new Color(255,255,255,160));
             int cx=((int)(500+i*300+frame*2)%(w+600))-300;
-            g2.fillOval(cx,30-i*10,80+i*15,20+i*8);
-            g2.fillOval(cx+40,34-i*8,50+i*10,14+i*5);
+            g2.fillOval(cx,30-i*10,80+i*15,20+i*8);g2.fillOval(cx+40,34-i*8,50+i*10,14+i*5);
         }
         int sx=camX/TILE,sy=camY/TILE,ex=Math.min(W,sx+gameFov+2),ey=Math.min(H,sy+gameFov*18/25+2);
         for(int x=sx;x<ex;x++)for(int y=sy;y<ey;y++)if(world[x][y]>0)g2.drawImage(tex[Math.min(world[x][y],BLOCK_COUNT-1)],x*TILE-camX,y*TILE-camY,null);
@@ -714,6 +731,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             g2.setColor(new Color(FB[Math.min(pt.block,FB.length-1)].getRed(),FB[Math.min(pt.block,FB.length-1)].getGreen(),FB[Math.min(pt.block,FB.length-1)].getBlue(),alpha));
             g2.fillRect((int)(pt.x-camX),(int)(pt.y-camY),2+pt.life/5,2+pt.life/5);
         }
+        for(DropItem d:drops){int dbob=(int)(Math.sin(d.life*0.1)*2);g2.drawImage(tex[Math.min(d.block,BLOCK_COUNT-1)],(int)(d.x-camX)-6,(int)(d.y-camY)-6+dbob,null);}
 
         if(mouseIn&&breakX<0){int hx=(mx+camX)/TILE,hy=(my+camY)/TILE;if(isIn(hx,hy)){g2.setColor(new Color(255,255,255,100));g2.drawRect(hx*TILE-camX,hy*TILE-camY,TILE,TILE);}}
         if(breakX>=0){g2.setColor(new Color(255,255,255,100));g2.drawRect(breakX*TILE-camX,breakY*TILE-camY,TILE,TILE);float pct=Math.min(1f,(float)breakTimer/(float)Math.max(1,breakTime));g2.setColor(new Color(0,0,0,80));g2.fillRect(breakX*TILE-camX,breakY*TILE-camY,(int)(TILE*pct),3);}
@@ -794,6 +812,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     @Override public void keyPressed(KeyEvent e){
         if(e.getKeyCode()==KeyEvent.VK_F1){showFps=!showFps;return;}
         if(e.getKeyCode()==KeyEvent.VK_F2){showCoords=!showCoords;return;}
+        if(e.getKeyCode()==KeyEvent.VK_F3){ultraFps=!ultraFps;return;}
         if(e.getKeyCode()==KeyEvent.VK_M){toggleMusic();return;}
         if(e.getKeyCode()==KeyEvent.VK_F11&&(screen==Screen.PLAY||screen==Screen.SETTINGS)){
             fullscreen=!fullscreen;
@@ -838,7 +857,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
         if(screen==Screen.PLAY&&e.getKeyCode()==KeyEvent.VK_E){craftingOpen=!craftingOpen;screen=craftingOpen?Screen.CRAFTING:Screen.PLAY;return;}
         if(screen==Screen.PLAY&&e.getKeyCode()==KeyEvent.VK_F){survival=!survival;return;}
-        if(screen==Screen.PLAY&&e.getKeyCode()==KeyEvent.VK_ESCAPE){saveWorld(worldName.isEmpty()?"world_"+System.currentTimeMillis():worldName);saveSettings();refreshWorldList();stopNetworking();screen=Screen.WORLD_LIST;return;}
+        if(screen==Screen.PLAY&&e.getKeyCode()==KeyEvent.VK_ESCAPE){screen=Screen.PAUSE;return;}
+        if(screen==Screen.PAUSE&&e.getKeyCode()==KeyEvent.VK_ESCAPE){screen=Screen.PLAY;return;}
         if(screen==Screen.DEATH&&e.getKeyCode()==KeyEvent.VK_ENTER){px=W/2.0*TILE;py=getGround(W/2)*TILE-playerH/2;health=20;hunger=20;dead=false;fallDist=0;screen=Screen.PLAY;}
         if(screen==Screen.CRAFTING&&e.getKeyCode()==KeyEvent.VK_E){craftingOpen=false;screen=Screen.PLAY;return;}
         if(screen==Screen.CRAFTING&&e.getKeyCode()==KeyEvent.VK_SPACE){int[] r=getCraft();if(r[0]>0){boolean h=true;for(int i=0;i<4;i++)if(craftGrid[i]>0&&!takeFromInv(craftGrid[i],craftCount[i]))h=false;if(h){addToInv(r[0],r[1]);for(int i=0;i<4;i++){craftGrid[i]=0;craftCount[i]=0;}}}}
@@ -888,6 +908,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(screen==Screen.CONNECT){if(inBtn(mx,my,w-60,220,120,36))menuHover=40;else if(inBtn(mx,my,w-60,270,120,36))menuHover=41;}
         if(screen==Screen.SETTINGS){if(inBtn(mx,my,w-60,getHeight()-80,120,36))menuHover=60;}
         if(screen==Screen.HOST){if(inBtn(mx,my,w-80,300,160,36))menuHover=50;else if(inBtn(mx,my,w-60,360,120,36))menuHover=51;}
+        if(screen==Screen.PAUSE){int bw=getWidth()/2;if(inBtn(mx,my,bw-80,170,160,36))menuHover=70;else if(inBtn(mx,my,bw-80,220,160,36))menuHover=72;else if(inBtn(mx,my,bw-80,270,160,36))menuHover=73;}
     }
 
     @Override public void mousePressed(MouseEvent e){int wx=e.getX(),wy=e.getY(),w=getWidth()/2;
@@ -932,6 +953,16 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
         if(screen==Screen.SETTINGS){
             if(inBtn(wx,wy,w-60,getHeight()-80,120,36))screen=Screen.MENU;return;
+        }
+        if(screen==Screen.PAUSE){
+            int bw=getWidth()/2;
+            if(inBtn(wx,wy,bw-80,170,160,36)){screen=Screen.PLAY;}
+            else if(inBtn(wx,wy,bw-80,220,160,36)){
+                saveWorld(worldName.isEmpty()?"world_"+System.currentTimeMillis():worldName);saveSettings();
+                refreshWorldList();stopNetworking();screen=Screen.WORLD_LIST;
+            }
+            else if(inBtn(wx,wy,bw-80,270,160,36)){stopNetworking();screen=Screen.MENU;}
+            return;
         }
         if(screen==Screen.HOST){
             if(inBtn(wx,wy,w-80,300,160,36)){
