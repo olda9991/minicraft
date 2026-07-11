@@ -1,3 +1,4 @@
+//sha:4273ac79
 //sha:d85ea93f
 //sha:fe11266b
 //sha:983eb6c2
@@ -587,6 +588,18 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
         if(!isHost&&client!=null&&client.isConnected()&&posTime%100<16){
             client.send("P "+(int)px+" "+(int)py);
+        }
+        if(ultraFps||posTime%3!=0){}else{
+            for(int y=H-2;y>=0;y--)for(int x=W-1;x>=0;x--){
+                if(world[x][y]==SAND||world[x][y]==GRAVEL||world[x][y]==WATER){
+                    if(y+1<H&&world[x][y+1]==0){world[x][y+1]=world[x][y];world[x][y]=0;}
+                    else if(world[x][y]==WATER){
+                        int dir=(int)(Math.random()*3)-1;
+                        if(x+dir>=0&&x+dir<W&&y+1<H&&world[x+dir][y+1]==0){world[x+dir][y+1]=WATER;world[x][y]=0;}
+                        else if(x-dir>=0&&x-dir<W&&world[x-dir][y]==0&&dir!=0){world[x-dir][y]=WATER;world[x][y]=0;}
+                    }
+                }
+            }
         }
         repaint();
     }
