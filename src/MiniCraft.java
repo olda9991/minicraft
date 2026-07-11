@@ -630,7 +630,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             String t1="MiniCraft";g2.drawString(t1,w/2-120,68);
         }
         String t2="v"+VERSION;g2.setFont(new Font("PixelPurl",Font.PLAIN,14));g2.setColor(new Color(180,180,180));g2.drawString(t2,w/2+80,108);
-        if(updateAvailable){g2.setFont(new Font("PixelPurl",Font.PLAIN,14));g2.setColor(Color.YELLOW);g2.drawString("Update v"+updateVersion+" available! (Options -> U)",w/2-200,130);}
+        if(updateAvailable){g2.setFont(new Font("PixelPurl",Font.PLAIN,14));g2.setColor(Color.YELLOW);g2.drawString("Update v"+updateVersion+" available! (update.sh or update.bat)",w/2-200,130);}
         drawBtn(g2,"Singleplayer",w/2-100,140,200,40,menuHover==0);drawBtn(g2,"Multiplayer",w/2-100,190,200,40,menuHover==1);
         drawBtn(g2,"Options",w/2-100,240,200,40,menuHover==2);drawBtn(g2,"Mods",w/2-100,290,200,40,menuHover==3);
         drawBtn(g2,"Quit",w/2-100,340,200,40,menuHover==4);
