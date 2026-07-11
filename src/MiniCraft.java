@@ -66,6 +66,14 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private String updateVersion="";
     private int fps=0, fpsCount=0;
     private long fpsTimer=0;
+    private java.util.ArrayList<Particle> particles=new java.util.ArrayList<>();
+    private int bobFrame=0;
+    private double camSmoothX=0, camSmoothY=0;
+    private boolean walking=false;
+
+    class Particle{double x,y,vx,vy;int life,maxLife;int block;
+        Particle(double x,double y,int b){this.x=x;this.y=y;block=b;life=maxLife=8+(int)(Math.random()*12);vx=(Math.random()-0.5)*4;vy=-Math.random()*5-2;}
+    }
     private boolean chatOpen=false;
     private String chatText="";
     private ArrayList<String> chatMessages=new ArrayList<>();
@@ -315,6 +323,13 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 for(int cx=x;cx<x+sz&&cx<W;cx++)for(int cy=y;cy<y+sz/2&&cy<H;cy++)if(cx>=0&&cx<W&&cy>=0&&cy<H)world[cx][cy]=0;
             }
         }
+        for(int x=1;x<W-1;x++){
+            int groundY=getGround(x);
+            if(groundY>2&&world[x][groundY]==GRASS&&world[x][groundY-1]==0){
+                if(r.nextInt(6)==0)world[x][groundY-1]=COAL_ORE;
+                else if(r.nextInt(8)==0&&r.nextInt(2)==0)for(int ty=groundY-1;ty>groundY-3&&ty>=0;ty--)world[x][ty]=GRASS;
+            }
+        }
         px=W/2.0*TILE;py=getGround(W/2)*TILE-playerH/2;health=20;hunger=20;dead=false;fallDist=0;survival=true;
         for(int i=0;i<inv.length;i++){inv[i]=0;invCount[i]=0;}
     }
@@ -367,7 +382,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(keys[KeyEvent.VK_D]||keys[KeyEvent.VK_RIGHT])dx+=speed;
         if(keys[KeyEvent.VK_W]||keys[KeyEvent.VK_UP])dy-=speed;
         if(keys[KeyEvent.VK_S]||keys[KeyEvent.VK_DOWN])dy+=speed;
-        boolean moving=dx!=0||dy!=0;
+        boolean moving=dx!=0||dy!=0;walking=moving;
         if(moving)hungerTimer++;
         double nx=px+dx,ny=py+dy;
         boolean canX=true,canY=true;
@@ -387,12 +402,19 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             if(isSolid(fx,fy)){og=true;break;}
         }
         if(survival&&!og&&!noclip){py+=2.0;fallDist++;}else if(survival&&!noclip){if(fallDist>20){health-=(fallDist-20)/2;if(health<=0){dead=true;screen=Screen.DEATH;}}fallDist=0;}
-        camX=Math.max(0,Math.min(W*TILE-gameFov*TILE,(int)(px-gameFov*TILE/2)));camY=Math.max(0,Math.min(H*TILE-gameFov*18/25*TILE,(int)(py-gameFov*18/25*TILE/2)));
+        int targetX=Math.max(0,Math.min(W*TILE-gameFov*TILE,(int)(px-gameFov*TILE/2)));
+        int targetY=Math.max(0,Math.min(H*TILE-gameFov*18/25*TILE,(int)(py-gameFov*18/25*TILE/2)));
+        if(camSmoothX==0){camSmoothX=targetX;camSmoothY=targetY;}
+        camSmoothX+=(targetX-camSmoothX)*0.15;camSmoothY+=(targetY-camSmoothY)*0.15;
+        camX=(int)camSmoothX;camY=(int)camSmoothY;
+
+        for(int i=0;i<particles.size();i++){Particle pt=particles.get(i);pt.x+=pt.vx;pt.y+=pt.vy;pt.vy+=0.2;pt.life--;if(pt.life<=0){particles.remove(i);i--;}}
+        bobFrame++;if(walking)bobFrame+=2;
         for(int i=0;i<10;i++)if(keys[KeyEvent.VK_1+i]){
             if(survival)selBlock=Math.min(i+1,BLOCK_COUNT-1);
             else{selBlock=Math.min(i+1+creativeOffset,BLOCK_COUNT-1);}
         }
-        if(breakX>=0&&breakY>=0&&isIn(breakX,breakY)&&world[breakX][breakY]>0){breakTimer++;if(breakTimer>=breakTime){syncBlock(breakX,breakY,0);addToInv(world[breakX][breakY],1);world[breakX][breakY]=0;breakX=-1;breakY=-1;breakTimer=0;}}else if(breakX>=0){breakX=-1;breakY=-1;breakTimer=0;}
+        if(breakX>=0&&breakY>=0&&isIn(breakX,breakY)&&world[breakX][breakY]>0){breakTimer++;if(breakTimer>=breakTime){syncBlock(breakX,breakY,0);addToInv(world[breakX][breakY],1);spawnParticles(breakX,breakY,world[breakX][breakY]);world[breakX][breakY]=0;breakX=-1;breakY=-1;breakTimer=0;}}else if(breakX>=0){breakX=-1;breakY=-1;breakTimer=0;}
         if(msgTimer>0)msgTimer--;
         if(chatTimer>0)chatTimer--;
         long posTime=System.currentTimeMillis();
@@ -430,6 +452,9 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
 
     private void addToInv(int block,int count){if(block<=0)return;for(int i=0;i<inv.length;i++)if(inv[i]==block){invCount[i]+=count;return;}for(int i=0;i<inv.length;i++)if(inv[i]==0){inv[i]=block;invCount[i]=count;return;}}
+    private void spawnParticles(int bx,int by,int block){
+        for(int i=0;i<8;i++)particles.add(new Particle(bx*TILE+TILE/2+Math.random()*TILE/2-TILE/4,by*TILE+TILE/2+Math.random()*TILE/2-TILE/4,block));
+    }
     private boolean takeFromInv(int block,int count){for(int i=0;i<inv.length;i++)if(inv[i]==block&&invCount[i]>=count){invCount[i]-=count;if(invCount[i]<=0)inv[i]=0;return true;}return false;}
     private int getInvCount(int block){for(int i=0;i<inv.length;i++)if(inv[i]==block)return invCount[i];return 0;}
 
@@ -571,20 +596,28 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     private void drawGame(Graphics2D g2){int w=getWidth(),h=getHeight();
         g2.setColor(new Color(100,180,255));g2.fillRect(0,0,w,h);
+        int frame=bobFrame%240;
+        for(int i=0;i<4;i++){
+            g2.setColor(new Color(255,255,255,160));
+            int cx=((int)(500+i*300+frame*2)%(w+600))-300;
+            g2.fillOval(cx,30-i*10,80+i*15,20+i*8);
+            g2.fillOval(cx+40,34-i*8,50+i*10,14+i*5);
+        }
         int sx=camX/TILE,sy=camY/TILE,ex=Math.min(W,sx+gameFov+2),ey=Math.min(H,sy+gameFov*18/25+2);
         for(int x=sx;x<ex;x++)for(int y=sy;y<ey;y++)if(world[x][y]>0)g2.drawImage(tex[Math.min(world[x][y],BLOCK_COUNT-1)],x*TILE-camX,y*TILE-camY,null);
         int pxOff=(int)(px-camX),pyOff=(int)(py-camY);
-        g2.drawImage(steveImg[0],pxOff-playerW/2,pyOff-playerH/2,null);
-        drawNameTag(g2,pxOff,pyOff,playerName,new Color(255,255,255));
+        int bob=(int)(Math.sin(frame*0.3)*2);
+        g2.drawImage(steveImg[0],pxOff-playerW/2,pyOff-playerH/2+bob,null);
+        drawNameTag(g2,pxOff,pyOff+bob,playerName,new Color(255,255,255));
         g2.setColor(new Color(0,0,0,30));g2.fillOval(pxOff-8,pyOff+TILE-6,16,4);
 
-            synchronized(remotePlayers){
-                for(RemotePlayer rp:remotePlayers){
-                    int rx=(int)(rp.x-camX),ry=(int)(rp.y-camY);
-                    g2.drawImage(steveImg[0],rx-playerW/2,ry-playerH/2,null);
-                    drawNameTag(g2,rx,ry,rp.name,new Color(150,200,255));
-                }
-            }
+        synchronized(remotePlayers){for(RemotePlayer rp:remotePlayers){int rx=(int)(rp.x-camX),ry=(int)(rp.y-camY);g2.drawImage(steveImg[0],rx-playerW/2,ry-playerH/2,null);drawNameTag(g2,rx,ry,rp.name,new Color(150,200,255));}}
+
+        for(Particle pt:particles){
+            int alpha=pt.life*255/pt.maxLife;
+            g2.setColor(new Color(FB[Math.min(pt.block,FB.length-1)].getRed(),FB[Math.min(pt.block,FB.length-1)].getGreen(),FB[Math.min(pt.block,FB.length-1)].getBlue(),alpha));
+            g2.fillRect((int)(pt.x-camX),(int)(pt.y-camY),2+pt.life/5,2+pt.life/5);
+        }
 
         if(mouseIn&&breakX<0){int hx=(mx+camX)/TILE,hy=(my+camY)/TILE;if(isIn(hx,hy)){g2.setColor(new Color(255,255,255,100));g2.drawRect(hx*TILE-camX,hy*TILE-camY,TILE,TILE);}}
         if(breakX>=0){g2.setColor(new Color(255,255,255,100));g2.drawRect(breakX*TILE-camX,breakY*TILE-camY,TILE,TILE);float pct=Math.min(1f,(float)breakTimer/(float)Math.max(1,breakTime));g2.setColor(new Color(0,0,0,80));g2.fillRect(breakX*TILE-camX,breakY*TILE-camY,(int)(TILE*pct),3);}
