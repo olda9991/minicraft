@@ -1,3 +1,4 @@
+//sha:97295afd
 //sha:903cdcfa
 //sha:188fb1df
 //sha:b1df95eb
@@ -218,7 +219,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             fw.write(code);fw.close();
             showPopup("Downloaded. Compiling...");
             String dir=System.getProperty("user.dir");
-            ProcessBuilder pb=new ProcessBuilder("/home/linuxbrew/.linuxbrew/opt/openjdk@21/bin/javac","-d",dir+"/build",dir+"/src/MiniCraft.java");
+            String javaHome=System.getProperty("java.home");
+            String javac=javaHome.replace("jre","")+"/bin/javac";
+            if(File.separatorChar=='\\')javac=javaHome.replace("jre","")+"\\bin\\javac.exe";
+            ProcessBuilder pb=new ProcessBuilder(javac,"-d",dir+"/build",dir+"/src/MiniCraft.java");
             pb.directory(new File(dir));pb.redirectErrorStream(true);
             Process p=pb.start();
             BufferedReader perr=new BufferedReader(new java.io.InputStreamReader(p.getInputStream()));
@@ -226,7 +230,9 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             p.waitFor();
             if(p.exitValue()!=0){showPopup("Compile failed:\n"+errors);return;}
             showPopup("Done! Restarting...");
-            try{new ProcessBuilder("/home/linuxbrew/.linuxbrew/opt/openjdk@21/bin/java","-cp",dir+"/build","MiniCraft").directory(new File(dir)).start();}catch(Exception e2){}
+            String java=javaHome.replace("jre","")+"/bin/java";
+            if(File.separatorChar=='\\')java+=".exe";
+            try{new ProcessBuilder(java,"-cp",dir+"/build","MiniCraft").directory(new File(dir)).start();}catch(Exception e2){}
             Thread.sleep(800);
             System.exit(0);
         }catch(Exception e){showPopup("Error: "+e.getMessage());}

@@ -20,8 +20,12 @@ open('src/MiniCraft.java','w').write('//sha:$SHA\n' + code)
 
 # Compile
 echo "Compiling..."
-export PATH="/home/linuxbrew/.linuxbrew/opt/openjdk@21/bin:\$PATH"
-javac -d build src/MiniCraft.java 2>&1
+JAVAC=$(which javac 2>/dev/null || find /usr -name javac 2>/dev/null | head -1)
+if [ -z "$JAVAC" ]; then
+    echo "ERROR: javac not found! Install Java JDK 21+"
+    exit 1
+fi
+"$JAVAC" -d build src/MiniCraft.java 2>&1
 if [ $? -ne 0 ]; then
     echo "COMPILE FAILED!"
     exit 1

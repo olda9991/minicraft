@@ -3,4 +3,4 @@ showCoords=true
 noclip=false
 fullscreen=true
 fov=25
-name=olda9991
+name=olda99912
