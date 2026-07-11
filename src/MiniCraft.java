@@ -565,6 +565,22 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         addChat(playerName,msg);
     }
 
+    private void runCommand(String cmd){
+        String[] parts=cmd.substring(1).split(" ");
+        addChat("CMD","/"+String.join(" ",parts));
+        switch(parts[0]){
+            case "time":if(parts.length>1){if(parts[1].equals("day"))worldTime=6000;else if(parts[1].equals("night"))worldTime=18000;addChat("Time","set to "+parts[1]);}break;
+            case "tp":if(parts.length>2){try{px=Integer.parseInt(parts[1])*TILE;py=Integer.parseInt(parts[2])*TILE;addChat("TP","teleported");}catch(Exception e){addChat("TP","invalid coords");}}break;
+            case "heal":health=20;hunger=20;addChat("Heal","restored");break;
+            case "creative":survival=false;addChat("Mode","creative");break;
+            case "survival":survival=true;addChat("Mode","survival");break;
+            case "give":if(parts.length>1){try{int b=Integer.parseInt(parts[1]),c=parts.length>2?Integer.parseInt(parts[2]):1;addToInv(b,c);addChat("Give",""+c+"x "+BNAME[Math.min(b,BLOCK_COUNT-1)]);}catch(Exception e){addChat("Give","usage: /give <id> [count]");}}break;
+            case "kill":health=0;dead=true;screen=Screen.DEATH;break;
+            case "help":addChat("Cmds","time day/night, tp x y, heal, creative, survival, give id, kill");break;
+            default:addChat("CMD","unknown: /"+parts[0]+"  use /help");
+        }
+    }
+
     private void addChat(String who,String msg){
         chatMessages.add("<"+who+"> "+msg);
         while(chatMessages.size()>20)chatMessages.remove(0);
@@ -846,7 +862,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(chatOpen){
             g2.setColor(new Color(0,0,0,180));g2.fillRect(5,getHeight()-25,410,22);
             g2.setColor(Color.WHITE);g2.setFont(new Font("PixelPurl",Font.PLAIN,12));
-            g2.drawString("> "+chatText+(System.currentTimeMillis()/500%2==0?"_":""),8,getHeight()-9);
+            g2.drawString((chatText.startsWith("/")?"":"")+"> "+chatText+(System.currentTimeMillis()/500%2==0?"_":""),8,getHeight()-9);
         }
     }
     private void drawCrafting(Graphics2D g2){g2.setColor(new Color(60,60,60));g2.fillRect(0,0,getWidth(),getHeight());g2.setColor(new Color(80,80,80));g2.fillRect(20,20,140,140);g2.fillRect(180,20,600,140);g2.fillRect(20,180,760,160);g2.setColor(Color.WHITE);g2.drawRect(20,20,140,140);g2.drawRect(180,20,600,140);g2.drawRect(20,180,760,160);g2.setFont(new Font("PixelPurl",Font.BOLD,16));g2.setColor(Color.WHITE);g2.drawString("Crafting",25,40);g2.drawString("Inventory",25,200);g2.setFont(new Font("PixelPurl",Font.PLAIN,12));g2.setColor(new Color(200,200,100));g2.drawString("Click item -> click slot | SPACE to craft",25,160);
@@ -883,7 +899,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
         if(e.getKeyCode()>=0&&e.getKeyCode()<keys.length)keys[e.getKeyCode()]=true;
         if(chatOpen){
-            if(e.getKeyCode()==KeyEvent.VK_ENTER&&!chatText.isEmpty()){syncChat(chatText);chatText="";chatOpen=false;}
+            if(e.getKeyCode()==KeyEvent.VK_ENTER&&!chatText.isEmpty()){
+                if(chatText.startsWith("/")){runCommand(chatText);chatText="";chatOpen=false;}
+                else{syncChat(chatText);chatText="";chatOpen=false;}
+            }
             else if(e.getKeyCode()==KeyEvent.VK_ESCAPE){chatText="";chatOpen=false;}
             else if(e.getKeyCode()==KeyEvent.VK_BACK_SPACE&&chatText.length()>0)chatText=chatText.substring(0,chatText.length()-1);
             else{char c=e.getKeyChar();if(c>=' '&&c<='~'&&chatText.length()<60)chatText+=c;}
