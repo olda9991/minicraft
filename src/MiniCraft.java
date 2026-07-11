@@ -1,3 +1,4 @@
+//sha:2fc5bec4
 //sha:4273ac79
 //sha:d85ea93f
 //sha:fe11266b
@@ -74,7 +75,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private String typing="";
     private int selectedWorld=-1;
     private int menuHover=-1;
-    private boolean showFps=false, showCoords=true, noclip=false, fullscreen=false, ultraFps=false, rtxMode=false;
+    private boolean showFps=false, showCoords=true, noclip=false, fullscreen=false, ultraFps=false, rtxMode=false, rtxWater=false;
     private int gameFov=25, settingSel=-1;
     private boolean nameEditing=false;
     private boolean updateAvailable=false;
@@ -317,7 +318,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private void saveSettings(){
         try{PrintWriter pw=new PrintWriter(new FileWriter(System.getProperty("user.dir")+"/settings.txt"));
             pw.println("showFps="+showFps);pw.println("showCoords="+showCoords);pw.println("noclip="+noclip);
-            pw.println("fullscreen="+fullscreen);pw.println("fov="+gameFov);pw.println("name="+playerName);            pw.println("ultraFps="+ultraFps);pw.println("rtxMode="+rtxMode);
+            pw.println("fullscreen="+fullscreen);pw.println("fov="+gameFov);pw.println("name="+playerName);            pw.println("ultraFps="+ultraFps);            pw.println("rtxMode="+rtxMode);pw.println("rtxWater="+rtxWater);
             pw.close();
         }catch(Exception e){}
     }
@@ -334,6 +335,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 if(p[0].equals("fov"))gameFov=Integer.parseInt(p[1]);
                 if(p[0].equals("ultraFps"))ultraFps=Boolean.parseBoolean(p[1]);
                 if(p[0].equals("rtxMode"))rtxMode=Boolean.parseBoolean(p[1]);
+                if(p[0].equals("rtxWater"))rtxWater=Boolean.parseBoolean(p[1]);
                 if(p[0].equals("name"))playerName=p[1];
             }
             br.close();
@@ -600,7 +602,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                             if(x+dir>=0&&x+dir<W&&world[x+dir][y]==0){world[x+dir][y]=WATER;world[x][y]=0;break;}
                             if(rtxMode&&x+dir>=0&&x+dir<W&&y>0&&world[x+dir][y-1]==0){world[x+dir][y-1]=WATER;}
                         }
-                        if(rtxMode&&y>0&&world[x][y-1]==0)world[x][y-1]=WATER;
+                        if(rtxMode||rtxWater){if(y>0&&world[x][y-1]==0)world[x][y-1]=WATER;}
                     }
                 }
             }
@@ -775,6 +777,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             "[M] Music: "+(musicOn?"ON":"OFF"),
             "[F3] Ultra FPS: "+(ultraFps?"ON":"OFF"),
             "[F4] RTX Mode: "+(rtxMode?"ON":"OFF"),
+            "[F5] RTX Water: "+(rtxWater?"ON":"OFF"),
             "[F] Mode: "+(survival?"Survival":"Creative"),
             "[F11] Fullscreen: "+(fullscreen?"ON":"OFF"),
             "[N] Name: "+playerName+(nameEditing?(System.currentTimeMillis()/500%2==0?"_":""):""),
@@ -838,7 +841,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             for(int i=0;i<60;i++){int rx=(i*117+frame*3)%w,ry=(i*83+frame*5)%h;g2.drawLine(rx,ry,rx,ry+8);}
         }
         int sx=camX/TILE,sy=camY/TILE,ex=Math.min(W,sx+gameFov+2),ey=Math.min(H,sy+gameFov*18/25+2);
-        for(int x=sx;x<ex;x++)for(int y=sy;y<ey;y++)if(world[x][y]>0)g2.drawImage(tex[Math.min(world[x][y],BLOCK_COUNT-1)],x*TILE-camX,y*TILE-camY,null);
+        for(int x=sx;x<ex;x++)for(int y=sy;y<ey;y++)if(world[x][y]>0){g2.drawImage(tex[Math.min(world[x][y],BLOCK_COUNT-1)],x*TILE-camX,y*TILE-camY,null);if(rtxWater&&world[x][y]==WATER){g2.setColor(new Color(60,120,255,40));g2.fillRect(x*TILE-camX-2,y*TILE-camY-2,TILE+4,TILE+4);g2.setColor(new Color(100,180,255,20+Math.abs(bobFrame%40-20)));g2.fillRect(x*TILE-camX,y*TILE-camY,TILE,TILE);}}
         int pxOff=(int)(px-camX),pyOff=(int)(py-camY);
         int bob=(int)(Math.sin(frame*0.3)*2);
         g2.drawImage(steveImg[0],pxOff-playerW/2,pyOff-playerH/2+bob,null);
@@ -957,6 +960,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(e.getKeyCode()==KeyEvent.VK_F2){showCoords=!showCoords;return;}
         if(e.getKeyCode()==KeyEvent.VK_F3){ultraFps=!ultraFps;return;}
         if(e.getKeyCode()==KeyEvent.VK_F4){rtxMode=!rtxMode;return;}
+        if(e.getKeyCode()==KeyEvent.VK_F5){rtxWater=!rtxWater;return;}
         if(e.getKeyCode()==KeyEvent.VK_M){toggleMusic();return;}
         if(e.getKeyCode()==KeyEvent.VK_F11&&(screen==Screen.PLAY||screen==Screen.SETTINGS)){
             fullscreen=!fullscreen;

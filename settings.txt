@@ -5,3 +5,4 @@ fullscreen=false
 fov=50
 name=olda99912
 ultraFps=false
+rtxMode=false
