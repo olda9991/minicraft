@@ -38,10 +38,13 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private static final int NETHERRACK=41,SOUL_SAND=42,GLOWSTONE=43,OBSIDIAN=44,CRYING_OBSIDIAN=45;
     private static final int SMOOTH_STONE=46,POLISHED_ANDESITE=47,POLISHED_DIORITE=48,POLISHED_GRANITE=49;
     private static final int PRISMARINE=50,DARK_PRISMARINE=51,SEA_LANTERN=52,END_STONE=53,PURPUR=54,MAGMA=55,SLIME=56,TNT=57,FURNACE=58,CRAFTING_TABLE=59;
-    private static final int BLOCK_COUNT=60,STICK=99;
-    private static final String[] BNAME={"Air","Grass","Dirt","Stone","Cobblestone","Bedrock","Sand","Gravel","Oak Log","Spruce Log","Birch Log","Jungle Log","Acacia Log","Dark Oak Log","Oak Planks","Spruce Planks","Birch Planks","Jungle Planks","Acacia Planks","Dark Oak Planks","Oak Leaves","Spruce Leaves","Birch Leaves","Jungle Leaves","Acacia Leaves","Dark Oak Leaves","Water","Snow","Ice","Bricks","Stone Bricks","Mossy Stone Bricks","Cracked Stone Bricks","Coal Ore","Iron Ore","Gold Ore","Diamond Ore","Emerald Ore","Redstone Ore","Lapis Ore","Copper Ore","Netherrack","Soul Sand","Glowstone","Obsidian","Crying Obsidian","Smooth Stone","Polished Andesite","Polished Diorite","Polished Granite","Prismarine","Dark Prismarine","Sea Lantern","End Stone","Purpur Block","Magma","Slime Block","TNT","Furnace","Crafting Table"};
-    private static final String[] TF={"air","grass","dirt","stone","cobblestone","bedrock","sand","gravel","oak_log","spruce_log","birch_log","jungle_log","acacia_log","dark_oak_log","oak_planks","spruce_planks","birch_planks","jungle_planks","acacia_planks","dark_oak_planks","oak_leaves","spruce_leaves","birch_leaves","jungle_leaves","acacia_leaves","dark_oak_leaves","water","snow","ice","bricks","stone_bricks","mossy_stone_bricks","cracked_stone_bricks","coal_ore","iron_ore","gold_ore","diamond_ore","emerald_ore","redstone_ore","lapis_ore","copper_ore","netherrack","soul_sand","glowstone","obsidian","crying_obsidian","smooth_stone","polished_andesite","polished_diorite","polished_granite","prismarine","dark_prismarine","sea_lantern","end_stone","purpur_block","magma","slime_block","tnt_side","furnace_front","crafting_table_front"};
-    private static final Color[] FB={new Color(0,0,0,0),new Color(100,180,60),new Color(140,100,60),new Color(120,120,120),new Color(100,100,100),new Color(30,30,30),new Color(230,210,160),new Color(140,130,120),new Color(100,80,50),new Color(80,60,40),new Color(180,160,100),new Color(120,100,70),new Color(160,120,60),new Color(60,40,20),new Color(160,130,80),new Color(140,110,70),new Color(180,150,100),new Color(160,130,90),new Color(180,140,80),new Color(100,70,40),new Color(50,140,50),new Color(40,120,40),new Color(60,150,60),new Color(50,130,50),new Color(60,140,50),new Color(40,110,30),new Color(80,80,200),new Color(220,220,230),new Color(160,200,220),new Color(180,120,80),new Color(160,160,160),new Color(140,140,120),new Color(130,130,130),new Color(60,60,60),new Color(180,140,160),new Color(220,180,40),new Color(80,200,220),new Color(60,180,60),new Color(200,80,80),new Color(60,80,180),new Color(160,120,80),new Color(100,40,40),new Color(80,60,40),new Color(200,180,80),new Color(30,20,50),new Color(80,30,60),new Color(180,180,180),new Color(140,140,150),new Color(160,160,170),new Color(160,140,120),new Color(80,160,160),new Color(60,120,120),new Color(200,200,160),new Color(220,200,160),new Color(160,80,120),new Color(200,80,40),new Color(80,200,80),new Color(180,60,40),new Color(120,120,120),new Color(140,100,60)};
+    private static final int BLOCK_COUNT=75,STICK=99;
+    private static final int RAW_BEEF=60,COOKED_BEEF=61,RAW_PORK=62,COOKED_PORK=63,WOOL=64;
+    private static final int IRON_INGOT=65,GOLD_INGOT=66,DIAMOND_GEM=67,BED=68,EXP_ORB=69;
+    private static final int SWORD=70,PICKAXE=71,AXE=72,SHOVEL=73,FURNACE_ITEM=74;
+    private static final String[] BNAME={"Air","Grass","Dirt","Stone","Cobblestone","Bedrock","Sand","Gravel","Oak Log","Spruce Log","Birch Log","Jungle Log","Acacia Log","Dark Oak Log","Oak Planks","Spruce Planks","Birch Planks","Jungle Planks","Acacia Planks","Dark Oak Planks","Oak Leaves","Spruce Leaves","Birch Leaves","Jungle Leaves","Acacia Leaves","Dark Oak Leaves","Water","Snow","Ice","Bricks","Stone Bricks","Mossy Stone Bricks","Cracked Stone Bricks","Coal Ore","Iron Ore","Gold Ore","Diamond Ore","Emerald Ore","Redstone Ore","Lapis Ore","Copper Ore","Netherrack","Soul Sand","Glowstone","Obsidian","Crying Obsidian","Smooth Stone","Polished Andesite","Polished Diorite","Polished Granite","Prismarine","Dark Prismarine","Sea Lantern","End Stone","Purpur Block","Magma","Slime Block","TNT","Furnace","Crafting Table","Raw Beef","Cooked Beef","Raw Pork","Cooked Pork","Wool","Iron Ingot","Gold Ingot","Diamond","Bed","XP Orb","Sword","Pickaxe","Axe","Shovel","Furnace Item"};
+    private static final String[] TF={"air","grass","dirt","stone","cobblestone","bedrock","sand","gravel","oak_log","spruce_log","birch_log","jungle_log","acacia_log","dark_oak_log","oak_planks","spruce_planks","birch_planks","jungle_planks","acacia_planks","dark_oak_planks","oak_leaves","spruce_leaves","birch_leaves","jungle_leaves","acacia_leaves","dark_oak_leaves","water","snow","ice","bricks","stone_bricks","mossy_stone_bricks","cracked_stone_bricks","coal_ore","iron_ore","gold_ore","diamond_ore","emerald_ore","redstone_ore","lapis_ore","copper_ore","netherrack","soul_sand","glowstone","obsidian","crying_obsidian","smooth_stone","polished_andesite","polished_diorite","polished_granite","prismarine","dark_prismarine","sea_lantern","end_stone","purpur_block","magma","slime_block","tnt_side","furnace_front","crafting_table_front","beef","cbeef","pork","cpork","wool","iron_ingot","gold_ingot","diamond","bed","xp","sword","pickaxe","axe","shovel","furnace"};
+    private static final Color[] FB={new Color(0,0,0,0),new Color(100,180,60),new Color(140,100,60),new Color(120,120,120),new Color(100,100,100),new Color(30,30,30),new Color(230,210,160),new Color(140,130,120),new Color(100,80,50),new Color(80,60,40),new Color(180,160,100),new Color(120,100,70),new Color(160,120,60),new Color(60,40,20),new Color(160,130,80),new Color(140,110,70),new Color(180,150,100),new Color(160,130,90),new Color(180,140,80),new Color(100,70,40),new Color(50,140,50),new Color(40,120,40),new Color(60,150,60),new Color(50,130,50),new Color(60,140,50),new Color(40,110,30),new Color(80,80,200),new Color(220,220,230),new Color(160,200,220),new Color(180,120,80),new Color(160,160,160),new Color(140,140,120),new Color(130,130,130),new Color(60,60,60),new Color(180,140,160),new Color(220,180,40),new Color(80,200,220),new Color(60,180,60),new Color(200,80,80),new Color(60,80,180),new Color(160,120,80),new Color(100,40,40),new Color(80,60,40),new Color(200,180,80),new Color(30,20,50),new Color(80,30,60),new Color(180,180,180),new Color(140,140,150),new Color(160,160,170),new Color(160,140,120),new Color(80,160,160),new Color(60,120,120),new Color(200,200,160),new Color(220,200,160),new Color(160,80,120),new Color(200,80,40),new Color(80,200,80),new Color(180,60,40),new Color(120,120,120),new Color(140,100,60),new Color(200,60,60),new Color(180,100,60),new Color(255,150,150),new Color(200,150,150),new Color(220,220,220),new Color(180,180,180),new Color(255,220,40),new Color(180,240,200),new Color(200,100,100),new Color(80,255,80),new Color(180,180,180),new Color(200,200,200),new Color(180,180,180),new Color(200,200,200),new Color(120,120,120)};
     private static final int[] BT = new int[BLOCK_COUNT];
     static { for(int i=0;i<BLOCK_COUNT;i++){if(i==BEDROCK)BT[i]=99999;else if(i>=COAL_ORE&&i<=COPPER_ORE)BT[i]=20;else if(i==OBSIDIAN||i==CRYING_OBSIDIAN)BT[i]=120;else BT[i]=Math.max(3,i*2%15+2);} }
 
@@ -434,11 +437,11 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         px=W/2.0*TILE;py=getGround(W/2)*TILE-playerH/2;health=20;hunger=20;dead=false;fallDist=0;survival=true;
         for(int i=0;i<inv.length;i++){inv[i]=0;invCount[i]=0;}
         mobs.clear();
-        for(int i=0;i<10;i++){
+        for(int i=0;i<8;i++){
             int mx=10+(int)(Math.random()*(W-20)),my=getGround(mx);
-            if(world[mx][my]==GRASS)mobs.add(new Mob(mx*TILE,my*TILE-playerH/2,(int)(Math.random()*2)));
+            if(world[mx][my]==GRASS)mobs.add(new Mob(mx*TILE,my*TILE-playerH/2,(int)(Math.random()*4)));
         }
-        for(int i=0;i<5;i++){
+        for(int i=0;i<4;i++){
             int mx=10+(int)(Math.random()*(W-20)),my=getGround(mx);
             if(world[mx][my]==GRASS)mobs.add(new Mob(mx*TILE,my*TILE-playerH/2,2));
         }
@@ -519,7 +522,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         int targetY=Math.max(0,Math.min(H*TILE-VH*TILE,(int)(py-VH*TILE/2)));
         if(ultraFps){camX=targetX;camY=targetY;}else{if(camSmoothX==0){camSmoothX=targetX;camSmoothY=targetY;}camSmoothX+=(targetX-camSmoothX)*0.15;camSmoothY+=(targetY-camSmoothY)*0.15;camX=(int)camSmoothX;camY=(int)camSmoothY;}
         if(!ultraFps)for(int i=0;i<particles.size();i++){Particle pt=particles.get(i);pt.x+=pt.vx;pt.y+=pt.vy;pt.vy+=0.2;pt.life--;if(pt.life<=0){particles.remove(i);i--;}}
-        if(!ultraFps)for(int i=0;i<drops.size();i++){DropItem d=drops.get(i);d.y+=d.vy;d.vy+=0.1;d.life--;if(Math.abs(d.x-px)<20&&Math.abs(d.y-py)<20){addToInv(d.block,1);drops.remove(i);i--;}else if(d.life<=0){drops.remove(i);i--;}}
+        if(!ultraFps)for(int i=0;i<drops.size();i++){DropItem d=drops.get(i);d.y+=d.vy;d.vy+=0.1;d.life--;if(Math.abs(d.x-px)<24&&Math.abs(d.y-py)<24){if(d.block==EXP_ORB){addChat("XP","+"+1);}else addToInv(d.block,1);drops.remove(i);i--;}else if(d.life<=0){drops.remove(i);i--;}}
         if(!ultraFps)for(Mob m:mobs){
             m.aiT++;if(m.hurtT>0)m.hurtT--;
             double ndark=Math.abs(worldTime-12000)/12000.0;
@@ -602,6 +605,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(nz==1&&f==SAND)return new int[]{SNOW,1};if(nz==1&&f==NETHERRACK)return new int[]{SOUL_SAND,1};
         if(nz==2&&((craftGrid[0]==OAK_PLANKS&&craftGrid[1]==OAK_PLANKS)||(craftGrid[0]==OAK_PLANKS&&craftGrid[2]==OAK_PLANKS)))return new int[]{4,4};
         if(nz==4&&craftGrid[0]==OAK_PLANKS&&craftGrid[1]==OAK_PLANKS&&craftGrid[2]==OAK_PLANKS&&craftGrid[3]==OAK_PLANKS)return new int[]{CRAFTING_TABLE,1};
+        if(nz==4&&craftGrid[0]==WOOL&&craftGrid[1]==WOOL&&craftGrid[2]==OAK_PLANKS&&craftGrid[3]==OAK_PLANKS)return new int[]{BED,1};
+        if(nz==4&&craftGrid[0]==STONE&&craftGrid[1]==STONE&&craftGrid[2]==STONE&&craftGrid[3]==STONE)return new int[]{FURNACE_ITEM,1};
+        if(nz==4&&craftGrid[0]==OAK_PLANKS&&craftGrid[1]==OAK_PLANKS&&craftGrid[2]==STONE&&craftGrid[3]==STONE)return new int[]{SWORD,1};
+        if(nz==4&&craftGrid[0]==OAK_PLANKS&&craftGrid[2]==STONE&&craftGrid[3]==STONE)return new int[]{PICKAXE,1};
         return new int[]{0,0};
     }
 
@@ -788,9 +795,9 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         for(DropItem d:drops){int dbob=(int)(Math.sin(d.life*0.1)*2);g2.drawImage(tex[Math.min(d.block,BLOCK_COUNT-1)],(int)(d.x-camX)-6,(int)(d.y-camY)-6+dbob,null);}
         for(Mob m:mobs){
             int mx=(int)(m.x-camX),my=(int)(m.y-camY);
-            g2.setColor(m.type==0?new Color(140,100,60):m.type==1?new Color(220,150,180):new Color(80,120,60));
+            g2.setColor(m.type==0?new Color(140,100,60):m.type==1?new Color(220,150,180):m.type==2?new Color(80,120,60):m.type==3?new Color(180,180,180):Color.WHITE);
             g2.fillRect(mx-10,my-14,20,24);
-            g2.setColor(Color.WHITE);g2.drawString(m.type==0?"Cow":m.type==1?"Pig":"Zomb",mx-10,my-18);
+            g2.setColor(Color.WHITE);g2.drawString(m.type==0?"Cow":m.type==1?"Pig":m.type==2?"Zomb":m.type==3?"Sheep":"Chick",mx-10,my-18);
             g2.setColor(new Color(0,0,0,100));g2.fillRect(mx-12,my-24,24,3);
             g2.setColor(new Color(255,0,0));g2.fillRect(mx-12,my-24,m.health*24/m.maxHealth,3);
             if(m.hurtT>0)g2.setColor(new Color(255,0,0,100));g2.fillRect(mx-10,my-14,20,24);
@@ -1050,11 +1057,15 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(screen==Screen.CRAFTING){int cx=(wx-30)/60,cy=(wy-50)/60,idx=cx+cy*2;if(cx>=0&&cx<2&&cy>=0&&cy<2&&idx>=0&&idx<4){if(craftGrid[idx]>0){addToInv(craftGrid[idx],craftCount[idx]);craftGrid[idx]=0;craftCount[idx]=0;return;}for(int i=0;i<inv.length;i++){int ix=30+(i%8)*60,iy=220+(i/8)*60;if(wx>=ix&&wx<ix+50&&wy>=iy&&wy<iy+50&&inv[i]>0){craftGrid[idx]=inv[i];craftCount[idx]=1;invCount[i]--;if(invCount[i]<=0)inv[i]=0;return;}}}return;}
         if(screen==Screen.PLAY){int tx=(mx+camX)/TILE,ty=(my+camY)/TILE;if(!isIn(tx,ty))return;int pt=(int)(px/TILE),pyt=(int)(py/TILE);if(Math.abs(tx-pt)+Math.abs(ty-pyt)<2)return;
             if(e.getButton()==MouseEvent.BUTTON1){
-                boolean hitMob=false;
-                for(Mob m:mobs){if(Math.abs((mx+camX)-m.x)<24&&Math.abs((my+camY)-m.y)<24){m.health-=3;m.hurtT=10;if(m.health<=0){mobs.remove(m);break;}hitMob=true;break;}}
-                if(!hitMob){if(survival&&world[tx][ty]>0){breakX=tx;breakY=ty;breakTimer=0;breakTime=BT[Math.min(world[tx][ty],BT.length-1)];}else if(!survival){world[tx][ty]=0;syncBlock(tx,ty,0);}}
+                boolean hitMob=false;int dmg=selBlock==SWORD?6:3;
+                for(Mob m:mobs){if(Math.abs((mx+camX)-m.x)<24&&Math.abs((my+camY)-m.y)<24){m.health-=dmg;m.hurtT=10;if(m.health<=0){drops.add(new DropItem(m.x,m.y,m.type==0?RAW_BEEF:m.type==1?RAW_PORK:m.type==3?WOOL:COOKED_BEEF));drops.add(new DropItem(m.x-10,m.y-10,EXP_ORB));mobs.remove(m);}hitMob=true;break;}}
+                if(!hitMob){if(survival&&world[tx][ty]>0){breakX=tx;breakY=ty;breakTimer=0;int spd=1;if(selBlock==PICKAXE)spd=4;if(selBlock==AXE)spd=4;if(selBlock==SHOVEL)spd=4;breakTime=Math.max(1,BT[Math.min(world[tx][ty],BT.length-1)]/spd);}else if(!survival){world[tx][ty]=0;syncBlock(tx,ty,0);}}
             }
-            else if(e.getButton()==MouseEvent.BUTTON3&&selBlock>=0&&(!survival||getInvCount(selBlock)>0)){world[tx][ty]=selBlock;if(survival)takeFromInv(selBlock,1);syncBlock(tx,ty,selBlock);}
+            else if(e.getButton()==MouseEvent.BUTTON3&&selBlock>=0&&(!survival||getInvCount(selBlock)>0)){
+                if(survival&&(selBlock==RAW_BEEF||selBlock==COOKED_BEEF||selBlock==RAW_PORK||selBlock==COOKED_PORK)){hunger=Math.min(20,hunger+(selBlock==COOKED_BEEF||selBlock==COOKED_PORK?8:4));takeFromInv(selBlock,1);}
+                else if(survival&&selBlock==BED){worldTime=6000;addChat("Bed","Good morning!");}
+                else{world[tx][ty]=selBlock;if(survival)takeFromInv(selBlock,1);syncBlock(tx,ty,selBlock);}
+            }
         }
     }
 
