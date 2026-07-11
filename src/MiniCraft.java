@@ -59,7 +59,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private javax.swing.Timer timer;
     private int camX,camY,mx=-999,my=-999;
     private boolean mouseIn=false;
-    private int health=20,hunger=20;
+    private int health=20,hunger=20,xp=0;
     private boolean dead=false;
     private int fallDist=0,breakTimer=0,breakX=-1,breakY=-1,breakTime=0;
     private boolean craftingOpen=false,survival=true;
@@ -182,6 +182,36 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private int serverPort=25565;
     private String serverIP="localhost";
     private Process webProcess, boreProcess;
+    private DiscordRPC discordRPC; 
+
+    class DiscordRPC extends Thread{
+        private java.net.Socket sock;private boolean running=true;private java.io.PrintWriter out;private java.io.BufferedReader in;
+        public void run(){
+            try{
+                String pipe=System.getenv("XDG_RUNTIME_DIR");
+                if(pipe==null)pipe="/run/user/"+System.getProperty("user.name");
+                pipe+="/discord-ipc-0";
+                java.net.UnixDomainSocketAddress addr=java.net.UnixDomainSocketAddress.of(pipe);
+                java.nio.channels.SocketChannel sc=java.nio.channels.SocketChannel.open(addr);
+                sock=sc.socket();
+                if(sock==null)return;
+                out=new java.io.PrintWriter(sock.getOutputStream(),true);in=new java.io.BufferedReader(new java.io.InputStreamReader(sock.getInputStream()));
+                out.print("{\"v\":1,\"client_id\":\"1336142185340932106\"}\n");out.flush();
+                in.readLine();
+                updatePresence();
+                while(running){try{Thread.sleep(15000);updatePresence();}catch(Exception e){break;}}
+            }catch(Exception e){try{Thread.sleep(5000);}catch(Exception ex){}}
+        }
+        void updatePresence(){
+            try{
+                String state="In Menu";
+                if(screen==Screen.PLAY)state=survival?"Survival":"Creative";
+                String json="{\"cmd\":\"SET_ACTIVITY\",\"args\":{\"pid\":"+ProcessHandle.current().pid()+",\"activity\":{\"details\":\"MiniCraft v"+VERSION+"\",\"state\":\""+state+"\",\"assets\":{\"large_image\":\"minecraft\",\"large_text\":\"MiniCraft\"}},\"nonce\":\""+System.currentTimeMillis()+"\"}}";
+                out.print(json+"\n");out.flush();
+            }catch(Exception e){}
+        }
+        void stopRPC(){running=false;try{if(sock!=null)sock.close();}catch(Exception e){}}
+    }
 
     public MiniCraft(){
         setPreferredSize(new Dimension(VW*TILE,VH*TILE));
@@ -202,7 +232,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         loadSettings();
         timer=new javax.swing.Timer(16,this);timer.start();
         new Thread(()->checkUpdate()).start();
-        new Thread(()->{try{Thread.sleep(1000);loadMusic();loadSFX();}catch(Exception e){}}).start();
+        new Thread(()->{try{Thread.sleep(1000);loadMusic();loadSFX();discordRPC=new DiscordRPC();discordRPC.start();}catch(Exception e){}}).start();
     }
 
     private BufferedImage makeIcon(Color c,int s){BufferedImage img=new BufferedImage(s,s,BufferedImage.TYPE_INT_ARGB);Graphics2D g=img.createGraphics();g.setColor(c);g.fillOval(1,1,s-2,s-2);g.setColor(c.brighter());g.fillOval(2,1,s-4,s-3);g.dispose();return img;}
@@ -530,7 +560,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         int targetY=Math.max(0,Math.min(H*TILE-VH*TILE,(int)(py-VH*TILE/2)));
         if(ultraFps){camX=targetX;camY=targetY;}else{if(camSmoothX==0){camSmoothX=targetX;camSmoothY=targetY;}camSmoothX+=(targetX-camSmoothX)*0.15;camSmoothY+=(targetY-camSmoothY)*0.15;camX=(int)camSmoothX;camY=(int)camSmoothY;}
         if(!ultraFps)for(int i=0;i<particles.size();i++){Particle pt=particles.get(i);pt.x+=pt.vx;pt.y+=pt.vy;pt.vy+=0.2;pt.life--;if(pt.life<=0){particles.remove(i);i--;}}
-        if(!ultraFps)for(int i=0;i<drops.size();i++){DropItem d=drops.get(i);d.y+=d.vy;d.vy+=0.1;d.life--;if(Math.abs(d.x-px)<24&&Math.abs(d.y-py)<24){if(d.block==EXP_ORB){}else addToInv(d.block,1);drops.remove(i);i--;}else if(d.life<=0){drops.remove(i);i--;}}
+        if(!ultraFps)for(int i=0;i<drops.size();i++){DropItem d=drops.get(i);d.y+=d.vy;d.vy+=0.1;d.life--;if(Math.abs(d.x-px)<24&&Math.abs(d.y-py)<24){if(d.block==EXP_ORB){xp++;}else addToInv(d.block,1);drops.remove(i);i--;}else if(d.life<=0){drops.remove(i);i--;}}
         for(int i=0;i<dmgNums.size();i++){DmgNum dn=dmgNums.get(i);dn.y-=1.5;dn.life--;if(dn.life<=0){dmgNums.remove(i);i--;}}
         for(int i=0;i<arrows.size();i++){Arrow a=arrows.get(i);a.x+=a.vx;a.y+=a.vy;a.life--;if(Math.abs(a.x-px)<16&&Math.abs(a.y-py)<16){health--;if(health<=0){dead=true;screen=Screen.DEATH;}arrows.remove(i);i--;}else if(a.life<=0||isSolid((int)(a.x/TILE),(int)(a.y/TILE))){arrows.remove(i);i--;}}
         if(!ultraFps)for(Mob m:mobs){
@@ -845,6 +875,12 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             for(int i=0;i<10;i++){
                 g2.drawImage(hungerImg[0],8+i*16,bh-70,null);
                 if(i>=(hunger+1)/2){g2.setColor(new Color(0,0,0,120));g2.fillRect(8+i*16,bh-70,9,9);}
+            }
+            if(xp>0){
+                g2.setColor(new Color(0,0,0,100));g2.fillRect(8,bh-60,160,5);
+                g2.setColor(new Color(80,255,80));g2.fillRect(8,bh-60,xp*160/(xp+20),5);
+                g2.setFont(new Font("PixelPurl",Font.PLAIN,9));g2.setColor(Color.WHITE);
+                g2.drawString("XP:"+xp,8,bh-62);
             }
         }
         int hs=24,slots=Math.min(9,BLOCK_COUNT);
