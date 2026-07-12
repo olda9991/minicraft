@@ -1,3 +1,4 @@
+//sha:55264b8f
 //sha:dea13c57
 //sha:4dd8ee68
 //sha:f03e8570
@@ -990,7 +991,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             if(f!=null){f.dispose();f.setUndecorated(fullscreen);f.setExtendedState(fullscreen?JFrame.MAXIMIZED_BOTH:JFrame.NORMAL);f.setVisible(true);}
             return;
         }
-        if(e.getKeyCode()==KeyEvent.VK_G&&(screen==Screen.PLAY||screen==Screen.SETTINGS)){noclip=!noclip;return;}
+        if(e.getKeyCode()==KeyEvent.VK_G&&(screen==Screen.PLAY||screen==Screen.SETTINGS)&&!chatOpen){noclip=!noclip;return;}
         if(screen==Screen.SETTINGS){
             if(nameEditing){
                 if(e.getKeyCode()==KeyEvent.VK_ENTER||e.getKeyCode()==KeyEvent.VK_ESCAPE){nameEditing=false;syncName();}
