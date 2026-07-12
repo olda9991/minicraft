@@ -1,3 +1,4 @@
+//sha:8254d601
 //sha:4ec7002e
 //sha:845cfc00
 //sha:6aa16497
@@ -1450,7 +1451,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                             int plrIdx=0;for(ClientHandler ch:clients)if(ch!=this&&ch.name!=null)plrIdx++;
                             double spx=px+(plrIdx%3*48)-48;
                             double spy=py-(plrIdx/3)*48;
-                            if(!isSolid((int)(spx/TILE),(int)((spy+playerH/2)/TILE))){spx=px;spy=py;}
+                            int gx=(int)(spx/TILE),gy=(int)((spy+playerH/2)/TILE);
+                            if(gx<0||gx>=W){spx=px;}else{int gy2=getGround(gx);spy=gy2*TILE-playerH/2;}
                             synchronized(remotePlayers){remotePlayers.add(new RemotePlayer(name,spx,spy));}
                             out.println("W "+W+" "+H);
                             StringBuilder batch=new StringBuilder();
