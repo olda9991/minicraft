@@ -1,3 +1,4 @@
+//sha:a0d703c6
 //sha:2e33f393
 //sha:d4bf54aa
 //sha:55264b8f
@@ -238,7 +239,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         steveImg[0]=makeSteve();}
         heartImg=new BufferedImage[1];heartImg[0]=makeIcon(new Color(200,0,0),9);
         hungerImg=new BufferedImage[1];hungerImg[0]=makeIcon(new Color(180,120,40),9);
-        try{logoImg=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/MINICRAFT.png"));}catch(Exception e){logoImg=null;}
+        try{logoImg=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/MINICRAFT.gif"));}catch(Exception e){try{logoImg=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/MINICRAFT.png"));}catch(Exception e2){logoImg=null;}}
         try{discIcon=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/discord.png"));}catch(Exception e){discIcon=null;}
         try{ghIcon=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/github.png"));}catch(Exception e){ghIcon=null;}
         new File(DATA_DIR).mkdirs();
