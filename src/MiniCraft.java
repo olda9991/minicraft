@@ -110,10 +110,12 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
     class DmgNum{double x,y;int val,life;DmgNum(double x,double y,int v){this.x=x;this.y=y;val=v;life=40;}}
     class Arrow{double x,y,vx,vy;int life;Arrow(double x,double y,double vx,double vy){this.x=x;this.y=y;this.vx=vx;this.vy=vy;life=120;}}
+    class PrimedTnt{double x,y;int timer;PrimedTnt(double x,double y){this.x=x;this.y=y;timer=180;}}
     private java.util.ArrayList<DropItem> drops=new java.util.ArrayList<>();
     private java.util.ArrayList<Mob> mobs=new java.util.ArrayList<>();
     private java.util.ArrayList<DmgNum> dmgNums=new java.util.ArrayList<>();
     private java.util.ArrayList<Arrow> arrows=new java.util.ArrayList<>();
+    private java.util.ArrayList<PrimedTnt> tntList=new java.util.ArrayList<>();
     private BufferedImage discIcon,ghIcon;
     private boolean chatOpen=false;
     private String chatText="";
@@ -578,13 +580,13 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(!ultraFps&&physicsOn)for(int i=0;i<drops.size();i++){DropItem d=drops.get(i);d.y+=d.vy;d.vy+=0.1;d.life--;if(Math.abs(d.x-px)<24&&Math.abs(d.y-py)<24){if(d.block==EXP_ORB){xp++;}else addToInv(d.block,1);drops.remove(i);i--;}else if(d.life<=0){drops.remove(i);i--;}}
         for(int i=0;i<dmgNums.size();i++){DmgNum dn=dmgNums.get(i);dn.y-=1.5;dn.life--;if(dn.life<=0){dmgNums.remove(i);i--;}}
         for(int i=0;i<arrows.size();i++){Arrow a=arrows.get(i);a.x+=a.vx;a.y+=a.vy;a.life--;if(Math.abs(a.x-px)<16&&Math.abs(a.y-py)<16){health-=Math.max(1,3-armor);if(health<=0){dead=true;screen=Screen.DEATH;}arrows.remove(i);i--;}else if(a.life<=0||isSolid((int)(a.x/TILE),(int)(a.y/TILE))){arrows.remove(i);i--;}}
+        for(int i=0;i<tntList.size();i++){PrimedTnt pt=tntList.get(i);pt.timer--;if(pt.timer%10==0){particles.add(new Particle(pt.x,pt.y,COAL_ORE));}if(pt.timer<=0){explode((int)(pt.x/TILE),(int)(pt.y/TILE));tntList.remove(i);i--;}}
         if(!ultraFps)for(Mob m:mobs){
             m.aiT++;if(m.hurtT>0)m.hurtT--;
             double ndark=Math.abs(worldTime-12000)/12000.0;
             if(m.type==5&&ndark>0.3){double ddx=px-m.x,ddy=py-m.y,dist=Math.sqrt(ddx*ddx+ddy*ddy);m.x+=ddx/dist*2;if(m.aiT>30){m.aiT=0;m.vy=-5;}}
             else if(m.type==2&&ndark>0.3){double ddx=px-m.x,ddy=py-m.y,dist=Math.sqrt(ddx*ddx+ddy*ddy);if(dist>8){m.x+=ddx/dist*1.5;m.y+=ddy/dist*0.5;}}
             else if(m.type==4&&ndark>0.3){double ddx=px-m.x,ddy=py-m.y,dist=Math.sqrt(ddx*ddx+ddy*ddy);if(dist>60){m.x+=ddx/dist*2;}else if(m.aiT>60){m.aiT=0;if(dist<100){arrows.add(new Arrow(m.x,m.y,(px-m.x)/dist*6,(py-m.y)/dist*6));}}}
-            else if(m.aiT>100){m.aiT=0;if(Math.random()<0.3)m.x+=(Math.random()-0.5)*TILE;}
             else if(m.aiT>100){m.aiT=0;if(Math.random()<0.3)m.x+=(Math.random()-0.5)*TILE;}
             if(isSolid((int)(m.x/TILE),(int)((m.y+20)/TILE))){m.aiT=-10;}else if(physicsOn)m.y+=1.5;
             if(m.type==2&&ndark>0.3&&Math.abs(m.x-px)<24&&Math.abs(m.y-py)<24&&m.hurtT<=0){health-=Math.max(1,3-armor);m.hurtT=40;if(health<=0){dead=true;screen=Screen.DEATH;}}
@@ -669,16 +671,28 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     private void removeConnectedWater(int x,int y){
         if(x<0||x>=W||y<0||y>=H||world[x][y]!=WATER)return;
-        java.util.ArrayDeque<int[]> q=new java.util.ArrayDeque<>();
-        q.add(new int[]{x,y});
+        java.util.LinkedList<int[]> q=new java.util.LinkedList<>();
+        q.add(new int[]{x,y});int count=0;
         while(!q.isEmpty()){
             int[] p=q.poll();int cx=p[0],cy=p[1];
             if(cx<0||cx>=W||cy<0||cy>=H||world[cx][cy]!=WATER)continue;
-            world[cx][cy]=0;
+            world[cx][cy]=0;count++;
             q.add(new int[]{cx-1,cy});q.add(new int[]{cx+1,cy});
             q.add(new int[]{cx,cy-1});q.add(new int[]{cx,cy+1});
         }
+        if(count>0)addChat("Water","Cleared "+count+" blocks");
     }
+
+    private void explode(int bx,int by){
+        for(int x=bx-3;x<=bx+3;x++)for(int y=by-3;y<=by+3;y++){
+            if(x>=0&&x<W&&y>=0&&y<H&&world[x][y]!=BEDROCK&&Math.abs(x-bx)+Math.abs(y-by)<=4){
+                spawnParticles(x,y,world[x][y]);world[x][y]=0;
+            }
+        }
+        for(int i=0;i<40;i++)particles.add(new Particle(bx*TILE,by*TILE,COAL_ORE));
+        if(Math.abs(bx*TILE-px)<100&&Math.abs(by*TILE-py)<100){health-=5;if(health<=0){dead=true;screen=Screen.DEATH;}}
+    }
+
     private boolean takeFromInv(int block,int count){for(int i=0;i<inv.length;i++)if(inv[i]==block&&invCount[i]>=count){invCount[i]-=count;if(invCount[i]<=0)inv[i]=0;return true;}return false;}
     private int getInvCount(int block){for(int i=0;i<inv.length;i++)if(inv[i]==block)return invCount[i];return 0;}
 
@@ -1181,6 +1195,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 if(!hitMob){if(survival&&world[tx][ty]>0){breakX=tx;breakY=ty;breakTimer=0;int spd=1;if(selBlock==PICKAXE)spd=4;if(selBlock==AXE)spd=4;if(selBlock==SHOVEL)spd=4;breakTime=Math.max(1,BT[Math.min(world[tx][ty],BT.length-1)]/spd);}else if(!survival){world[tx][ty]=0;syncBlock(tx,ty,0);}}
             }
             else if(e.getButton()==MouseEvent.BUTTON3&&selBlock>=0&&(!survival||getInvCount(selBlock)>0)){
+                if(survival&&world[tx][ty]==TNT){tntList.add(new PrimedTnt(tx*TILE+TILE/2,ty*TILE+TILE/2));world[tx][ty]=0;return;}
                 if(survival&&selBlock==BOW&&getInvCount(ARROW_ITEM)>=1){takeFromInv(ARROW_ITEM,1);arrows.add(new Arrow(px,py,(mx+camX-px)*0.3,(my+camY-py)*0.3));}
                 else if(survival&&(selBlock==RAW_BEEF||selBlock==COOKED_BEEF||selBlock==RAW_PORK||selBlock==COOKED_PORK)){hunger=Math.min(20,hunger+(selBlock==COOKED_BEEF||selBlock==COOKED_PORK?8:4));takeFromInv(selBlock,1);}
                 else if(survival&&selBlock==BED){worldTime=6000;addChat("Bed","Good morning!");}

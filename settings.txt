@@ -1,6 +1,6 @@
 showFps=false
 showCoords=true
-noclip=true
+noclip=false
 fullscreen=false
 fov=50
 name=olda9991
@@ -8,3 +8,4 @@ ultraFps=false
 rtxMode=true
 rtxWater=true
 physicsLevel=2
+shaderMode=0
