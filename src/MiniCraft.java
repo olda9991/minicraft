@@ -1348,7 +1348,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     class MiniServer extends Thread{
         private ServerSocket ss;private boolean running=false;
         private ArrayList<ClientHandler> clients=new ArrayList<>();
-        MiniServer(int port){try{ss=new ServerSocket(port);}catch(Exception e){}}
+        MiniServer(int port){try{ss=new ServerSocket(port);System.out.println("Server listening on port "+port);}catch(Exception e){System.err.println("Server FAILED on port "+port+": "+e.getMessage());}}
         public void run(){
             running=true;
             while(running){try{ClientHandler ch=new ClientHandler(ss.accept());ch.start();synchronized(clients){clients.add(ch);}}catch(Exception e){if(running)try{Thread.sleep(100);}catch(Exception ex){}break;}}
@@ -1358,7 +1358,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
         void broadcast(String msg){synchronized(clients){for(ClientHandler ch:clients)if(ch.name!=null)ch.send(msg);}}
         int getPlayerCount(){return clients.size()+1;}
-        boolean isRunning(){return running;}
+        boolean isRunning(){return ss!=null&&running;}
         void stopServer(){running=false;try{if(ss!=null)ss.close();}catch(Exception e){}synchronized(clients){for(ClientHandler ch:clients)ch.interrupt();clients.clear();}}
         void removeClient(ClientHandler ch){
             synchronized(clients){clients.remove(ch);}
