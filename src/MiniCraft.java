@@ -1351,8 +1351,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                             broadcast("P "+name+" "+p[1]+" "+p[2],name);
                         }
                         else if(p[0].equals("B")&&p.length>=4){
-                            int bx=Integer.parseInt(p[1]),by=Integer.parseInt(p[2]),bl=Integer.parseInt(p[3]);
-                            if(bx>=0&&bx<W&&by>=0&&by<H){world[bx][by]=bl;}
+                            final int bx=Integer.parseInt(p[1]),by=Integer.parseInt(p[2]),bl=Integer.parseInt(p[3]);
+                            SwingUtilities.invokeLater(()->{if(bx>=0&&bx<W&&by>=0&&by<H)world[bx][by]=bl;});
                             broadcast("B "+bx+" "+by+" "+bl,name);
                         }
                         else if(p[0].equals("C")&&p.length>=3){
