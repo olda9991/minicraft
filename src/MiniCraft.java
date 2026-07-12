@@ -1356,9 +1356,9 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             while(running){try{ClientHandler ch=new ClientHandler(ss.accept());ch.start();synchronized(clients){clients.add(ch);}}catch(Exception e){if(running)try{Thread.sleep(100);}catch(Exception ex){}break;}}
         }
         void broadcast(String msg,String skip){
-            synchronized(clients){for(ClientHandler ch:clients)if(ch.name!=null&&!ch.name.equals(skip))ch.send(msg);}
+            synchronized(clients){for(ClientHandler ch:clients)if(ch.name!=null&&!ch.name.equals(skip))try{ch.send(msg);}catch(Exception e){}}
         }
-        void broadcast(String msg){synchronized(clients){for(ClientHandler ch:clients)if(ch.name!=null)ch.send(msg);}}
+        void broadcast(String msg){synchronized(clients){for(ClientHandler ch:clients)if(ch.name!=null)try{ch.send(msg);}catch(Exception e){}}}
         int getPlayerCount(){return clients.size()+1;}
         boolean isRunning(){return ss!=null&&running;}
         void stopServer(){running=false;try{if(ss!=null)ss.close();}catch(Exception e){}synchronized(clients){for(ClientHandler ch:clients)ch.interrupt();clients.clear();}}
