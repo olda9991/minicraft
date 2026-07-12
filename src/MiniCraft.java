@@ -1,3 +1,4 @@
+//sha:3833a1cb
 //sha:4f7a25cb
 //sha:ba527029
 //sha:3bde94bb
@@ -71,7 +72,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private static final int SWORD=70,PICKAXE=71,AXE=72,SHOVEL=73,FURNACE_ITEM=74,BOW=75,ARROW_ITEM=76,CHEST=77,SPIDER_EYE=78,BONE=79;
     private static final String[] BNAME={"Air","Grass","Dirt","Stone","Cobblestone","Bedrock","Sand","Gravel","Oak Log","Spruce Log","Birch Log","Jungle Log","Acacia Log","Dark Oak Log","Oak Planks","Spruce Planks","Birch Planks","Jungle Planks","Acacia Planks","Dark Oak Planks","Oak Leaves","Spruce Leaves","Birch Leaves","Jungle Leaves","Acacia Leaves","Dark Oak Leaves","Water","Lava","Ice","Bricks","Stone Bricks","Mossy Stone Bricks","Cracked Stone Bricks","Coal Ore","Iron Ore","Gold Ore","Diamond Ore","Emerald Ore","Redstone Ore","Lapis Ore","Copper Ore","Netherrack","Soul Sand","Glowstone","Obsidian","Crying Obsidian","Smooth Stone","Polished Andesite","Polished Diorite","Polished Granite","Prismarine","Dark Prismarine","Sea Lantern","End Stone","Purpur Block","Magma","Slime Block","TNT","Furnace","Crafting Table","Raw Beef","Cooked Beef","Raw Pork","Cooked Pork","Wool","Iron Ingot","Gold Ingot","Diamond","Bed","XP Orb","Sword","Pickaxe","Axe","Shovel","Furnace Item","Bow","Arrow","Chest","Spider Eye","Bone","Stick","FlintSteel","FishRod","RawFish","CookFish","Saddle","Leather","Torch","Totem","Elytra"};
     private static final String[] TF={"air","grass","dirt","stone","cobblestone","bedrock","sand","gravel","oak_log","spruce_log","birch_log","jungle_log","acacia_log","dark_oak_log","oak_planks","spruce_planks","birch_planks","jungle_planks","acacia_planks","dark_oak_planks","oak_leaves","spruce_leaves","birch_leaves","jungle_leaves","acacia_leaves","dark_oak_leaves","water","snow","ice","bricks","stone_bricks","mossy_stone_bricks","cracked_stone_bricks","coal_ore","iron_ore","gold_ore","diamond_ore","emerald_ore","redstone_ore","lapis_ore","copper_ore","netherrack","soul_sand","glowstone","obsidian","crying_obsidian","smooth_stone","polished_andesite","polished_diorite","polished_granite","prismarine","dark_prismarine","sea_lantern","end_stone","purpur_block","magma","slime_block","tnt_side","furnace_front","crafting_table_front","beef","cbeef","pork","cpork","wool","iron_ingot","gold_ingot","diamond","bed","xp","sword","pickaxe","axe","shovel","furnace","bow","arrow","chest","eye","bone","stick","flint","fishrod","rawfish","cookfish","saddle","leather","torch","totem","elytra"};
-    private static final Color[] FB={new Color(0,0,0,0),new Color(100,180,60),new Color(140,100,60),new Color(120,120,120),new Color(100,100,100),new Color(30,30,30),new Color(230,210,160),new Color(140,130,120),new Color(100,80,50),new Color(80,60,40),new Color(180,160,100),new Color(120,100,70),new Color(160,120,60),new Color(60,40,20),new Color(160,130,80),new Color(140,110,70),new Color(180,150,100),new Color(160,130,90),new Color(180,140,80),new Color(100,70,40),new Color(50,140,50),new Color(40,120,40),new Color(60,150,60),new Color(50,130,50),new Color(60,140,50),new Color(40,110,30),new Color(80,80,200),new Color(255,120,20),new Color(160,200,220),new Color(180,120,80),new Color(160,160,160),new Color(140,140,120),new Color(130,130,130),new Color(60,60,60),new Color(180,140,160),new Color(220,180,40),new Color(80,200,220),new Color(60,180,60),new Color(200,80,80),new Color(60,80,180),new Color(160,120,80),new Color(100,40,40),new Color(80,60,40),new Color(200,180,80),new Color(30,20,50),new Color(80,30,60),new Color(180,180,180),new Color(140,140,150),new Color(160,160,170),new Color(160,140,120),new Color(80,160,160),new Color(60,120,120),new Color(200,200,160),new Color(220,200,160),new Color(160,80,120),new Color(200,80,40),new Color(80,200,80),new Color(180,60,40),new Color(120,120,120),new Color(140,100,60),new Color(200,60,60),new Color(180,100,60),new Color(255,150,150),new Color(200,150,150),new Color(220,220,220),new Color(180,180,180),new Color(255,220,40),new Color(180,240,200),new Color(200,100,100),new Color(80,255,80),new Color(180,180,180),new Color(200,200,200),new Color(180,180,180),new Color(200,200,200),new Color(200,200,200),new Color(180,120,60),new Color(200,180,140),new Color(160,100,40),new Color(140,50,50),new Color(220,220,200),new Color(180,160,120),new Color(100,100,100),new Color(80,120,160),new Color(100,160,180),new Color(200,150,100),new Color(80,140,80),new Color(180,120,60),new Color(255,200,40),new Color(200,200,100),new Color(200,180,160)};
+    private static final Color[] FB={new Color(0,0,0,0),new Color(100,180,60),new Color(140,100,60),new Color(120,120,120),new Color(100,100,100),new Color(30,30,30),new Color(230,210,160),new Color(140,130,120),new Color(100,80,50),new Color(80,60,40),new Color(180,160,100),new Color(120,100,70),new Color(160,120,60),new Color(60,40,22),new Color(160,130,80),new Color(140,110,70),new Color(180,150,100),new Color(160,130,90),new Color(180,140,80),new Color(100,70,40),new Color(50,140,50),new Color(40,120,40),new Color(60,150,60),new Color(50,130,50),new Color(60,140,50),new Color(40,110,30),new Color(80,80,200),new Color(255,120,22),new Color(160,200,220),new Color(180,120,80),new Color(160,160,160),new Color(140,140,120),new Color(130,130,130),new Color(60,60,60),new Color(180,140,160),new Color(220,180,40),new Color(80,200,220),new Color(60,180,60),new Color(200,80,80),new Color(60,80,180),new Color(160,120,80),new Color(100,40,40),new Color(80,60,40),new Color(200,180,80),new Color(30,20,50),new Color(80,30,60),new Color(180,180,180),new Color(140,140,150),new Color(160,160,170),new Color(160,140,120),new Color(80,160,160),new Color(60,120,120),new Color(200,200,160),new Color(220,200,160),new Color(160,80,120),new Color(200,80,40),new Color(80,200,80),new Color(180,60,40),new Color(120,120,120),new Color(140,100,60),new Color(200,60,60),new Color(180,100,60),new Color(255,150,150),new Color(200,150,150),new Color(220,220,220),new Color(180,180,180),new Color(255,220,40),new Color(180,240,200),new Color(200,100,100),new Color(80,255,80),new Color(180,180,180),new Color(200,200,200),new Color(180,180,180),new Color(200,200,200),new Color(200,200,200),new Color(180,120,60),new Color(200,180,140),new Color(160,100,40),new Color(140,50,50),new Color(220,220,200),new Color(180,160,120),new Color(100,100,100),new Color(80,120,160),new Color(100,160,180),new Color(200,150,100),new Color(80,140,80),new Color(180,120,60),new Color(255,200,40),new Color(200,200,100),new Color(200,180,160)};
     private static final int[] BT = new int[BLOCK_COUNT];
     static { for(int i=0;i<BLOCK_COUNT;i++){if(i==BEDROCK)BT[i]=99999;else if(i==WATER)BT[i]=1;else if(i>=COAL_ORE&&i<=COPPER_ORE)BT[i]=20;else if(i==OBSIDIAN||i==CRYING_OBSIDIAN)BT[i]=120;else BT[i]=Math.max(3,i*2%15+2);} }
 
@@ -170,7 +171,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                                 boolean found=false;
                                 for(DiscoveredServer ds:discoveredServers)
                                     if(ds.ip.equals(ip)&&ds.port==port){ds.players=Integer.parseInt(p[3]);ds.lastSeen=System.currentTimeMillis();found=true;break;}
-                                if(!found)discoveredServers.add(new DiscoveredServer(ip,port,p[2],p[2],Integer.parseInt(p[3]),8));
+                                if(!found)discoveredServers.add(new DiscoveredServer(ip,port,p[2],p[2],Integer.parseInt(p[3]),13));
                             }
                         }catch(SocketTimeoutException e){}catch(Exception e){break;}
                     }
@@ -251,8 +252,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         steveImg=new BufferedImage[1];
         try{steveImg[0]=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/steve.png"));playerW=steveImg[0].getWidth();playerH=steveImg[0].getHeight();}catch(Exception ex){
         steveImg[0]=makeSteve();}
-        heartImg=new BufferedImage[1];heartImg[0]=makeIcon(new Color(200,0,0),9);
-        hungerImg=new BufferedImage[1];hungerImg[0]=makeIcon(new Color(180,120,40),9);
+        heartImg=new BufferedImage[1];heartImg[0]=makeIcon(new Color(200,0,0),13);
+        hungerImg=new BufferedImage[1];hungerImg[0]=makeIcon(new Color(180,120,40),13);
         try{
             File gifFile=new File(System.getProperty("user.dir")+"/MINICRAFT.gif");
             if(gifFile.exists()){
@@ -306,7 +307,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 lr.close();
             }
             if(!localSha.isEmpty()&&localSha.equals(latestSha))return;
-            updateAvailable=true;updateVersion=latestSha.substring(0,8);
+            updateAvailable=true;updateVersion=latestSha.substring(0,13);
         }catch(Exception e){}
     }
 
@@ -787,7 +788,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
 
     private void drawDirtBG(Graphics2D g2,int w,int h){for(int x=0;x<w;x+=TILE)for(int y=0;y<h;y+=TILE)g2.drawImage(tex[DIRT],x,y,null);}
-    private void drawBtn(Graphics2D g2,String t,int x,int y,int w,int hh,boolean hov){g2.setColor(hov?new Color(120,120,120,200):new Color(80,80,80,200));g2.fillRect(x,y,w,hh);g2.setColor(hov?Color.WHITE:new Color(180,180,180));g2.drawRect(x,y,w,hh);g2.setFont(new Font("PixelPurl",Font.BOLD,18));g2.drawString(t,x+(w-g2.getFontMetrics().stringWidth(t))/2,y+hh-12);}
+    private void drawBtn(Graphics2D g2,String t,int x,int y,int w,int hh,boolean hov){g2.setColor(hov?new Color(120,120,120,200):new Color(80,80,80,200));g2.fillRect(x,y,w,hh);g2.setColor(hov?Color.WHITE:new Color(180,180,180));g2.drawRect(x,y,w,hh);g2.setFont(new Font("PixelPurl",Font.BOLD,22));g2.drawString(t,x+(w-g2.getFontMetrics().stringWidth(t))/2,y+hh-12);}
     private boolean inBtn(int mx,int my,int x,int y,int w,int h){return mx>=x&&mx<x+w&&my>=y&&my<y+h;}
 
     private void drawMenu(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
@@ -803,8 +804,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             g2.setFont(new Font("PixelPurl",Font.PLAIN,36));g2.setColor(new Color(255,220,60));
             String t1="MiniCraft";g2.drawString(t1,w/2-120,68);
         }
-        String t2="v"+VERSION;g2.setFont(new Font("PixelPurl",Font.PLAIN,14));g2.setColor(new Color(180,180,180));g2.drawString(t2,w/2+80,108);
-        if(updateAvailable){g2.setFont(new Font("PixelPurl",Font.PLAIN,14));g2.setColor(Color.YELLOW);g2.drawString("Update v"+updateVersion+" available! (update.sh or update.bat)",w/2-200,130);}
+        String t2="v"+VERSION;g2.setFont(new Font("PixelPurl",Font.PLAIN,22));g2.setColor(new Color(180,180,180));g2.drawString(t2,w/2+80,108);
+        if(updateAvailable){g2.setFont(new Font("PixelPurl",Font.PLAIN,22));g2.setColor(Color.YELLOW);g2.drawString("Update v"+updateVersion+" available! (update.sh or update.bat)",w/2-200,130);}
         drawBtn(g2,"Singleplayer",w/2-100,140,200,40,menuHover==0);drawBtn(g2,"Multiplayer",w/2-100,190,200,40,menuHover==1);
         drawBtn(g2,"Options",w/2-100,240,200,40,menuHover==2);drawBtn(g2,"Mods",w/2-100,290,200,40,menuHover==3);
         drawBtn(g2,"Quit",w/2-100,340,200,40,menuHover==4);
@@ -816,8 +817,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private void drawWorldList(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
         g2.setFont(new Font("PixelPurl",Font.BOLD,28));g2.setColor(new Color(100,200,60));g2.drawString("Select World",w/2-100,60);
         int yy=100;
-        for(int i=0;i<worldList.size();i++){g2.setColor(i==selectedWorld?new Color(120,120,120,200):new Color(60,60,60,200));g2.fillRect(w/2-150,yy,300,36);g2.setColor(i==selectedWorld?Color.WHITE:new Color(200,200,200));g2.drawRect(w/2-150,yy,300,36);g2.setFont(new Font("PixelPurl",Font.BOLD,14));g2.drawString(worldList.get(i),w/2-140,yy+25);yy+=42;}
-        if(worldList.isEmpty()){g2.setFont(new Font("PixelPurl",Font.PLAIN,18));g2.setColor(new Color(200,200,200));g2.drawString("No worlds yet!",w/2-80,yy+10);yy+=30;}
+        for(int i=0;i<worldList.size();i++){g2.setColor(i==selectedWorld?new Color(120,120,120,200):new Color(60,60,60,200));g2.fillRect(w/2-150,yy,300,36);g2.setColor(i==selectedWorld?Color.WHITE:new Color(200,200,200));g2.drawRect(w/2-150,yy,300,36);g2.setFont(new Font("PixelPurl",Font.BOLD,22));g2.drawString(worldList.get(i),w/2-140,yy+25);yy+=42;}
+        if(worldList.isEmpty()){g2.setFont(new Font("PixelPurl",Font.PLAIN,22));g2.setColor(new Color(200,200,200));g2.drawString("No worlds yet!",w/2-80,yy+10);yy+=30;}
         yy=Math.max(yy+10,350);
         drawBtn(g2,"Create New World",w/2-120,yy,240,36,menuHover==10);
         if(selectedWorld>=0){drawBtn(g2,"Delete World",w/2-120,yy+46,240,36,menuHover==11);drawBtn(g2,"Play",w/2-60,yy+92,120,36,menuHover==12);}
@@ -826,18 +827,18 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     private void drawCreateWorld(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
         g2.setFont(new Font("PixelPurl",Font.BOLD,28));g2.setColor(new Color(100,200,60));g2.drawString("New World",w/2-80,60);
-        g2.setFont(new Font("PixelPurl",Font.PLAIN,18));g2.setColor(Color.WHITE);g2.drawString("Player Name:",w/2-150,100);
+        g2.setFont(new Font("PixelPurl",Font.PLAIN,22));g2.setColor(Color.WHITE);g2.drawString("Player Name:",w/2-150,100);
         g2.setColor(new Color(40,40,40));g2.fillRect(w/2-150,110,300,35);g2.setColor(Color.WHITE);g2.drawRect(w/2-150,110,300,35);
-        g2.setFont(new Font("PixelPurl",Font.PLAIN,16));g2.drawString(playerName+(System.currentTimeMillis()/500%2==0?"_":""),w/2-140,135);
+        g2.setFont(new Font("PixelPurl",Font.PLAIN,22));g2.drawString(playerName+(System.currentTimeMillis()/500%2==0?"_":""),w/2-140,135);
         g2.setColor(Color.WHITE);g2.drawString("World Name:",w/2-150,190);
         g2.setColor(new Color(40,40,40));g2.fillRect(w/2-150,205,300,35);g2.setColor(Color.WHITE);g2.drawRect(w/2-150,205,300,35);
-        g2.setFont(new Font("PixelPurl",Font.PLAIN,16));g2.drawString(typing+(System.currentTimeMillis()/500%2==0?"_":""),w/2-140,230);
+        g2.setFont(new Font("PixelPurl",Font.PLAIN,22));g2.drawString(typing+(System.currentTimeMillis()/500%2==0?"_":""),w/2-140,230);
         drawBtn(g2,"Create",w/2-60,280,120,36,menuHover==20);drawBtn(g2,"Back",w/2-60,330,120,36,menuHover==21);
     }
 
     private void drawMultiplayer(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
         g2.setFont(new Font("PixelPurl",Font.BOLD,28));g2.setColor(new Color(100,200,60));g2.drawString("Multiplayer",w/2-80,60);
-        g2.setFont(new Font("PixelPurl",Font.PLAIN,14));g2.setColor(new Color(200,200,200));
+        g2.setFont(new Font("PixelPurl",Font.PLAIN,22));g2.setColor(new Color(200,200,200));
         int yy=100;
         if(discoveredServers.isEmpty()){
             g2.drawString("Scanning for servers...",w/2-100,yy+20);
@@ -848,9 +849,9 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 g2.fillRect(w/2-220,yy,440,36);
                 g2.setColor(i==selectedServer?Color.WHITE:new Color(200,200,200));
                 g2.drawRect(w/2-220,yy,440,36);
-                g2.setFont(new Font("PixelPurl",Font.BOLD,12));
+                g2.setFont(new Font("PixelPurl",Font.BOLD,15));
                 g2.drawString(ds.name,w/2-210,yy+15);
-                g2.setFont(new Font("PixelPurl",Font.PLAIN,10));
+                g2.setFont(new Font("PixelPurl",Font.PLAIN,22));
                 g2.drawString(ds.players+" players  "+ds.world+"  Code:"+ds.port,w/2-210,yy+30);
                 yy+=42;
             }
@@ -873,16 +874,16 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     private void drawConnect(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
         g2.setFont(new Font("PixelPurl",Font.BOLD,28));g2.setColor(new Color(100,200,60));g2.drawString("Connect",w/2-60,60);
-        g2.setFont(new Font("PixelPurl",Font.PLAIN,18));g2.setColor(Color.WHITE);        g2.drawString("Join Server",w/2-150,130);
+        g2.setFont(new Font("PixelPurl",Font.PLAIN,22));g2.setColor(Color.WHITE);        g2.drawString("Join Server",w/2-150,130);
         g2.setColor(new Color(40,40,40));g2.fillRect(w/2-150,145,300,35);g2.setColor(Color.WHITE);g2.drawRect(w/2-150,145,300,35);
-        g2.setFont(new Font("PixelPurl",Font.PLAIN,16));g2.drawString(typing+(System.currentTimeMillis()/500%2==0?"_":""),w/2-140,170);
+        g2.setFont(new Font("PixelPurl",Font.PLAIN,22));g2.drawString(typing+(System.currentTimeMillis()/500%2==0?"_":""),w/2-140,170);
         drawBtn(g2,"Connect",w/2-60,220,120,36,menuHover==40);drawBtn(g2,"Back",w/2-60,270,120,36,menuHover==41);
-        if(!lastMsg.isEmpty()){g2.setFont(new Font("PixelPurl",Font.PLAIN,14));g2.setColor(Color.YELLOW);g2.drawString(lastMsg,w/2-150,330);}
+        if(!lastMsg.isEmpty()){g2.setFont(new Font("PixelPurl",Font.PLAIN,22));g2.setColor(Color.YELLOW);g2.drawString(lastMsg,w/2-150,330);}
     }
 
     private void drawSettings(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
         g2.setFont(new Font("PixelPurl",Font.BOLD,28));g2.setColor(new Color(100,200,60));g2.drawString("Options  v"+VERSION,w/2-90,60);
-        g2.setFont(new Font("PixelPurl",Font.PLAIN,16));g2.setColor(Color.WHITE);
+        g2.setFont(new Font("PixelPurl",Font.PLAIN,22));g2.setColor(Color.WHITE);
         String[][] opts={
             {"[F1] FPS:"+(showFps?"ON":"OFF"),"[F2] Coords:"+(showCoords?"ON":"OFF"),"[G] Noclip:"+(noclip?"ON":"OFF")},
             {"[F3] UltraFPS:"+(ultraFps?"ON":"OFF"),"[F4] RTX:"+(rtxMode?"ON":"OFF"),"[F5] RTX H2O:"+(rtxWater?"ON":"OFF")},
@@ -903,13 +904,13 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private void drawConnecting(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
         g2.setFont(new Font("PixelPurl",Font.BOLD,28));g2.setColor(new Color(100,200,60));
         g2.drawString("Connecting...",w/2-100,120);
-        g2.setFont(new Font("PixelPurl",Font.PLAIN,18));g2.setColor(Color.WHITE);
+        g2.setFont(new Font("PixelPurl",Font.PLAIN,22));g2.setColor(Color.WHITE);
         g2.drawString("Receiving world...",w/2-100,180);
     }
 
     private void drawHost(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
         g2.setFont(new Font("PixelPurl",Font.BOLD,28));g2.setColor(new Color(100,200,60));g2.drawString("Host Server",w/2-80,60);
-        g2.setFont(new Font("PixelPurl",Font.PLAIN,18));g2.setColor(Color.WHITE);
+        g2.setFont(new Font("PixelPurl",Font.PLAIN,22));g2.setColor(Color.WHITE);
         g2.drawString("Port: "+serverPort,w/2-60,130);
         g2.drawString("IP: [hidden]",w/2-100,170);
         if(server!=null&&server.isRunning()){
@@ -966,7 +967,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
         for(DropItem d:drops){int dbob=(int)(Math.sin(d.life*0.1)*2);g2.drawImage(tex[Math.min(d.block,BLOCK_COUNT-1)],(int)(d.x-camX)-6,(int)(d.y-camY)-6+dbob,null);}
         for(DmgNum dn:dmgNums){
-            g2.setColor(new Color(255,0,0,dn.life>30?255:dn.life*8));g2.setFont(new Font("PixelPurl",Font.BOLD,14));
+            g2.setColor(new Color(255,0,0,dn.life>30?255:dn.life*8));g2.setFont(new Font("PixelPurl",Font.BOLD,22));
             g2.drawString(""+dn.val,(int)(dn.x-camX)-8,(int)(dn.y-camY));
         }
         for(Arrow a:arrows){g2.setColor(Color.WHITE);g2.drawLine((int)(a.x-camX),(int)(a.y-camY),(int)(a.x-a.vx*2-camX),(int)(a.y-a.vy*2-camY));}
@@ -989,21 +990,21 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 for(int i=0;i<25;i++){int a=90-i*3;if(a>0){g2.setColor(new Color(0,0,0,a));g2.drawRect(i,i,vw-i*2,vh-i*2);}}
                 for(int i=0;i<200;i++){int rx=(int)(Math.random()*vw),ry=(int)(Math.random()*vh);g2.setColor(new Color(100,80,60,15));g2.fillRect(rx,ry,1,1);}
             }else{
-                g2.setColor(new Color(255,255,200,20));g2.fillRect(0,0,vw,vh);
+                g2.setColor(new Color(255,255,200,22));g2.fillRect(0,0,vw,vh);
                 for(int i=0;i<15;i++){int a=40-i*2;if(a>0){g2.setColor(new Color(100,150,255,a));g2.drawRect(i,i,vw-i*2,vh-i*2);}}
                 if(night<0.3){g2.setColor(new Color(255,255,200,25));g2.fillOval(sunX-50,sunY-50,100,100);}
             }
         }
         drawChat(g2);
-        if(showFps){g2.setColor(new Color(0,0,0,150));g2.fillRect(getWidth()-70,10,60,16);g2.setColor(Color.YELLOW);g2.setFont(new Font("PixelPurl",Font.PLAIN,10));g2.drawString(fps+" FPS",getWidth()-65,22);fpsCount++;long now=System.currentTimeMillis();if(now-fpsTimer>1000){fps=fpsCount;fpsCount=0;fpsTimer=now;}}
-        if(isHost&&server!=null){g2.setFont(new Font("PixelPurl",Font.BOLD,10));g2.setColor(Color.GREEN);g2.drawString("SERVER "+server.getPlayerCount()+" players  Code: "+serverPort,10,35);}
-        if(client!=null&&client.isConnected()){g2.setFont(new Font("PixelPurl",Font.BOLD,10));g2.setColor(Color.CYAN);g2.drawString("CONNECTED",10,45);}
+        if(showFps){g2.setColor(new Color(0,0,0,150));g2.fillRect(getWidth()-70,10,60,22);g2.setColor(Color.YELLOW);g2.setFont(new Font("PixelPurl",Font.PLAIN,22));g2.drawString(fps+" FPS",getWidth()-65,22);fpsCount++;long now=System.currentTimeMillis();if(now-fpsTimer>1000){fps=fpsCount;fpsCount=0;fpsTimer=now;}}
+        if(isHost&&server!=null){g2.setFont(new Font("PixelPurl",Font.BOLD,22));g2.setColor(Color.GREEN);g2.drawString("SERVER "+server.getPlayerCount()+" players  Code: "+serverPort,10,35);}
+        if(client!=null&&client.isConnected()){g2.setFont(new Font("PixelPurl",Font.BOLD,22));g2.setColor(Color.CYAN);g2.drawString("CONNECTED",10,45);}
     }
 
     private void drawNameTag(Graphics2D g2,int x,int y,String name,Color c){
-        g2.setFont(new Font("PixelPurl",Font.BOLD,12));
+        g2.setFont(new Font("PixelPurl",Font.BOLD,15));
         int tw=g2.getFontMetrics().stringWidth(name);
-        g2.setColor(new Color(0,0,0,120));g2.fillRect(x-tw/2-2,y-playerH/2-16,tw+4,14);
+        g2.setColor(new Color(0,0,0,120));g2.fillRect(x-tw/2-2,y-playerH/2-16,tw+4,22);
         g2.setColor(c);g2.drawString(name,x-tw/2,y-playerH/2-5);
     }
 
@@ -1012,20 +1013,20 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(survival){
             for(int i=0;i<10;i++){
                 g2.drawImage(heartImg[0],8+i*16,bh-90,null);
-                if(i>=(health+1)/2){g2.setColor(new Color(0,0,0,120));g2.fillRect(8+i*16,bh-90,9,9);}
+                if(i>=(health+1)/2){g2.setColor(new Color(0,0,0,120));g2.fillRect(8+i*16,bh-90,9,13);}
             }
             for(int i=0;i<10;i++){
                 g2.drawImage(hungerImg[0],8+i*16,bh-70,null);
-                if(i>=(hunger+1)/2){g2.setColor(new Color(0,0,0,120));g2.fillRect(8+i*16,bh-70,9,9);}
+                if(i>=(hunger+1)/2){g2.setColor(new Color(0,0,0,120));g2.fillRect(8+i*16,bh-70,9,13);}
             }
             if(xp>0){
                 g2.setColor(new Color(0,0,0,100));g2.fillRect(8,bh-60,160,5);
                 g2.setColor(new Color(80,255,80));g2.fillRect(8,bh-60,xp*160/(xp+20),5);
-                g2.setFont(new Font("PixelPurl",Font.PLAIN,9));g2.setColor(Color.WHITE);
+                g2.setFont(new Font("PixelPurl",Font.PLAIN,13));g2.setColor(Color.WHITE);
                 g2.drawString("XP:"+xp,8,bh-62);
             }
             if(armor>0){
-                for(int i=0;i<armor;i++){g2.setColor(new Color(80,80,80));g2.fillRect(8+i*12,bh-56,10,10);g2.setColor(Color.BLUE);g2.drawRect(8+i*12,bh-56,10,10);}
+                for(int i=0;i<armor;i++){g2.setColor(new Color(80,80,80));g2.fillRect(8+i*12,bh-56,10,22);g2.setColor(Color.BLUE);g2.drawRect(8+i*12,bh-56,10,22);}
             }
         }
         int hs=24,slots=Math.min(9,BLOCK_COUNT);
@@ -1041,39 +1042,39 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             g2.setColor(i==(selBlock-1-creativeOffset)||(!survival&&i==selBlock-1)?Color.WHITE:new Color(100,100,100));
             g2.drawRect(sx,sy,hs,hs);
             g2.drawImage(tex[Math.min(idx,BLOCK_COUNT-1)],sx+2,sy+2,null);
-            if(survival){int cnt=getInvCount(idx);if(cnt>0){g2.setFont(new Font("PixelPurl",Font.PLAIN,8));g2.setColor(Color.WHITE);g2.drawString(""+cnt,sx+hs-10,sy+hs-3);}}
+            if(survival){int cnt=getInvCount(idx);if(cnt>0){g2.setFont(new Font("PixelPurl",Font.PLAIN,13));g2.setColor(Color.WHITE);g2.drawString(""+cnt,sx+hs-12,sy+hs-3);}}
         }
         if(!survival){
-            g2.setFont(new Font("PixelPurl",Font.PLAIN,10));
-            g2.setColor(new Color(0,0,0,180));g2.fillRect(sw/2-60,2,120,16);
-            g2.setColor(Color.WHITE);g2.drawString(BNAME[Math.min(selBlock,BLOCK_COUNT-1)],sw/2-55,14);
+            g2.setFont(new Font("PixelPurl",Font.PLAIN,22));
+            g2.setColor(new Color(0,0,0,180));g2.fillRect(sw/2-60,2,120,22);
+            g2.setColor(Color.WHITE);g2.drawString(BNAME[Math.min(selBlock,BLOCK_COUNT-1)],sw/2-55,22);
         }
         g2.setColor(new Color(0,0,0,150));g2.fillRect(10,10,280,24);
-        g2.setColor(Color.WHITE);g2.setFont(new Font("PixelPurl",Font.BOLD,12));
+        g2.setColor(Color.WHITE);g2.setFont(new Font("PixelPurl",Font.BOLD,15));
         g2.drawString(worldName+(!worldName.isEmpty()?" | ":"")+playerName+(noclip?" NOCLIP":"")+(physicsLevel==0?" NO PHY":physicsLevel==2?" RTX PHY":"")+(survival?" S":" C"),15,25);
-        if(showCoords){g2.setColor(new Color(0,0,0,150));g2.fillRect(10,36,140,14);g2.setColor(new Color(200,200,200));g2.setFont(new Font("PixelPurl",Font.PLAIN,9));g2.drawString("X:"+(int)(px/TILE)+" Y:"+(int)(py/TILE),15,46);}
+        if(showCoords){g2.setColor(new Color(0,0,0,150));g2.fillRect(10,36,140,22);g2.setColor(new Color(200,200,200));g2.setFont(new Font("PixelPurl",Font.PLAIN,13));g2.drawString("X:"+(int)(px/TILE)+" Y:"+(int)(py/TILE),15,46);}
     }
 
-    private void drawDeath(Graphics2D g2){g2.setColor(new Color(100,0,0,200));g2.fillRect(0,0,getWidth(),getHeight());g2.setFont(new Font("PixelPurl",Font.BOLD,48));g2.setColor(Color.RED);String t="YOU DIED";g2.drawString(t,(getWidth()-g2.getFontMetrics().stringWidth(t))/2,getHeight()/2-20);g2.setFont(new Font("PixelPurl",Font.BOLD,20));g2.setColor(Color.WHITE);String r="Press ENTER to respawn";g2.drawString(r,(getWidth()-g2.getFontMetrics().stringWidth(r))/2,getHeight()/2+30);}
+    private void drawDeath(Graphics2D g2){g2.setColor(new Color(100,0,0,200));g2.fillRect(0,0,getWidth(),getHeight());g2.setFont(new Font("PixelPurl",Font.BOLD,48));g2.setColor(Color.RED);String t="YOU DIED";g2.drawString(t,(getWidth()-g2.getFontMetrics().stringWidth(t))/2,getHeight()/2-20);g2.setFont(new Font("PixelPurl",Font.BOLD,22));g2.setColor(Color.WHITE);String r="Press ENTER to respawn";g2.drawString(r,(getWidth()-g2.getFontMetrics().stringWidth(r))/2,getHeight()/2+30);}
 
     private void drawChat(Graphics2D g2){
         int y=getHeight()-130;
-        g2.setFont(new Font("PixelPurl",Font.PLAIN,11));
+        g2.setFont(new Font("PixelPurl",Font.PLAIN,22));
         for(int i=Math.max(0,chatMessages.size()-5);i<chatMessages.size();i++){
-            g2.setColor(new Color(0,0,0,100));g2.fillRect(5,y-2,400,14);
+            g2.setColor(new Color(0,0,0,100));g2.fillRect(5,y-2,400,22);
             g2.setColor(Color.WHITE);g2.drawString(chatMessages.get(i),8,y+2);y+=16;
         }
         if(chatOpen){
             g2.setColor(new Color(0,0,0,180));g2.fillRect(5,getHeight()-25,410,22);
-            g2.setColor(Color.WHITE);g2.setFont(new Font("PixelPurl",Font.PLAIN,12));
+            g2.setColor(Color.WHITE);g2.setFont(new Font("PixelPurl",Font.PLAIN,15));
             g2.drawString((chatText.startsWith("/")?"":"")+"> "+chatText+(System.currentTimeMillis()/500%2==0?"_":""),8,getHeight()-9);
         }
     }
-    private void drawCrafting(Graphics2D g2){g2.setColor(new Color(60,60,60));g2.fillRect(0,0,getWidth(),getHeight());g2.setColor(new Color(80,80,80));g2.fillRect(20,20,140,140);g2.fillRect(180,20,600,140);g2.fillRect(20,180,760,160);g2.setColor(Color.WHITE);g2.drawRect(20,20,140,140);g2.drawRect(180,20,600,140);g2.drawRect(20,180,760,160);g2.setFont(new Font("PixelPurl",Font.BOLD,16));g2.setColor(Color.WHITE);g2.drawString("Crafting",25,40);g2.drawString("Inventory",25,200);g2.setFont(new Font("PixelPurl",Font.PLAIN,12));g2.setColor(new Color(200,200,100));g2.drawString("Click item -> click slot | SPACE to craft",25,160);
+    private void drawCrafting(Graphics2D g2){g2.setColor(new Color(60,60,60));g2.fillRect(0,0,getWidth(),getHeight());g2.setColor(new Color(80,80,80));g2.fillRect(20,20,140,140);g2.fillRect(180,20,600,140);g2.fillRect(20,180,760,160);g2.setColor(Color.WHITE);g2.drawRect(20,20,140,140);g2.drawRect(180,20,600,140);g2.drawRect(20,180,760,160);g2.setFont(new Font("PixelPurl",Font.BOLD,22));g2.setColor(Color.WHITE);g2.drawString("Crafting",25,40);g2.drawString("Inventory",25,200);g2.setFont(new Font("PixelPurl",Font.PLAIN,15));g2.setColor(new Color(200,200,100));g2.drawString("Click item -> click slot | SPACE to craft",25,160);
         for(int i=0;i<4;i++){int cx=30+(i%2)*60,cy=50+(i/2)*60;g2.setColor(new Color(50,50,50));g2.fillRect(cx,cy,50,50);g2.setColor(Color.GRAY);g2.drawRect(cx,cy,50,50);if(craftGrid[i]>0)g2.drawImage(tex[craftGrid[i]],cx+1,cy+1,null);}
         int[] res=getCraft();g2.setColor(new Color(50,50,50));g2.fillRect(130,85,50,50);g2.setColor(Color.YELLOW);g2.drawRect(130,85,50,50);if(res[0]>0)g2.drawImage(tex[Math.min(res[0],BLOCK_COUNT-1)],131,86,null);
-        for(int i=0;i<inv.length;i++){int ix=30+(i%8)*60,iy=220+(i/8)*60;if(iy>getHeight()-60)break;g2.setColor(new Color(50,50,50));g2.fillRect(ix,iy,50,50);g2.setColor(Color.GRAY);g2.drawRect(ix,iy,50,50);if(inv[i]>0){g2.drawImage(tex[Math.min(inv[i],BLOCK_COUNT-1)],ix+1,iy+1,null);if(invCount[i]>1){g2.setFont(new Font("PixelPurl",Font.BOLD,10));g2.setColor(Color.WHITE);g2.drawString(""+invCount[i],ix+38,iy+46);}}}
-        g2.setFont(new Font("PixelPurl",Font.PLAIN,14));g2.setColor(new Color(200,200,200));g2.drawString("Recipes:",500,40);g2.drawString("Log -> 4 Planks",500,60);g2.drawString("Stone -> Cobblestone",500,80);g2.drawString("2 Planks -> 4 Sticks",500,100);g2.drawString("4 Planks -> Crafting Table",500,120);
+        for(int i=0;i<inv.length;i++){int ix=30+(i%8)*60,iy=220+(i/8)*60;if(iy>getHeight()-60)break;g2.setColor(new Color(50,50,50));g2.fillRect(ix,iy,50,50);g2.setColor(Color.GRAY);g2.drawRect(ix,iy,50,50);if(inv[i]>0){g2.drawImage(tex[Math.min(inv[i],BLOCK_COUNT-1)],ix+1,iy+1,null);if(invCount[i]>1){g2.setFont(new Font("PixelPurl",Font.BOLD,22));g2.setColor(Color.WHITE);g2.drawString(""+invCount[i],ix+38,iy+46);}}}
+        g2.setFont(new Font("PixelPurl",Font.PLAIN,22));g2.setColor(new Color(200,200,200));g2.drawString("Recipes:",500,40);g2.drawString("Log -> 4 Planks",500,60);g2.drawString("Stone -> Cobblestone",500,80);g2.drawString("2 Planks -> 4 Sticks",500,100);g2.drawString("4 Planks -> Crafting Table",500,120);
     }
 
     @Override public void keyPressed(KeyEvent e){
