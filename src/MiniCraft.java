@@ -1,3 +1,4 @@
+//sha:0ad507ca
 //sha:a27a7a51
 //sha:38836b38
 //sha:ad9b24da
@@ -239,7 +240,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private DiscordRPC discordRPC; 
 
     class DiscordRPC extends Thread{
-        private java.net.Socket sock;private boolean running=true;private java.io.DataOutputStream out;private java.io.DataInputStream in;
+        private java.nio.channels.SocketChannel chan;private boolean running=true;
         public void run(){
             while(running){
                 try{
@@ -249,46 +250,48 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                         System.getenv("XDG_RUNTIME_DIR")+"/app/dev.vencord.Vesktop/discord-ipc-0"};
                     for(String pipe:pipes){
                         try{
-                            java.io.File f=new java.io.File(pipe);
-                            if(!f.exists())continue;
-                            java.net.UnixDomainSocketAddress a=java.net.UnixDomainSocketAddress.of(pipe);
-                            sock=java.nio.channels.SocketChannel.open(a).socket();
+                            if(!new java.io.File(pipe).exists())continue;
+                            chan=java.nio.channels.SocketChannel.open(java.net.UnixDomainSocketAddress.of(pipe));
                             break;
                         }catch(Exception e2){}
                     }
-                    if(sock==null){if(running)Thread.sleep(30000);continue;}
-                    sock.setSoTimeout(5000);
-                    out=new java.io.DataOutputStream(sock.getOutputStream());
-                    in=new java.io.DataInputStream(sock.getInputStream());
-                    // Handshake: opcode 0, length, JSON
-                    String handshake="{\"v\":1,\"client_id\":\"1512377902195540018\"}";
-                    byte[] hdata=handshake.getBytes("UTF-8");
-                    out.writeInt(0);out.writeInt(hdata.length);out.write(hdata);out.flush();
-                    // Read response: opcode, length, JSON
-                    int rop=in.readInt(),rlen=in.readInt();
-                    byte[] rbuf=new byte[rlen];in.readFully(rbuf);
-                    String resp=new String(rbuf,"UTF-8");
-                    if(!resp.contains("READY")){cleanup();if(running)Thread.sleep(30000);continue;}
+                    if(chan==null||!chan.isConnected()){if(running)Thread.sleep(30000);continue;}
                     System.out.println("[RPC] Connected");
+                    // Handshake: opcode 0 (4 bytes little-endian) + length (4 bytes) + JSON
+                    writeFrame(0,"{\"v\":1,\"client_id\":\"1512377902195540018\"}");
+                    String resp=readFrame();
+                    if(resp==null||!resp.contains("READY")){cleanup();if(running)Thread.sleep(30000);continue;}
                     updatePresence();
                     while(running){try{Thread.sleep(15000);updatePresence();}catch(Exception e){break;}}
                     break;
                 }catch(Exception e){cleanup();if(running)try{Thread.sleep(30000);}catch(Exception ex){break;}}
             }
         }
+        private void writeFrame(int opcode,String json) throws Exception{
+            byte[] data=json.getBytes("UTF-8");
+            java.nio.ByteBuffer buf=java.nio.ByteBuffer.allocate(8+data.length);
+            buf.order(java.nio.ByteOrder.LITTLE_ENDIAN);buf.putInt(opcode);buf.putInt(data.length);buf.put(data);buf.flip();
+            while(buf.hasRemaining())chan.write(buf);
+        }
+        private String readFrame() throws Exception{
+            java.nio.ByteBuffer h=java.nio.ByteBuffer.allocate(8);h.order(java.nio.ByteOrder.LITTLE_ENDIAN);
+            while(h.hasRemaining()){if(chan.read(h)<0)return null;}
+            h.flip();int op=h.getInt();int len=h.getInt();
+            if(len<0||len>65536)return null;
+            java.nio.ByteBuffer b=java.nio.ByteBuffer.allocate(len);
+            while(b.hasRemaining()){if(chan.read(b)<0)return null;}
+            return new String(b.array(),"UTF-8");
+        }
         void updatePresence(){
             try{
-                if(out==null)return;
+                if(chan==null||!chan.isConnected())return;
                 String state=screen==Screen.PLAY?(survival?"Survival":"Creative"):"In Menu";
                 String json="{\"cmd\":\"SET_ACTIVITY\",\"args\":{\"pid\":"+ProcessHandle.current().pid()+",\"activity\":{\"details\":\"MiniCraft v"+VERSION+"\",\"state\":\""+state+"\",\"assets\":{\"large_image\":\"minecraft\",\"large_text\":\"MiniCraft\"}}},\"nonce\":\""+System.currentTimeMillis()+"\"}";
-                byte[] data=json.getBytes("UTF-8");
-                out.writeInt(1);out.writeInt(data.length);out.write(data);out.flush();
-                // Read ack
-                int ackOp=in.readInt(),ackLen=in.readInt();
-                if(ackLen>0&&ackLen<65536){byte[] ack=new byte[ackLen];in.readFully(ack);}
+                writeFrame(1,json);
+                String ack=readFrame();
             }catch(Exception e){cleanup();}
         }
-        void cleanup(){try{if(sock!=null)sock.close();}catch(Exception e){}sock=null;out=null;in=null;}
+        void cleanup(){try{if(chan!=null)chan.close();}catch(Exception e){}chan=null;}
         void stopRPC(){running=false;cleanup();}
     }
 
