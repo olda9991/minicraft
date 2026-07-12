@@ -1,3 +1,4 @@
+//sha:2e33f393
 //sha:d4bf54aa
 //sha:55264b8f
 //sha:dea13c57
@@ -45,18 +46,18 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private static final int OAK_LOG=8,SPRUCE_LOG=9,BIRCH_LOG=10,JUNGLE_LOG=11,ACACIA_LOG=12,DARK_OAK_LOG=13;
     private static final int OAK_PLANKS=14,SPRUCE_PLANKS=15,BIRCH_PLANKS=16,JUNGLE_PLANKS=17,ACACIA_PLANKS=18,DARK_OAK_PLANKS=19;
     private static final int OAK_LEAVES=20,SPRUCE_LEAVES=21,BIRCH_LEAVES=22,JUNGLE_LEAVES=23,ACACIA_LEAVES=24,DARK_OAK_LEAVES=25;
-    private static final int WATER=26,SNOW=27,ICE=28,BRICKS=29,STONE_BRICKS=30,MOSSY_STONE_BRICKS=31,CRACKED_STONE_BRICKS=32;
+    private static final int WATER=26,LAVA=27,ICE=28,BRICKS=29,STONE_BRICKS=30,MOSSY_STONE_BRICKS=31,CRACKED_STONE_BRICKS=32;
     private static final int COAL_ORE=33,IRON_ORE=34,GOLD_ORE=35,DIAMOND_ORE=36,EMERALD_ORE=37,REDSTONE_ORE=38,LAPIS_ORE=39,COPPER_ORE=40;
     private static final int NETHERRACK=41,SOUL_SAND=42,GLOWSTONE=43,OBSIDIAN=44,CRYING_OBSIDIAN=45;
     private static final int SMOOTH_STONE=46,POLISHED_ANDESITE=47,POLISHED_DIORITE=48,POLISHED_GRANITE=49;
     private static final int PRISMARINE=50,DARK_PRISMARINE=51,SEA_LANTERN=52,END_STONE=53,PURPUR=54,MAGMA=55,SLIME=56,TNT=57,FURNACE=58,CRAFTING_TABLE=59;
-    private static final int BLOCK_COUNT=92,STICK=80;
+    private static final int BLOCK_COUNT=90,STICK=80;
     private static final int RAW_BEEF=60,COOKED_BEEF=61,RAW_PORK=62,COOKED_PORK=63,WOOL=64;
     private static final int IRON_INGOT=65,GOLD_INGOT=66,DIAMOND_GEM=67,BED=68,EXP_ORB=69;
     private static final int SWORD=70,PICKAXE=71,AXE=72,SHOVEL=73,FURNACE_ITEM=74,BOW=75,ARROW_ITEM=76,CHEST=77,SPIDER_EYE=78,BONE=79;
-    private static final String[] BNAME={"Air","Grass","Dirt","Stone","Cobblestone","Bedrock","Sand","Gravel","Oak Log","Spruce Log","Birch Log","Jungle Log","Acacia Log","Dark Oak Log","Oak Planks","Spruce Planks","Birch Planks","Jungle Planks","Acacia Planks","Dark Oak Planks","Oak Leaves","Spruce Leaves","Birch Leaves","Jungle Leaves","Acacia Leaves","Dark Oak Leaves","Water","Snow","Ice","Bricks","Stone Bricks","Mossy Stone Bricks","Cracked Stone Bricks","Coal Ore","Iron Ore","Gold Ore","Diamond Ore","Emerald Ore","Redstone Ore","Lapis Ore","Copper Ore","Netherrack","Soul Sand","Glowstone","Obsidian","Crying Obsidian","Smooth Stone","Polished Andesite","Polished Diorite","Polished Granite","Prismarine","Dark Prismarine","Sea Lantern","End Stone","Purpur Block","Magma","Slime Block","TNT","Furnace","Crafting Table","Raw Beef","Cooked Beef","Raw Pork","Cooked Pork","Wool","Iron Ingot","Gold Ingot","Diamond","Bed","XP Orb","Sword","Pickaxe","Axe","Shovel","Furnace Item","Bow","Arrow","Chest","Spider Eye","Bone","Stick","FlintSteel","FishRod","RawFish","CookFish","Saddle","Leather","Torch","Totem","Elytra"};
+    private static final String[] BNAME={"Air","Grass","Dirt","Stone","Cobblestone","Bedrock","Sand","Gravel","Oak Log","Spruce Log","Birch Log","Jungle Log","Acacia Log","Dark Oak Log","Oak Planks","Spruce Planks","Birch Planks","Jungle Planks","Acacia Planks","Dark Oak Planks","Oak Leaves","Spruce Leaves","Birch Leaves","Jungle Leaves","Acacia Leaves","Dark Oak Leaves","Water","Lava","Ice","Bricks","Stone Bricks","Mossy Stone Bricks","Cracked Stone Bricks","Coal Ore","Iron Ore","Gold Ore","Diamond Ore","Emerald Ore","Redstone Ore","Lapis Ore","Copper Ore","Netherrack","Soul Sand","Glowstone","Obsidian","Crying Obsidian","Smooth Stone","Polished Andesite","Polished Diorite","Polished Granite","Prismarine","Dark Prismarine","Sea Lantern","End Stone","Purpur Block","Magma","Slime Block","TNT","Furnace","Crafting Table","Raw Beef","Cooked Beef","Raw Pork","Cooked Pork","Wool","Iron Ingot","Gold Ingot","Diamond","Bed","XP Orb","Sword","Pickaxe","Axe","Shovel","Furnace Item","Bow","Arrow","Chest","Spider Eye","Bone","Stick","FlintSteel","FishRod","RawFish","CookFish","Saddle","Leather","Torch","Totem","Elytra"};
     private static final String[] TF={"air","grass","dirt","stone","cobblestone","bedrock","sand","gravel","oak_log","spruce_log","birch_log","jungle_log","acacia_log","dark_oak_log","oak_planks","spruce_planks","birch_planks","jungle_planks","acacia_planks","dark_oak_planks","oak_leaves","spruce_leaves","birch_leaves","jungle_leaves","acacia_leaves","dark_oak_leaves","water","snow","ice","bricks","stone_bricks","mossy_stone_bricks","cracked_stone_bricks","coal_ore","iron_ore","gold_ore","diamond_ore","emerald_ore","redstone_ore","lapis_ore","copper_ore","netherrack","soul_sand","glowstone","obsidian","crying_obsidian","smooth_stone","polished_andesite","polished_diorite","polished_granite","prismarine","dark_prismarine","sea_lantern","end_stone","purpur_block","magma","slime_block","tnt_side","furnace_front","crafting_table_front","beef","cbeef","pork","cpork","wool","iron_ingot","gold_ingot","diamond","bed","xp","sword","pickaxe","axe","shovel","furnace","bow","arrow","chest","eye","bone","stick","flint","fishrod","rawfish","cookfish","saddle","leather","torch","totem","elytra"};
-    private static final Color[] FB={new Color(0,0,0,0),new Color(100,180,60),new Color(140,100,60),new Color(120,120,120),new Color(100,100,100),new Color(30,30,30),new Color(230,210,160),new Color(140,130,120),new Color(100,80,50),new Color(80,60,40),new Color(180,160,100),new Color(120,100,70),new Color(160,120,60),new Color(60,40,20),new Color(160,130,80),new Color(140,110,70),new Color(180,150,100),new Color(160,130,90),new Color(180,140,80),new Color(100,70,40),new Color(50,140,50),new Color(40,120,40),new Color(60,150,60),new Color(50,130,50),new Color(60,140,50),new Color(40,110,30),new Color(80,80,200),new Color(220,220,230),new Color(160,200,220),new Color(180,120,80),new Color(160,160,160),new Color(140,140,120),new Color(130,130,130),new Color(60,60,60),new Color(180,140,160),new Color(220,180,40),new Color(80,200,220),new Color(60,180,60),new Color(200,80,80),new Color(60,80,180),new Color(160,120,80),new Color(100,40,40),new Color(80,60,40),new Color(200,180,80),new Color(30,20,50),new Color(80,30,60),new Color(180,180,180),new Color(140,140,150),new Color(160,160,170),new Color(160,140,120),new Color(80,160,160),new Color(60,120,120),new Color(200,200,160),new Color(220,200,160),new Color(160,80,120),new Color(200,80,40),new Color(80,200,80),new Color(180,60,40),new Color(120,120,120),new Color(140,100,60),new Color(200,60,60),new Color(180,100,60),new Color(255,150,150),new Color(200,150,150),new Color(220,220,220),new Color(180,180,180),new Color(255,220,40),new Color(180,240,200),new Color(200,100,100),new Color(80,255,80),new Color(180,180,180),new Color(200,200,200),new Color(180,180,180),new Color(200,200,200),new Color(200,200,200),new Color(180,120,60),new Color(200,180,140),new Color(160,100,40),new Color(140,50,50),new Color(220,220,200),new Color(180,160,120),new Color(100,100,100),new Color(80,120,160),new Color(100,160,180),new Color(200,150,100),new Color(80,140,80),new Color(180,120,60),new Color(100,140,100),new Color(255,200,40),new Color(200,200,100),new Color(200,180,160)};
+    private static final Color[] FB={new Color(0,0,0,0),new Color(100,180,60),new Color(140,100,60),new Color(120,120,120),new Color(100,100,100),new Color(30,30,30),new Color(230,210,160),new Color(140,130,120),new Color(100,80,50),new Color(80,60,40),new Color(180,160,100),new Color(120,100,70),new Color(160,120,60),new Color(60,40,20),new Color(160,130,80),new Color(140,110,70),new Color(180,150,100),new Color(160,130,90),new Color(180,140,80),new Color(100,70,40),new Color(50,140,50),new Color(40,120,40),new Color(60,150,60),new Color(50,130,50),new Color(60,140,50),new Color(40,110,30),new Color(80,80,200),new Color(255,120,20),new Color(160,200,220),new Color(180,120,80),new Color(160,160,160),new Color(140,140,120),new Color(130,130,130),new Color(60,60,60),new Color(180,140,160),new Color(220,180,40),new Color(80,200,220),new Color(60,180,60),new Color(200,80,80),new Color(60,80,180),new Color(160,120,80),new Color(100,40,40),new Color(80,60,40),new Color(200,180,80),new Color(30,20,50),new Color(80,30,60),new Color(180,180,180),new Color(140,140,150),new Color(160,160,170),new Color(160,140,120),new Color(80,160,160),new Color(60,120,120),new Color(200,200,160),new Color(220,200,160),new Color(160,80,120),new Color(200,80,40),new Color(80,200,80),new Color(180,60,40),new Color(120,120,120),new Color(140,100,60),new Color(200,60,60),new Color(180,100,60),new Color(255,150,150),new Color(200,150,150),new Color(220,220,220),new Color(180,180,180),new Color(255,220,40),new Color(180,240,200),new Color(200,100,100),new Color(80,255,80),new Color(180,180,180),new Color(200,200,200),new Color(180,180,180),new Color(200,200,200),new Color(200,200,200),new Color(180,120,60),new Color(200,180,140),new Color(160,100,40),new Color(140,50,50),new Color(220,220,200),new Color(180,160,120),new Color(100,100,100),new Color(80,120,160),new Color(100,160,180),new Color(200,150,100),new Color(80,140,80),new Color(180,120,60),new Color(255,200,40),new Color(200,200,100),new Color(200,180,160)};
     private static final int[] BT = new int[BLOCK_COUNT];
     static { for(int i=0;i<BLOCK_COUNT;i++){if(i==BEDROCK)BT[i]=99999;else if(i==WATER)BT[i]=1;else if(i>=COAL_ORE&&i<=COPPER_ORE)BT[i]=20;else if(i==OBSIDIAN||i==CRYING_OBSIDIAN)BT[i]=120;else BT[i]=Math.max(3,i*2%15+2);} }
 
@@ -322,7 +323,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
 
     private void loadTex(){tex=new BufferedImage[BLOCK_COUNT];for(int i=0;i<BLOCK_COUNT;i++){try{tex[i]=javax.imageio.ImageIO.read(new File(TEX_DIR+TF[i]+".png"));
-        if(i==WATER){BufferedImage wt=new BufferedImage(TILE,TILE,BufferedImage.TYPE_INT_ARGB);Graphics2D g=wt.createGraphics();g.drawImage(tex[i],0,0,null);g.setColor(new Color(60,60,200,120));g.fillRect(0,0,TILE,TILE);g.dispose();tex[i]=wt;}
+        if(i==WATER||i==LAVA){BufferedImage wt=new BufferedImage(TILE,TILE,BufferedImage.TYPE_INT_ARGB);Graphics2D g=wt.createGraphics();g.drawImage(tex[i],0,0,null);g.setColor(i==LAVA?new Color(255,100,20,150):new Color(60,60,200,120));g.fillRect(0,0,TILE,TILE);g.dispose();tex[i]=wt;}
         if(i>=COAL_ORE&&i<=COPPER_ORE){BufferedImage ot=new BufferedImage(TILE,TILE,BufferedImage.TYPE_INT_ARGB);Graphics2D g=ot.createGraphics();g.drawImage(tex[i],0,0,null);Color oc=FB[i];g.setColor(new Color(oc.getRed(),oc.getGreen(),oc.getBlue(),80));g.fillRect(0,0,TILE,TILE);g.dispose();tex[i]=ot;}
     }catch(Exception e){tex[i]=new BufferedImage(TILE,TILE,BufferedImage.TYPE_INT_ARGB);Graphics2D g=tex[i].createGraphics();g.setColor(FB[i]);g.fillRect(0,0,TILE,TILE);g.dispose();}}}
     private void refreshWorldList(){worldList.clear();File[] f=new File(DATA_DIR).listFiles((d,n)->n.endsWith(".mcw"));if(f!=null)for(File x:f)worldList.add(x.getName().replace(".mcw",""));}
@@ -451,6 +452,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 if(y==s)world[x][y]=GRASS;
                 else if(y>s&&y<=s+4)world[x][y]=DIRT;
                 else if(y>s+4&&y<bedrock)world[x][y]=r.nextInt(8)==0?COBBLESTONE:STONE;
+                if(y==bedrock-1&&r.nextInt(3)==0)world[x][y]=LAVA;
                 else if(y>=bedrock)world[x][y]=BEDROCK;
             }
             if(x>2&&x<W-3&&s>hm[x-1]+2&&s>hm[x+1]+2){
@@ -511,7 +513,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
 
     private int getHeight(int x){for(int y=0;y<H;y++)if(world[x][y]>0)return y;return H-1;}
-    private boolean isSolid(int x,int y){if(x<0||x>=W||y<0||y>=H)return true;return world[x][y]>0&&world[x][y]!=WATER;}
+    private boolean isSolid(int x,int y){if(x<0||x>=W||y<0||y>=H)return true;return world[x][y]>0&&world[x][y]!=WATER&&world[x][y]!=LAVA;}
     private boolean isIn(int x,int y){return x>=0&&x<W&&y>=0&&y<H;}
 
     private void saveWorld(String name){
@@ -547,7 +549,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         double speed=survival&&hunger<=0?1.5:3.0;
         if(keys[KeyEvent.VK_SHIFT])speed*=1.6;
         int pfoot=(int)((py+playerH/2)/TILE);
-        if(pfoot>=0&&pfoot<H&&world[(int)(px/TILE)][pfoot]==WATER)speed*=0.4;
+        if(pfoot>=0&&pfoot<H&&(world[(int)(px/TILE)][pfoot]==WATER||world[(int)(px/TILE)][pfoot]==LAVA)){speed*=0.4;if(world[(int)(px/TILE)][pfoot]==LAVA&&hungerTimer%30==0){health--;if(health<=0){dead=true;screen=Screen.DEATH;}}}
         double dx=0,dy=0;
         if(keys[KeyEvent.VK_A]||keys[KeyEvent.VK_LEFT])dx-=speed;
         if(keys[KeyEvent.VK_D]||keys[KeyEvent.VK_RIGHT])dx+=speed;
@@ -701,7 +703,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         int nz=0,f=0;for(int i=0;i<4;i++)if(craftGrid[i]>0){nz++;if(f==0)f=craftGrid[i];}
         if(nz==1&&f>=OAK_LOG&&f<=DARK_OAK_LOG)return new int[]{f-OAK_LOG+OAK_PLANKS,4};
         if(nz==1&&f==STONE)return new int[]{COBBLESTONE,1};if(nz==1&&f==COBBLESTONE)return new int[]{STONE,1};
-        if(nz==1&&f==SAND)return new int[]{SNOW,1};if(nz==1&&f==NETHERRACK)return new int[]{SOUL_SAND,1};
+        if(nz==1&&f==SAND)return new int[]{LAVA,1};if(nz==1&&f==NETHERRACK)return new int[]{SOUL_SAND,1};
         if(nz==2&&((craftGrid[0]==OAK_PLANKS&&craftGrid[1]==OAK_PLANKS)||(craftGrid[0]==OAK_PLANKS&&craftGrid[2]==OAK_PLANKS)))return new int[]{4,4};
         if(nz==4&&craftGrid[0]==OAK_PLANKS&&craftGrid[1]==OAK_PLANKS&&craftGrid[2]==OAK_PLANKS&&craftGrid[3]==OAK_PLANKS)return new int[]{CRAFTING_TABLE,1};
         if(nz==4&&craftGrid[0]==WOOL&&craftGrid[1]==WOOL&&craftGrid[2]==OAK_PLANKS&&craftGrid[3]==OAK_PLANKS)return new int[]{BED,1};
