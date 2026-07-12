@@ -96,8 +96,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private int selInv=-1;
     private Random rand=new Random();
 
-    private enum Screen{MENU,WORLD_LIST,CREATE_WORLD,PLAY,CRAFTING,DEATH,MULTIPLAYER,CONNECT,HOST,SETTINGS,CONNECTING,PAUSE};
-    private Screen screen=Screen.MENU;
+    private enum Screen{MENU,WORLD_LIST,CREATE_WORLD,PLAY,CRAFTING,DEATH,MULTIPLAYER,CONNECT,HOST,SETTINGS,CONNECTING,PAUSE,HELP};
+    private Screen screen=Screen.HELP;
     private ArrayList<String> worldList=new ArrayList<>();
     private String typing="";
     private int selectedWorld=-1;
@@ -621,7 +621,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     @Override
     public void actionPerformed(ActionEvent e){
-        if(screen==Screen.MENU||screen==Screen.WORLD_LIST||screen==Screen.CREATE_WORLD||screen==Screen.MULTIPLAYER||screen==Screen.CONNECT||screen==Screen.HOST||screen==Screen.CONNECTING||screen==Screen.SETTINGS||screen==Screen.PAUSE){repaint();return;}
+        if(screen==Screen.MENU||screen==Screen.WORLD_LIST||screen==Screen.CREATE_WORLD||screen==Screen.MULTIPLAYER||screen==Screen.CONNECT||screen==Screen.HOST||screen==Screen.CONNECTING||screen==Screen.SETTINGS||screen==Screen.PAUSE||screen==Screen.HELP){repaint();return;}
         if(screen==Screen.DEATH||screen==Screen.CRAFTING){repaint();return;}
         if(screen!=Screen.PLAY)return;
         double speed=survival&&hunger<=0?1.5:3.0;
@@ -801,7 +801,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     @Override
     protected void paintComponent(Graphics g){super.paintComponent(g);Graphics2D g2=(Graphics2D)g;g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_OFF);
-        switch(screen){case MENU:drawMenu(g2);break;case WORLD_LIST:drawWorldList(g2);break;case CREATE_WORLD:drawCreateWorld(g2);break;case MULTIPLAYER:drawMultiplayer(g2);break;case CONNECT:drawConnect(g2);break;case HOST:drawHost(g2);break;case SETTINGS:drawSettings(g2);break;case CONNECTING:drawConnecting(g2);break;case PAUSE:drawPause(g2);break;case DEATH:drawDeath(g2);break;case CRAFTING:drawCrafting(g2);break;case PLAY:drawGame(g2);break;}
+        switch(screen){case MENU:drawMenu(g2);break;case WORLD_LIST:drawWorldList(g2);break;case CREATE_WORLD:drawCreateWorld(g2);break;case MULTIPLAYER:drawMultiplayer(g2);break;case CONNECT:drawConnect(g2);break;case HOST:drawHost(g2);break;case SETTINGS:drawSettings(g2);break;case CONNECTING:drawConnecting(g2);break;case PAUSE:drawPause(g2);break;case HELP:drawHelp(g2);break;case DEATH:drawDeath(g2);break;case CRAFTING:drawCrafting(g2);break;case PLAY:drawGame(g2);break;}
     }
 
     private void drawDirtBG(Graphics2D g2,int w,int h){for(int x=0;x<w;x+=TILE)for(int y=0;y<h;y+=TILE)g2.drawImage(tex[DIRT],x,y,null);}
@@ -923,6 +923,15 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         g2.drawString("Connecting...",w/2-100,120);
         g2.setFont(new Font("PixelPurl",Font.PLAIN,18));g2.setColor(Color.WHITE);
         g2.drawString("Receiving world...",w/2-100,180);
+    }
+
+    private void drawHelp(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
+        g2.setFont(new Font("PixelPurl",Font.BOLD,36));g2.setColor(new Color(100,200,60));
+        g2.drawString("Welcome to MiniCraft!",w/2-200,60);
+        g2.setFont(new Font("PixelPurl",Font.BOLD,14));g2.setColor(Color.WHITE);
+        String[] lines={"[WASD] Move","[Click] Break/Place blocks","[Scroll] Change block","[E] Crafting","[T] Chat","[F] Survival/Creative","[G] Noclip","[M] Music","[ESC] Pause","[F1-F7] Settings","[ENTER] Continue..."};
+        int yy=110;
+        for(String l:lines){g2.drawString(l,w/2-120,yy*13);yy+=28;}
     }
 
     private void drawHost(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
@@ -1095,6 +1104,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
 
     @Override public void keyPressed(KeyEvent e){
+        if(e.getKeyCode()==KeyEvent.VK_ENTER&&screen==Screen.HELP){screen=Screen.MENU;return;}
         if(!chatOpen){
             if(e.getKeyCode()==KeyEvent.VK_F1){showFps=!showFps;return;}
             if(e.getKeyCode()==KeyEvent.VK_F2){showCoords=!showCoords;return;}
@@ -1212,6 +1222,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
 
     @Override public void mousePressed(MouseEvent e){int wx=e.getX(),wy=e.getY(),w=getWidth()/2;
+        if(screen==Screen.HELP){screen=Screen.MENU;return;}
         if(screen==Screen.MENU){
             if(inBtn(wx,wy,w-100,140,200,40)){refreshWorldList();screen=worldList.isEmpty()?Screen.CREATE_WORLD:Screen.WORLD_LIST;}
             else if(inBtn(wx,wy,w-100,190,200,40)){
