@@ -1,4 +1,4 @@
-//sha:44856117
+//sha:e84488e6
 //sha:eb07462a
 //sha:192d03dd
 //sha:ff663c0b
@@ -859,12 +859,11 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     private void drawConnect(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
         g2.setFont(new Font("PixelPurl",Font.BOLD,28));g2.setColor(new Color(100,200,60));g2.drawString("Connect",w/2-60,60);
-        g2.setFont(new Font("PixelPurl",Font.PLAIN,14));g2.setColor(Color.WHITE);
-        g2.drawString("Enter a server code or address:",w/2-160,120);
-        g2.setColor(new Color(40,40,40));g2.fillRect(w/2-150,135,300,35);g2.setColor(Color.WHITE);g2.drawRect(w/2-150,135,300,35);
-        g2.setFont(new Font("PixelPurl",Font.PLAIN,16));g2.drawString(typing+(System.currentTimeMillis()/500%2==0?"_":""),w/2-140,160);
-        drawBtn(g2,"Connect",w/2-60,210,120,36,menuHover==40);drawBtn(g2,"Back",w/2-60,260,120,36,menuHover==41);
-        if(!lastMsg.isEmpty()){g2.setFont(new Font("PixelPurl",Font.PLAIN,14));g2.setColor(Color.YELLOW);g2.drawString(lastMsg,w/2-150,320);}
+        g2.setFont(new Font("PixelPurl",Font.PLAIN,18));g2.setColor(Color.WHITE);        g2.drawString("Join Server",w/2-150,130);
+        g2.setColor(new Color(40,40,40));g2.fillRect(w/2-150,145,300,35);g2.setColor(Color.WHITE);g2.drawRect(w/2-150,145,300,35);
+        g2.setFont(new Font("PixelPurl",Font.PLAIN,16));g2.drawString(typing+(System.currentTimeMillis()/500%2==0?"_":""),w/2-140,170);
+        drawBtn(g2,"Connect",w/2-60,220,120,36,menuHover==40);drawBtn(g2,"Back",w/2-60,270,120,36,menuHover==41);
+        if(!lastMsg.isEmpty()){g2.setFont(new Font("PixelPurl",Font.PLAIN,14));g2.setColor(Color.YELLOW);g2.drawString(lastMsg,w/2-150,330);}
     }
 
     private void drawSettings(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
@@ -897,18 +896,16 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private void drawHost(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
         g2.setFont(new Font("PixelPurl",Font.BOLD,28));g2.setColor(new Color(100,200,60));g2.drawString("Host Server",w/2-80,60);
         g2.setFont(new Font("PixelPurl",Font.PLAIN,18));g2.setColor(Color.WHITE);
-        g2.drawString("Share Code: "+serverPort,w/2-80,120);
-        g2.setFont(new Font("PixelPurl",Font.PLAIN,12));
-        g2.setColor(new Color(255,255,200));g2.drawString("Friends enter this code to join",w/2-120,150);
-        g2.setFont(new Font("PixelPurl",Font.PLAIN,18));
+        g2.drawString("Port: "+serverPort,w/2-60,130);
+        g2.drawString("IP: [hidden]",w/2-100,170);
         if(server!=null&&server.isRunning()){
-            g2.setColor(Color.GREEN);g2.drawString("SERVER RUNNING",w/2-80,210);
-            g2.drawString("Players: "+server.getPlayerCount(),w/2-80,240);
-            drawBtn(g2,"Stop Server",w/2-80,290,160,36,menuHover==50);
+            g2.setColor(Color.GREEN);g2.drawString("SERVER RUNNING",w/2-80,220);
+            g2.drawString("Players: "+server.getPlayerCount(),w/2-80,250);
+            drawBtn(g2,"Stop Server",w/2-80,300,160,36,menuHover==50);
         }else{
-            drawBtn(g2,"Start Server",w/2-80,290,160,36,menuHover==50);
+            drawBtn(g2,"Start Server",w/2-80,300,160,36,menuHover==50);
         }
-        drawBtn(g2,"Back",w/2-60,350,120,36,menuHover==51);
+        drawBtn(g2,"Back",w/2-60,360,120,36,menuHover==51);
     }
 
     private String getLocalIP(){try{return InetAddress.getLocalHost().getHostAddress();}catch(Exception e){return "127.0.0.1";}}
@@ -1142,9 +1139,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
 
     private void tryConnect(){
-        String addr=typing.trim();
-        if(addr.matches("\\d{4,6}"))addr="bore.pub:"+addr;
-        String[] parts=addr.split(":");
+        String[] parts=typing.split(":");
         String ip=parts[0];int port=parts.length>1?Integer.parseInt(parts[1]):25565;
         serverIP=ip;serverPort=port;
         world=null;
