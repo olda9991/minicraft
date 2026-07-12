@@ -592,7 +592,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             int fx=(int)((px+gx)/TILE),fy=(int)((py+playerH/2)/TILE);
             if(isSolid(fx,fy)){og=true;break;}
         }
-        if(survival&&!og&&!noclip&&physicsOn){playerVy+=0.25;py+=playerVy;fallDist++;}else if(survival&&!noclip){if(playerVy>10){health-=(int)(playerVy-10)/5;if(health<=0){dead=true;screen=Screen.DEATH;}}playerVy=0;fallDist=0;}
+        if(survival&&!og&&!noclip&&physicsOn){playerVy+=0.2;py+=playerVy;fallDist++;}else if(survival&&!noclip){if(playerVy>18){health-=(int)(playerVy-18)/10;if(health<=0){dead=true;screen=Screen.DEATH;}}playerVy=0;fallDist=0;}
         int targetX=Math.max(0,Math.min(W*TILE-VW*TILE,(int)(px-VW*TILE/2)));
         int targetY=Math.max(0,Math.min(H*TILE-VH*TILE,(int)(py-VH*TILE/2)));
         if(ultraFps){camX=targetX;camY=targetY;}else{if(camSmoothX==0){camSmoothX=targetX;camSmoothY=targetY;}camSmoothX+=(targetX-camSmoothX)*0.15;camSmoothY+=(targetY-camSmoothY)*0.15;camX=(int)camSmoothX;camY=(int)camSmoothY;}
