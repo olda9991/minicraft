@@ -806,28 +806,22 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     private void drawSettings(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
         g2.setFont(new Font("PixelPurl",Font.BOLD,28));g2.setColor(new Color(100,200,60));g2.drawString("Options  v"+VERSION,w/2-90,60);
-        g2.setFont(new Font("PixelPurl",Font.PLAIN,18));g2.setColor(Color.WHITE);
-        String[] opts={
-            "[F1] FPS: "+(showFps?"ON":"OFF"),
-            "[F2] Coords: "+(showCoords?"ON":"OFF"),
-            "[G] Noclip: "+(noclip?"ON":"OFF"),
-            "[M] Music: "+(musicOn?"ON":"OFF"),
-            "[F3] Ultra FPS: "+(ultraFps?"ON":"OFF"),
-            "[F4] RTX Mode: "+(rtxMode?"ON":"OFF"),
-            "[F5] RTX Water: "+(rtxWater?"ON":"OFF"),
-            "[F6] Physics: "+(physicsLevel==0?"OFF":physicsLevel==1?"Basic":"RTX"),
-            "[F7] Shaders: "+(shaderMode==0?"OFF":shaderMode==1?"Nostalgia":"Solas"),
-            "[F] Mode: "+(survival?"Survival":"Creative"),
-            "[F11] Fullscreen: "+(fullscreen?"ON":"OFF"),
-            "[N] Name: "+playerName+(nameEditing?(System.currentTimeMillis()/500%2==0?"_":""):""),
-            "[< >] FOV: "+gameFov,
-            "[U] Update: "+(updateAvailable?"v"+updateVersion+" AVAILABLE!":"Check GitHub")
+        g2.setFont(new Font("PixelPurl",Font.PLAIN,16));g2.setColor(Color.WHITE);
+        String[][] opts={
+            {"[F1] FPS:"+(showFps?"ON":"OFF"),"[F2] Coords:"+(showCoords?"ON":"OFF"),"[G] Noclip:"+(noclip?"ON":"OFF")},
+            {"[F3] UltraFPS:"+(ultraFps?"ON":"OFF"),"[F4] RTX:"+(rtxMode?"ON":"OFF"),"[F5] RTX H2O:"+(rtxWater?"ON":"OFF")},
+            {"[F6] Phys:"+(physicsLevel==0?"OFF":physicsLevel==1?"Basic":"RTX"),"[F7] Shader:"+(shaderMode==0?"OFF":shaderMode==1?"Nost":"Solas"),"[M] Music:"+(musicOn?"ON":"OFF")},
+            {"[F] "+(survival?"Survival":"Creative"),"[F11] Fullscreen:"+(fullscreen?"ON":"OFF"),"[< >] FOV:"+gameFov},
+            {"[N] Name: "+playerName+(nameEditing?(System.currentTimeMillis()/500%2==0?"_":""):""),"[U] "+(updateAvailable?"UPDATE!":"Check"),""},
         };
-        for(int i=0;i<opts.length;i++){
-            g2.setColor(i==settingSel?new Color(255,255,100):Color.WHITE);
-            g2.drawString(opts[i],w/2-200,110+i*36);
+        int y=100;
+        for(String[] row:opts){
+            g2.setColor(Color.WHITE);g2.drawString(row[0],20,y);
+            g2.drawString(row[1],w/2-100,y);
+            if(!row[2].isEmpty())g2.drawString(row[2],w-260,y);
+            y+=34;
         }
-        drawBtn(g2,"Back",w/2-60,h-80,120,36,menuHover==60);
+        drawBtn(g2,"Back",w/2-60,h-70,120,36,menuHover==60);
     }
 
     private void drawConnecting(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
