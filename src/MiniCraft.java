@@ -508,7 +508,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 for(int cx=x;cx<x+sz&&cx<W;cx++)for(int cy=y;cy<y+sz/2&&cy<H;cy++)if(cx>=0&&cx<W&&cy>=0&&cy<H)world[cx][cy]=0;
             }
         }
-        px=W/2.0*TILE;py=getGround(W/2)*TILE-playerH/2;health=20;hunger=20;dead=false;fallDist=0;survival=true;
+        px=W/2.0*TILE;py=getGround(W/2)*TILE-playerH/2;health=20;hunger=20;dead=false;fallDist=0;playerVy=0;survival=true;
         for(int i=0;i<inv.length;i++){inv[i]=0;invCount[i]=0;}
         mobs.clear();
         for(int i=0;i<8;i++){
@@ -592,7 +592,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             int fx=(int)((px+gx)/TILE),fy=(int)((py+playerH/2)/TILE);
             if(isSolid(fx,fy)){og=true;break;}
         }
-        if(survival&&!og&&!noclip&&physicsOn){playerVy+=0.4;py+=playerVy;fallDist++;}else if(survival&&!noclip){if(playerVy>6){health-=(int)(playerVy-6)/3;if(health<=0){dead=true;screen=Screen.DEATH;}}playerVy=0;fallDist=0;}
+        if(survival&&!og&&!noclip&&physicsOn){playerVy+=0.25;py+=playerVy;fallDist++;}else if(survival&&!noclip){if(playerVy>10){health-=(int)(playerVy-10)/5;if(health<=0){dead=true;screen=Screen.DEATH;}}playerVy=0;fallDist=0;}
         int targetX=Math.max(0,Math.min(W*TILE-VW*TILE,(int)(px-VW*TILE/2)));
         int targetY=Math.max(0,Math.min(H*TILE-VH*TILE,(int)(py-VH*TILE/2)));
         if(ultraFps){camX=targetX;camY=targetY;}else{if(camSmoothX==0){camSmoothX=targetX;camSmoothY=targetY;}camSmoothX+=(targetX-camSmoothX)*0.15;camSmoothY+=(targetY-camSmoothY)*0.15;camX=(int)camSmoothX;camY=(int)camSmoothY;}
@@ -1084,10 +1084,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(screen==Screen.PLAY&&e.getKeyCode()==KeyEvent.VK_F){survival=!survival;return;}
         if(screen==Screen.PLAY&&e.getKeyCode()==KeyEvent.VK_ESCAPE){screen=Screen.PAUSE;return;}
         if(screen==Screen.PAUSE&&e.getKeyCode()==KeyEvent.VK_ESCAPE){screen=Screen.PLAY;return;}
-        if(screen==Screen.DEATH&&e.getKeyCode()==KeyEvent.VK_ENTER){px=W/2.0*TILE;py=getGround(W/2)*TILE-playerH/2;health=20;hunger=20;dead=false;fallDist=0;screen=Screen.PLAY;}
+        if(screen==Screen.DEATH&&e.getKeyCode()==KeyEvent.VK_ENTER){px=W/2.0*TILE;py=getGround(W/2)*TILE-playerH/2;health=20;hunger=20;dead=false;fallDist=0;playerVy=0;screen=Screen.PLAY;}
         if(screen==Screen.CRAFTING&&e.getKeyCode()==KeyEvent.VK_E){craftingOpen=false;screen=Screen.PLAY;return;}
         if(screen==Screen.CRAFTING&&e.getKeyCode()==KeyEvent.VK_SPACE){int[] r=getCraft();if(r[0]>0){boolean h=true;for(int i=0;i<4;i++)if(craftGrid[i]>0&&!takeFromInv(craftGrid[i],craftCount[i]))h=false;if(h){addToInv(r[0],r[1]);for(int i=0;i<4;i++){craftGrid[i]=0;craftCount[i]=0;}}}}
-        if(screen==Screen.PLAY&&e.getKeyCode()==KeyEvent.VK_SPACE){int tx=(int)((px)/TILE),ty=(int)((py+playerH/2)/TILE);for(int dy=ty;dy<H;dy++)if(isSolid(tx,dy)){if(dy>0)py=(dy-1)*TILE;break;}}
+        if(screen==Screen.PLAY&&e.getKeyCode()==KeyEvent.VK_SPACE){int tx=(int)((px)/TILE),ty=(int)((py+playerH/2)/TILE);for(int dy=ty;dy<H;dy++)if(isSolid(tx,dy)){if(dy>0)py=(dy-1)*TILE;playerVy=0;break;}}
     }
     @Override public void keyReleased(KeyEvent e){if(e.getKeyCode()>=0&&e.getKeyCode()<keys.length)keys[e.getKeyCode()]=false;}
     @Override public void keyTyped(KeyEvent e){}
