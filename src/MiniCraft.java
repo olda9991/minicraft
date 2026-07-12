@@ -1,3 +1,4 @@
+//sha:6aa16497
 //sha:daf003d6
 //sha:c2888a02
 //sha:5ff0b62d
@@ -454,6 +455,31 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         else if(musicClip!=null){musicClip.stop();musicClip.close();}
     }
 
+    private void toggleFullscreen(){
+        fullscreen=!fullscreen;
+        JFrame f=(JFrame)SwingUtilities.getWindowAncestor(this);
+        if(f==null)return;
+        try{
+            new ProcessBuilder("hyprctl","dispatch","fullscreen",fullscreen?"1":"0").start();
+            return;
+        }catch(Exception e1){}
+        try{
+            f.setVisible(false);f.dispose();
+            f.setUndecorated(fullscreen);
+            f.setVisible(true);
+            if(fullscreen){
+                java.awt.GraphicsDevice gd=java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+                if(gd.isFullScreenSupported())gd.setFullScreenWindow(f);
+                else f.setExtendedState(JFrame.MAXIMIZED_BOTH);
+            }else{
+                java.awt.GraphicsDevice gd=java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+                if(gd!=null)gd.setFullScreenWindow(null);
+                f.setSize(VW*TILE,VH*TILE);f.setLocationRelativeTo(null);
+            }
+            f.requestFocus();
+        }catch(Exception e2){}
+    }
+
     private void loadSFX(){
         try{
             File sdir=new File(System.getProperty("user.dir")+"/sounds");
@@ -716,6 +742,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(!isHost&&client!=null&&client.isConnected()&&posTime%100<80){
             client.send("P "+(int)px+" "+(int)py);
         }
+        synchronized(remotePlayers){for(RemotePlayer rp:remotePlayers){rp.x+=(rp.targetX-rp.x)*0.25;rp.y+=(rp.targetY-rp.y)*0.25;}}
         if(ultraFps||posTime%3!=0||!physicsOn){}else{
             boolean bossAlive=false;for(Mob m:mobs)if(m.type==6)bossAlive=true;
             if(!bossAlive&&worldTime>17500&&worldTime<18500&&Math.random()<0.005){int bx=(int)(10+Math.random()*(W-20));mobs.add(new Mob(bx*TILE,getGround(bx)*TILE-playerH/2,6));}
@@ -1152,11 +1179,9 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             if(e.getKeyCode()==KeyEvent.VK_F7){shaderMode=(shaderMode+1)%3;return;}
             if(e.getKeyCode()==KeyEvent.VK_M){toggleMusic();return;}
             if(e.getKeyCode()==KeyEvent.VK_F11&&(screen==Screen.PLAY||screen==Screen.SETTINGS)){
-            fullscreen=!fullscreen;
-            JFrame f=(JFrame)SwingUtilities.getWindowAncestor(this);
-            if(f!=null){f.dispose();f.setUndecorated(fullscreen);f.setExtendedState(fullscreen?JFrame.MAXIMIZED_BOTH:JFrame.NORMAL);f.setVisible(true);}
-            return;
-        }
+                toggleFullscreen();
+                return;
+            }
         }
         if(e.getKeyCode()==KeyEvent.VK_G&&(screen==Screen.PLAY||screen==Screen.SETTINGS)&&!chatOpen){noclip=!noclip;return;}
         if(screen==Screen.SETTINGS){
@@ -1378,7 +1403,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
     }
 
-    class RemotePlayer{double x,y;String name;RemotePlayer(String n,double x,double y){this.name=n;this.x=x;this.y=y;}}
+    class RemotePlayer{double x,y,targetX,targetY;String name;RemotePlayer(String n,double x,double y){this.name=n;this.x=this.targetX=x;this.y=this.targetY=y;}}
 
     class MiniServer extends Thread{
         private ServerSocket ss;private boolean running=false;
@@ -1389,9 +1414,15 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             while(running){try{ClientHandler ch=new ClientHandler(ss.accept());ch.start();synchronized(clients){clients.add(ch);}}catch(Exception e){if(running)try{Thread.sleep(100);}catch(Exception ex){}break;}}
         }
         void broadcast(String msg,String skip){
-            synchronized(clients){for(ClientHandler ch:clients)if(ch.name!=null&&!ch.name.equals(skip))try{ch.send(msg);}catch(Exception e){}}
+            ArrayList<ClientHandler> snapshot;
+            synchronized(clients){snapshot=new ArrayList<>(clients);}
+            for(ClientHandler ch:snapshot)if(ch.name!=null&&!ch.name.equals(skip))try{ch.send(msg);}catch(Exception e){}
         }
-        void broadcast(String msg){synchronized(clients){for(ClientHandler ch:clients)if(ch.name!=null)try{ch.send(msg);}catch(Exception e){}}}
+        void broadcast(String msg){
+            ArrayList<ClientHandler> snapshot;
+            synchronized(clients){snapshot=new ArrayList<>(clients);}
+            for(ClientHandler ch:snapshot)if(ch.name!=null)try{ch.send(msg);}catch(Exception e){}
+        }
         int getPlayerCount(){return clients.size()+1;}
         boolean isRunning(){return ss!=null&&running;}
         void stopServer(){running=false;try{if(ss!=null)ss.close();}catch(Exception e){}synchronized(clients){for(ClientHandler ch:clients)ch.interrupt();clients.clear();}}
@@ -1421,13 +1452,11 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                             if(batch.length()>0){out.print(batch.toString());out.flush();}
                             out.println("WD");out.flush();
                             out.println("S "+(int)px+" "+(int)py);
-                            out.println("J "+playerName);
-                            out.println("P "+playerName+" "+(int)px+" "+(int)py);
+                            out.println("J "+playerName+" "+(int)px+" "+(int)py);
                             for(ClientHandler ch:clients)if(ch!=this&&ch.name!=null){
-                                out.println("J "+ch.name);
-                                out.println("P "+ch.name+" "+ch.x+" "+ch.y);
+                                out.println("J "+ch.name+" "+ch.x+" "+ch.y);
                             }
-                            broadcast("J "+name,name);
+                            broadcast("J "+name+" "+px+" "+py,name);
                             for(int hc=Math.max(0,chatMessages.size()-5);hc<chatMessages.size();hc++){
                                 String cm=chatMessages.get(hc);
                                 int ci=cm.indexOf('>');
@@ -1437,7 +1466,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                         else if(p[0].equals("P")&&p.length>=3){
                             x=(int)Double.parseDouble(p[1]);y=(int)Double.parseDouble(p[2]);
                             synchronized(remotePlayers){
-                                for(RemotePlayer rp:remotePlayers)if(rp.name!=null&&rp.name.equals(name)){rp.x=Double.parseDouble(p[1]);rp.y=Double.parseDouble(p[2]);}
+                                for(RemotePlayer rp:remotePlayers)if(rp.name!=null&&rp.name.equals(name)){rp.targetX=Double.parseDouble(p[1]);rp.targetY=Double.parseDouble(p[2]);}
                             }
                             broadcast("P "+name+" "+p[1]+" "+p[2],name);
                         }
@@ -1498,16 +1527,18 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                         SwingUtilities.invokeLater(()->{
                             boolean found=false;
                             synchronized(remotePlayers){
-                                for(RemotePlayer rp:remotePlayers)if(rp.name!=null&&rp.name.equals(pname)){rp.x=sx;rp.y=sy;found=true;break;}
+                                for(RemotePlayer rp:remotePlayers)if(rp.name!=null&&rp.name.equals(pname)){rp.targetX=sx;rp.targetY=sy;found=true;break;}
                                 if(!found)remotePlayers.add(new RemotePlayer(pname,sx,sy));
                             }
                         });
                     }
                     else if(p[0].equals("J")&&p.length>1){
                         final String jname=p[1];
+                        final double jx=p.length>=4?Double.parseDouble(p[2]):0;
+                        final double jy=p.length>=4?Double.parseDouble(p[3]):0;
                         SwingUtilities.invokeLater(()->{
                             boolean exists=false;
-                            synchronized(remotePlayers){for(RemotePlayer rp:remotePlayers)if(rp.name!=null&&rp.name.equals(jname))exists=true;if(!exists)remotePlayers.add(new RemotePlayer(jname,0,0));}
+                            synchronized(remotePlayers){for(RemotePlayer rp:remotePlayers)if(rp.name!=null&&rp.name.equals(jname))exists=true;if(!exists)remotePlayers.add(new RemotePlayer(jname,jx,jy));}
                         });
                     }
                     else if(p[0].equals("L")&&p.length>1){
@@ -1530,8 +1561,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 }
             }catch(Exception e){}finally{connected=false;try{if(s!=null)s.close();}catch(Exception ex){}}
         }
-        void send(String m){try{if(out!=null){out.println(m);if(out.checkError())throw new Exception("broken");}}catch(Exception e){out=null;}}
-        void disconnect(){running=false;try{if(s!=null)s.close();}catch(Exception e){}connected=false;}
+        void send(String m){try{if(out!=null){out.println(m);if(out.checkError())throw new Exception("broken");}}catch(Exception e){out=null;connected=false;if(screen==Screen.PLAY)SwingUtilities.invokeLater(()->lastMsg="Connection lost!");}}
+        void disconnect(){running=false;try{if(s!=null)s.close();}catch(Exception e){}connected=false;out=null;}
         boolean isConnected(){return connected;}
     }
 
