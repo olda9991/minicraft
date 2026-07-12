@@ -660,6 +660,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(keys[KeyEvent.VK_W]||keys[KeyEvent.VK_UP])dy-=speed;
         if(keys[KeyEvent.VK_S]||keys[KeyEvent.VK_DOWN])dy+=speed;
         boolean moving=dx!=0||dy!=0;walking=moving;
+        if(keys[KeyEvent.VK_SHIFT]&&moving&&!ultraFps&&Math.random()<0.3)particles.add(new Particle(px-playerW/2-Math.random()*playerW,py+playerH/2,COBBLESTONE));
         if(moving){walkSoundTimer++;if(walkSoundTimer>20){walkSoundTimer=0;playSFX("grass");}}
         if(moving)hungerTimer++;
         double nx=px+dx,ny=py+dy;
@@ -1342,8 +1343,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
         if(screen==Screen.PLAY){int tx=(mx+camX)/TILE,ty=(my+camY)/TILE;if(!isIn(tx,ty))return;int pt=(int)(px/TILE),pyt=(int)(py/TILE);if(Math.abs(tx-pt)+Math.abs(ty-pyt)<2)return;
             if(e.getButton()==MouseEvent.BUTTON1){
-                boolean hitMob=false;int dmg=selBlock==SWORD?6:3;
-                for(Mob m:mobs){if(Math.abs((mx+camX)-m.x)<24&&Math.abs((my+camY)-m.y)<24){int critDmg=dmg;boolean onG=false;int fx=(int)((px+14)/TILE),fy=(int)((py+TILE-4)/TILE);if(isSolid(fx,fy))onG=true;if(!onG){critDmg*=2;}m.health-=critDmg;m.hurtT=10;dmgNums.add(new DmgNum(m.x,m.y-20,critDmg));m.x+=(m.x>px?8:-8);if(m.health<=0){if(m.type==6){drops.add(new DropItem(m.x,m.y,DIAMOND_GEM));drops.add(new DropItem(m.x-10,m.y,DIAMOND_GEM));for(int i=0;i<10;i++)drops.add(new DropItem(m.x+Math.random()*40-20,m.y+Math.random()*20-10,EXP_ORB));achieve("BOSS DEFEATED!");}else{drops.add(new DropItem(m.x,m.y,m.type==0?RAW_BEEF:m.type==1?RAW_PORK:m.type==3?WOOL:m.type==4?COOKED_BEEF:COOKED_BEEF));drops.add(new DropItem(m.x-10,m.y-10,EXP_ORB));}mobs.remove(m);kills++;if(kills==1)achieve("First Blood!");if(kills==10)achieve("Monster Hunter!");if(kills==50)achieve("Slayer!");}hitMob=true;break;}}
+                boolean hitMob=false;int dmg=selBlock==SWORD?7:selBlock==AXE?5:selBlock==PICKAXE?4:3;
+                for(Mob m:mobs){if(Math.abs((mx+camX)-m.x)<24&&Math.abs((my+camY)-m.y)<24){int critDmg=dmg;boolean onG=false;int fx=(int)((px+14)/TILE),fy=(int)((py+TILE-4)/TILE);if(isSolid(fx,fy))onG=true;if(!onG){critDmg*=2;for(int i=0;i<5;i++)particles.add(new Particle(m.x,m.y-20,GOLD_ORE));}m.health-=critDmg;m.hurtT=10;dmgNums.add(new DmgNum(m.x,m.y-20,critDmg));m.x+=(m.x>px?8:-8);if(m.health<=0){if(m.type==6){drops.add(new DropItem(m.x,m.y,DIAMOND_GEM));drops.add(new DropItem(m.x-10,m.y,DIAMOND_GEM));for(int i=0;i<10;i++)drops.add(new DropItem(m.x+Math.random()*40-20,m.y+Math.random()*20-10,EXP_ORB));achieve("BOSS DEFEATED!");}else{drops.add(new DropItem(m.x,m.y,m.type==0?RAW_BEEF:m.type==1?RAW_PORK:m.type==3?WOOL:m.type==4?COOKED_BEEF:COOKED_BEEF));drops.add(new DropItem(m.x-10,m.y-10,EXP_ORB));}mobs.remove(m);kills++;if(kills==1)achieve("First Blood!");if(kills==10)achieve("Monster Hunter!");if(kills==50)achieve("Slayer!");}hitMob=true;break;}}
                 if(!hitMob){if(survival&&world[tx][ty]>0){breakX=tx;breakY=ty;breakTimer=0;int spd=1;if(selBlock==PICKAXE)spd=4;if(selBlock==AXE)spd=4;if(selBlock==SHOVEL)spd=4;breakTime=Math.max(1,BT[Math.min(world[tx][ty],BT.length-1)]/spd);}else if(!survival){world[tx][ty]=0;syncBlock(tx,ty,0);}}
             }
             else if(e.getButton()==MouseEvent.BUTTON3&&selBlock>=0&&(!survival||getInvCount(selBlock)>0)){
