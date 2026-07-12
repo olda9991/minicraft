@@ -1,3 +1,4 @@
+//sha:1f9d0fff
 //sha:ca4a31c3
 //sha:4ec7002e
 //sha:845cfc00
@@ -1448,7 +1449,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                             int cnt=0;ArrayList<ClientHandler> snap;
                             synchronized(clients){snap=new ArrayList<>(clients);}
                             for(ClientHandler ch:snap)if(ch!=this&&ch.name!=null&&ch.name.equals(name))cnt++;
-                            if(cnt>0){String base=name.replaceAll("\\d+$","");name=base+(cnt+1);}
+                            if(cnt>0){String base=name.replaceAll("\\d+$","");int n=2;name=base+n;while(true){boolean taken=false;for(ClientHandler ch:snap)if(ch!=this&&ch.name!=null&&ch.name.equals(name)){taken=true;break;}if(!taken)break;n++;name=base+n;}}
                             out.println("N "+name);
                             int plrIdx=0;for(ClientHandler ch:snap)if(ch!=this&&ch.name!=null)plrIdx++;
                             double spx=px+(plrIdx%3*48)-48;
