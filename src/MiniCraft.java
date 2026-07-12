@@ -1,3 +1,4 @@
+//sha:779471cc
 //sha:88c66e73
 //sha:4f7a25cb
 //sha:ba527029
@@ -466,6 +467,20 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }).start();
     }
 
+    private void playSound(String exact){
+        new Thread(()->{
+            try{
+                String f=null;
+                for(String sf:sfxFiles)if(sf.contains(exact)){f=sf;break;}
+                if(f==null)return;
+                javax.sound.sampled.Clip c=javax.sound.sampled.AudioSystem.getClip();
+                c.open(javax.sound.sampled.AudioSystem.getAudioInputStream(new File(f)));
+                c.start();
+                c.addLineListener(ev->{if(ev.getType()==javax.sound.sampled.LineEvent.Type.STOP)c.close();});
+            }catch(Exception e){}
+        }).start();
+    }
+
     private void stopWebServer(){
         if(boreProcess!=null){boreProcess.destroy();boreProcess=null;}
         if(webProcess!=null){webProcess.destroy();webProcess=null;}
@@ -660,7 +675,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             if(survival)selBlock=Math.min(i+1,BLOCK_COUNT-1);
             else{selBlock=Math.min(i+1+creativeOffset,BLOCK_COUNT-1);}
         }
-        if(breakX>=0&&breakY>=0&&isIn(breakX,breakY)&&world[breakX][breakY]>0){breakTimer++;if(breakTimer>=breakTime){syncBlock(breakX,breakY,0);addToInv(world[breakX][breakY],1);spawnParticles(breakX,breakY,world[breakX][breakY]);playSFX(world[breakX][breakY]<=GRASS||world[breakX][breakY]==SAND?"grass":"stone");world[breakX][breakY]=0;breakX=-1;breakY=-1;breakTimer=0;}}else if(breakX>=0){breakX=-1;breakY=-1;breakTimer=0;}
+        if(breakX>=0&&breakY>=0&&isIn(breakX,breakY)&&world[breakX][breakY]>0){breakTimer++;if(breakTimer>=breakTime){int bk=world[breakX][breakY];syncBlock(breakX,breakY,0);addToInv(bk,1);spawnParticles(breakX,breakY,bk);String st="stone";if(bk==SAND||bk==GRAVEL)st="sand";else if(bk>=OAK_LOG&&bk<=DARK_OAK_LOG)st="wood";else if(bk<=GRASS||bk==DIRT)st="grass";playSFX(st);world[breakX][breakY]=0;breakX=-1;breakY=-1;breakTimer=0;}}else if(breakX>=0){breakX=-1;breakY=-1;breakTimer=0;}
         if(msgTimer>0)msgTimer--;
         if(chatTimer>0)chatTimer--;
         long posTime=System.currentTimeMillis();
