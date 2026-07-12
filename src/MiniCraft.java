@@ -832,7 +832,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         g2.setFont(new Font("PixelPurl",Font.PLAIN,14));g2.setColor(new Color(200,200,200));
         int yy=100;
         if(discoveredServers.isEmpty()){
-            g2.drawString("Scanning for LAN servers...",w/2-100,yy+20);
+            g2.drawString("Scanning for servers...",w/2-100,yy+20);
         }else{
             for(int i=0;i<discoveredServers.size();i++){
                 DiscoveredServer ds=discoveredServers.get(i);
@@ -843,13 +843,13 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 g2.setFont(new Font("PixelPurl",Font.BOLD,12));
                 g2.drawString(ds.name,w/2-210,yy+15);
                 g2.setFont(new Font("PixelPurl",Font.PLAIN,10));
-                g2.drawString(ds.players+" players  "+ds.world,w/2-210,yy+30);
+                g2.drawString(ds.players+" players  "+ds.world+"  Code:"+ds.port,w/2-210,yy+30);
                 yy+=42;
             }
         }
         yy=Math.max(yy+10,300);
         drawBtn(g2,"Host Server",w/2-100,yy,200,36,menuHover==30);
-        drawBtn(g2,"Direct Connect",w/2-100,yy+46,200,36,menuHover==31);
+        drawBtn(g2,"Join by Code",w/2-100,yy+46,200,36,menuHover==31);
         drawBtn(g2,"Refresh",w/2-100,yy+92,200,36,menuHover==33);
         drawBtn(g2,"Back",w/2-100,yy+138,200,36,menuHover==32);
     }
