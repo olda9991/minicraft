@@ -1,3 +1,4 @@
+//sha:88c66e73
 //sha:4f7a25cb
 //sha:ba527029
 //sha:3bde94bb
@@ -1153,12 +1154,18 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
 
     private void tryConnect(){
-        String[] parts=typing.split(":");
-        String ip=parts[0];int port=parts.length>1?Integer.parseInt(parts[1]):25565;
-        serverIP=ip;serverPort=port;
-        world=null;
-        client=new MiniClient(ip,port);
-        if(client.connect()){screen=Screen.CONNECTING;lastMsg="";}else{lastMsg="Failed to connect!";msgTimer=120;}
+        final String addr=typing.trim();
+        screen=Screen.CONNECTING;lastMsg="";
+        new Thread(()->{
+            try{
+                String a=addr;if(a.matches("\\d{4,6}"))a="bore.pub:"+a;
+                String[] parts=a.split(":");String ip=parts[0];int port=parts.length>1?Integer.parseInt(parts[1]):25565;
+                serverIP=ip;serverPort=port;
+                client=new MiniClient(ip,port);
+                if(client.connect()){SwingUtilities.invokeLater(()->{screen=Screen.CONNECTING;});}
+                else{SwingUtilities.invokeLater(()->{screen=Screen.CONNECT;lastMsg="Failed: "+ip+":"+port;});}
+            }catch(Exception e){SwingUtilities.invokeLater(()->{screen=Screen.CONNECT;lastMsg="Error!";});}
+        }).start();
     }
 
     private boolean loadUnconnectedWorld(){
