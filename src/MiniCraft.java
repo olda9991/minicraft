@@ -1407,7 +1407,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 try{out=new PrintWriter(s.getOutputStream(),true);in=new BufferedReader(new InputStreamReader(s.getInputStream()));
                     String line;
                     while((line=in.readLine())!=null){
-                        String[] p=line.split(" ",3);
+                        String[] p=line.split(" ",4);
                         if(p[0].equals("J")){
                             name=p.length>1?p[1]:"Player";
                             synchronized(remotePlayers){remotePlayers.add(new RemotePlayer(name,(int)px,(int)py));}
