@@ -1,3 +1,4 @@
+//sha:a27a7a51
 //sha:38836b38
 //sha:ad9b24da
 //sha:a503a4cf
@@ -238,57 +239,57 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private DiscordRPC discordRPC; 
 
     class DiscordRPC extends Thread{
-        private java.net.Socket sock;private boolean running=true;private java.io.PrintWriter out;
-        private Process pyProcess;private java.io.PrintWriter pyOut;
+        private java.net.Socket sock;private boolean running=true;private java.io.DataOutputStream out;private java.io.DataInputStream in;
         public void run(){
             while(running){
                 try{
-                    try{
-                        String[] pipes={System.getenv("XDG_RUNTIME_DIR")+"/discord-ipc-0",
-                            "/run/user/"+System.getProperty("user.name")+"/discord-ipc-0",
-                            System.getenv("XDG_RUNTIME_DIR")+"/app/com.discordapp.Discord/discord-ipc-0"};
-                        for(String pipe:pipes)try{java.net.UnixDomainSocketAddress a=java.net.UnixDomainSocketAddress.of(pipe);sock=java.nio.channels.SocketChannel.open(a).socket();break;}catch(Exception e2){}
-                        if(sock==null)try{sock=new java.net.Socket("127.0.0.1",6463);sock.setSoTimeout(2000);}catch(Exception e2){}
-                        if(sock==null){startPythonRPC();if(running)Thread.sleep(10000);continue;}
-                    }catch(Exception e){startPythonRPC();if(running)Thread.sleep(10000);continue;}
-                    sock.setSoTimeout(2000);
-                    out=new java.io.PrintWriter(sock.getOutputStream(),true);
-                    java.io.BufferedReader in=new java.io.BufferedReader(new java.io.InputStreamReader(sock.getInputStream()));
-                    out.print("{\"v\":1,\"client_id\":\"1512377902195540018\"}\n");out.flush();
-                    String resp=in.readLine();if(resp==null||!resp.contains("READY")){cleanup();startPythonRPC();if(running)Thread.sleep(10000);continue;}
-                    System.out.println("[RPC] Connected to Discord");
+                    String[] pipes={System.getenv("XDG_RUNTIME_DIR")+"/discord-ipc-0",
+                        "/run/user/"+System.getProperty("user.name")+"/discord-ipc-0",
+                        System.getenv("XDG_RUNTIME_DIR")+"/app/com.discordapp.Discord/discord-ipc-0",
+                        System.getenv("XDG_RUNTIME_DIR")+"/app/dev.vencord.Vesktop/discord-ipc-0"};
+                    for(String pipe:pipes){
+                        try{
+                            java.io.File f=new java.io.File(pipe);
+                            if(!f.exists())continue;
+                            java.net.UnixDomainSocketAddress a=java.net.UnixDomainSocketAddress.of(pipe);
+                            sock=java.nio.channels.SocketChannel.open(a).socket();
+                            break;
+                        }catch(Exception e2){}
+                    }
+                    if(sock==null){if(running)Thread.sleep(30000);continue;}
+                    sock.setSoTimeout(5000);
+                    out=new java.io.DataOutputStream(sock.getOutputStream());
+                    in=new java.io.DataInputStream(sock.getInputStream());
+                    // Handshake: opcode 0, length, JSON
+                    String handshake="{\"v\":1,\"client_id\":\"1512377902195540018\"}";
+                    byte[] hdata=handshake.getBytes("UTF-8");
+                    out.writeInt(0);out.writeInt(hdata.length);out.write(hdata);out.flush();
+                    // Read response: opcode, length, JSON
+                    int rop=in.readInt(),rlen=in.readInt();
+                    byte[] rbuf=new byte[rlen];in.readFully(rbuf);
+                    String resp=new String(rbuf,"UTF-8");
+                    if(!resp.contains("READY")){cleanup();if(running)Thread.sleep(30000);continue;}
+                    System.out.println("[RPC] Connected");
                     updatePresence();
                     while(running){try{Thread.sleep(15000);updatePresence();}catch(Exception e){break;}}
                     break;
-                }catch(Exception e){cleanup();startPythonRPC();if(running)try{Thread.sleep(10000);}catch(Exception ex){break;}}
+                }catch(Exception e){cleanup();if(running)try{Thread.sleep(30000);}catch(Exception ex){break;}}
             }
-        }
-        void startPythonRPC(){
-            if(pyProcess!=null)return;
-            try{
-                String dir=System.getProperty("user.dir");
-                String py=System.getProperty("os.name").toLowerCase().contains("win")?"python":"python3";
-                ProcessBuilder pb=new ProcessBuilder(py,dir+"/discord_rpc.py");
-                pb.directory(new File(dir));pb.redirectErrorStream(true);
-                pyProcess=pb.start();
-                pyOut=new java.io.PrintWriter(pyProcess.getOutputStream(),true);
-                System.out.println("[RPC] Python fallback started");
-            }catch(Exception e){}
         }
         void updatePresence(){
             try{
+                if(out==null)return;
                 String state=screen==Screen.PLAY?(survival?"Survival":"Creative"):"In Menu";
-                String json="{\"details\":\"MiniCraft v"+VERSION+"\",\"state\":\""+state+"\",\"assets\":{\"large_image\":\"minecraft\",\"large_text\":\"MiniCraft\"}}";
-                if(out!=null){
-                    out.print("{\"cmd\":\"SET_ACTIVITY\",\"args\":{\"pid\":"+ProcessHandle.current().pid()+",\"activity\":"+json+"},\"nonce\":\""+System.currentTimeMillis()+"\"}}\n");out.flush();
-                }
-                if(pyOut!=null){
-                    pyOut.println(json);pyOut.flush();
-                }
+                String json="{\"cmd\":\"SET_ACTIVITY\",\"args\":{\"pid\":"+ProcessHandle.current().pid()+",\"activity\":{\"details\":\"MiniCraft v"+VERSION+"\",\"state\":\""+state+"\",\"assets\":{\"large_image\":\"minecraft\",\"large_text\":\"MiniCraft\"}}},\"nonce\":\""+System.currentTimeMillis()+"\"}";
+                byte[] data=json.getBytes("UTF-8");
+                out.writeInt(1);out.writeInt(data.length);out.write(data);out.flush();
+                // Read ack
+                int ackOp=in.readInt(),ackLen=in.readInt();
+                if(ackLen>0&&ackLen<65536){byte[] ack=new byte[ackLen];in.readFully(ack);}
             }catch(Exception e){cleanup();}
         }
-        void cleanup(){try{if(sock!=null)sock.close();}catch(Exception e){}sock=null;out=null;}
-        void stopRPC(){running=false;cleanup();if(pyProcess!=null){try{pyProcess.destroy();}catch(Exception e){}}}
+        void cleanup(){try{if(sock!=null)sock.close();}catch(Exception e){}sock=null;out=null;in=null;}
+        void stopRPC(){running=false;cleanup();}
     }
 
     public MiniCraft(){
