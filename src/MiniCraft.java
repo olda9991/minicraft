@@ -1,4 +1,4 @@
-//sha:0e6c3572
+//sha:ff663c0b
 //sha:a0d703c6
 //sha:2e33f393
 //sha:d4bf54aa
@@ -243,7 +243,19 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         steveImg[0]=makeSteve();}
         heartImg=new BufferedImage[1];heartImg[0]=makeIcon(new Color(200,0,0),9);
         hungerImg=new BufferedImage[1];hungerImg[0]=makeIcon(new Color(180,120,40),9);
-        try{javax.imageio.stream.ImageInputStream iis=javax.imageio.ImageIO.createImageInputStream(new File(System.getProperty("user.dir")+"/MINICRAFT.gif"));javax.imageio.ImageReader reader=javax.imageio.ImageIO.getImageReadersByFormatName("gif").next();reader.setInput(iis);int n=reader.getNumImages(true);logoFrames=new BufferedImage[n];for(int i=0;i<n;i++)logoFrames[i]=reader.read(i);reader.dispose();iis.close();}catch(Exception e){try{logoImg=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/MINICRAFT.png"));}catch(Exception e2){logoImg=null;}}
+        try{
+            File gifFile=new File(System.getProperty("user.dir")+"/MINICRAFT.gif");
+            if(gifFile.exists()){
+                javax.imageio.stream.ImageInputStream iis=javax.imageio.ImageIO.createImageInputStream(gifFile);
+                javax.imageio.ImageReader reader=javax.imageio.ImageIO.getImageReadersByFormatName("gif").next();
+                reader.setInput(iis);int n=reader.getNumImages(true);
+                logoFrames=new BufferedImage[n];
+                for(int i=0;i<n;i++)logoFrames[i]=reader.read(i);
+                reader.dispose();iis.close();
+            }
+        }catch(Exception e){
+            try{logoImg=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/MINICRAFT.png"));}catch(Exception e2){logoImg=null;}
+        }
         try{discIcon=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/discord.png"));}catch(Exception e){discIcon=null;}
         try{ghIcon=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/github.png"));}catch(Exception e){ghIcon=null;}
         new File(DATA_DIR).mkdirs();
