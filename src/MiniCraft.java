@@ -1,4 +1,4 @@
-//sha:494e4976
+//sha:dea13c57
 //sha:4dd8ee68
 //sha:f03e8570
 //sha:fe8aebdb
@@ -191,52 +191,38 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private int serverPort=25565;
     private String serverIP="localhost";
     private Process webProcess, boreProcess;
-    private DiscordRPC discordRPC;
-    private java.io.PrintWriter logWriter; 
+    private DiscordRPC discordRPC; 
 
     class DiscordRPC extends Thread{
         private java.net.Socket sock;private boolean running=true;private java.io.PrintWriter out;private java.io.BufferedReader in;
         public void run(){
-            while(running){
-                try{
-                    String pipe=System.getenv("XDG_RUNTIME_DIR");
-                    if(pipe==null)pipe="/run/user/"+System.getProperty("user.name");
-                    pipe+="/discord-ipc-0";
-                    java.net.UnixDomainSocketAddress addr=java.net.UnixDomainSocketAddress.of(pipe);
-                    sock=java.nio.channels.SocketChannel.open(addr).socket();
-                    sock.setSoTimeout(2000);
-                    out=new java.io.PrintWriter(sock.getOutputStream(),true);
-                    in=new java.io.BufferedReader(new java.io.InputStreamReader(sock.getInputStream()));
-                    out.print("{\"v\":1,\"client_id\":\"1512377902195540018\"}\n");out.flush();
-                    String resp=in.readLine();
-                    if(resp==null||!resp.contains("READY")){cleanup();break;}
-                    log("Discord RPC connected");
-                    updatePresence();
-                    while(running){
-                        try{Thread.sleep(15000);updatePresence();}catch(Exception e){break;}
-                    }
-                    break;
-                }catch(Exception e){
-                    cleanup();
-                    if(running)try{Thread.sleep(30000);}catch(Exception ex){break;}
-                }
-            }
+            try{
+                String pipe=System.getenv("XDG_RUNTIME_DIR");
+                if(pipe==null)pipe="/run/user/"+System.getProperty("user.name");
+                pipe+="/discord-ipc-0";
+                java.net.UnixDomainSocketAddress addr=java.net.UnixDomainSocketAddress.of(pipe);
+                java.nio.channels.SocketChannel sc=java.nio.channels.SocketChannel.open(addr);
+                sock=sc.socket();sock.setSoTimeout(2000);
+                if(sock==null)return;
+                out=new java.io.PrintWriter(sock.getOutputStream(),true);in=new java.io.BufferedReader(new java.io.InputStreamReader(sock.getInputStream()));
+                out.print("{\"v\":1,\"client_id\":\"1512377902195540018\"}\n");out.flush();
+                in.readLine();
+                updatePresence();
+                while(running){try{Thread.sleep(15000);updatePresence();}catch(Exception e){break;}}
+            }catch(Exception e){try{Thread.sleep(5000);}catch(Exception ex){}}
         }
         void updatePresence(){
-            if(out==null)return;
             try{
-                String state="In Menu";String details="MiniCraft v"+VERSION;
-                if(screen==Screen.PLAY){state=survival?"Survival":"Creative";if(!worldName.isEmpty())details=worldName;}
-                String json="{\"cmd\":\"SET_ACTIVITY\",\"args\":{\"pid\":"+ProcessHandle.current().pid()+",\"activity\":{\"details\":\""+details+"\",\"state\":\""+state+"\",\"assets\":{\"large_image\":\"minecraft\",\"large_text\":\"MiniCraft\"}},\"nonce\":\""+System.currentTimeMillis()+"\"}}";
+                String state="In Menu";
+                if(screen==Screen.PLAY)state=survival?"Survival":"Creative";
+                String json="{\"cmd\":\"SET_ACTIVITY\",\"args\":{\"pid\":"+ProcessHandle.current().pid()+",\"activity\":{\"details\":\"MiniCraft v"+VERSION+"\",\"state\":\""+state+"\",\"assets\":{\"large_image\":\"minecraft\",\"large_text\":\"MiniCraft\"}},\"nonce\":\""+System.currentTimeMillis()+"\"}}";
                 out.print(json+"\n");out.flush();
-            }catch(Exception e){cleanup();}
+            }catch(Exception e){}
         }
-        void cleanup(){try{if(sock!=null)sock.close();}catch(Exception e){}sock=null;out=null;in=null;}
-        void stopRPC(){running=false;cleanup();}
+        void stopRPC(){running=false;try{if(sock!=null)sock.close();}catch(Exception e){}}
     }
 
     public MiniCraft(){
-        try{logWriter=new java.io.PrintWriter(new java.io.FileWriter(System.getProperty("user.dir")+"/minicraft.log",true));logWriter.println("["+new java.text.SimpleDateFormat("HH:mm:ss").format(new java.util.Date())+"] MiniCraft v"+VERSION+" starting");logWriter.flush();}catch(Exception e){}
         setPreferredSize(new Dimension(VW*TILE,VH*TILE));
         setFocusable(true);
         addKeyListener(this);addMouseListener(this);addMouseMotionListener(this);addMouseWheelListener(this);
@@ -362,10 +348,6 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             }
             br.close();
         }catch(Exception e){}
-    }
-
-    private void log(String msg){
-        try{String ts=new java.text.SimpleDateFormat("HH:mm:ss").format(new java.util.Date());if(logWriter!=null){logWriter.println("["+ts+"] "+msg);logWriter.flush();}}catch(Exception ex){}
     }
 
     private void startWebServer(){
@@ -542,8 +524,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             px=d.readInt();py=d.readInt();health=d.readInt();hunger=d.readInt();survival=d.readInt()==1;
             for(int i=0;i<inv.length;i++){inv[i]=d.readInt();invCount[i]=d.readInt();}
             world=new int[W][H];for(int x=0;x<W;x++)for(int y=0;y<H;y++)world[x][y]=d.readInt();
-            d.close();dead=false;fallDist=0;craftingOpen=false;screen=Screen.PLAY;
-        log("World loaded: "+name);return true;
+            d.close();dead=false;fallDist=0;craftingOpen=false;screen=Screen.PLAY;return true;
         }catch(Exception e){return false;}
     }
 
