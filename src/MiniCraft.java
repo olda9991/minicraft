@@ -1,3 +1,4 @@
+//sha:ad9b24da
 //sha:a503a4cf
 //sha:6b77481f
 //sha:fc6865f2
@@ -118,7 +119,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private String typing="";
     private int selectedWorld=-1;
     private int menuHover=-1;
-    private boolean showFps=false, showCoords=true, noclip=false, fullscreen=false, ultraFps=false, rtxMode=false, rtxWater=false, physicsOn=true;
+    private boolean showFps=false, showCoords=true, noclip=false, fullscreen=false, ultraFps=false, rtxMode=false, rtxWater=false, physicsOn=true, superflat=false;
     private int shaderMode=0;
     private int physicsLevel=2;
     private int gameFov=25, settingSel=-1;
@@ -577,7 +578,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     private void genWorld(long seed){
         world=new int[W][H];Random r=new Random(seed);
-        if(inNether){
+        if(superflat){
+            for(int x=0;x<W;x++)for(int y=0;y<H;y++)world[x][y]=0;
+            for(int x=0;x<W;x++){world[x][H-1]=BEDROCK;world[x][H-2]=DIRT;world[x][H-3]=DIRT;world[x][H-4]=GRASS;}
+        }else if(inNether){
             for(int x=0;x<W;x++)for(int y=0;y<H;y++){
                 if(y<H/4)world[x][y]=0;
                 else if(y==H/4&&r.nextInt(3)==0)world[x][y]=GLOWSTONE;
@@ -937,7 +941,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         g2.setColor(Color.WHITE);g2.drawString("World Name:",w/2-150,190);
         g2.setColor(new Color(40,40,40));g2.fillRect(w/2-150,205,300,35);g2.setColor(Color.WHITE);g2.drawRect(w/2-150,205,300,35);
         g2.setFont(new Font("PixelPurl",Font.PLAIN,16));g2.drawString(typing+(System.currentTimeMillis()/500%2==0?"_":""),w/2-140,230);
-        drawBtn(g2,"Create",w/2-60,280,120,36,menuHover==20);drawBtn(g2,"Back",w/2-60,330,120,36,menuHover==21);
+        drawBtn(g2,superflat?"World: Superflat":"World: Normal",w/2-140,255,280,32,menuHover==22);
+        drawBtn(g2,"Create",w/2-60,300,120,36,menuHover==20);drawBtn(g2,"Back",w/2-60,350,120,36,menuHover==21);
     }
 
     private void drawMultiplayer(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
@@ -1306,7 +1311,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         int w=getWidth()/2;
         if(screen==Screen.MENU){if(inBtn(mx,my,w-100,140,200,40))menuHover=0;else if(inBtn(mx,my,w-100,190,200,40))menuHover=1;else if(inBtn(mx,my,w-100,240,200,40))menuHover=2;else if(inBtn(mx,my,w-100,290,200,40))menuHover=3;else if(inBtn(mx,my,w-100,340,200,40))menuHover=4;else if(inBtn(mx,my,w-100,390,95,32))menuHover=5;else if(inBtn(mx,my,w+5,390,95,32))menuHover=6;}
         if(screen==Screen.WORLD_LIST){int yy=Math.max(worldList.isEmpty()?130:100+worldList.size()*42+10,350);if(inBtn(mx,my,w-120,yy,240,36))menuHover=10;else if(selectedWorld>=0&&inBtn(mx,my,w-120,yy+46,240,36))menuHover=11;else if(selectedWorld>=0&&inBtn(mx,my,w-60,yy+92,120,36))menuHover=12;else if(inBtn(mx,my,w-60,yy+138,120,36))menuHover=13;}
-        if(screen==Screen.CREATE_WORLD){if(inBtn(mx,my,w-60,280,120,36))menuHover=20;else if(inBtn(mx,my,w-60,330,120,36))menuHover=21;}
+        if(screen==Screen.CREATE_WORLD){if(inBtn(mx,my,w-60,300,120,36))menuHover=20;else if(inBtn(mx,my,w-60,350,120,36))menuHover=21;else if(inBtn(mx,my,w-140,255,280,32))menuHover=22;}
         if(screen==Screen.MULTIPLAYER){
             int yy=100+Math.min(discoveredServers.size(),5)*42;
             yy=Math.max(yy+10,300);
@@ -1345,8 +1350,9 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             else if(inBtn(wx,wy,w-60,yy+138,120,36)){stopNetworking();screen=Screen.MENU;}return;
         }
         if(screen==Screen.CREATE_WORLD){
-            if(inBtn(wx,wy,w-60,280,120,36)&&!typing.isEmpty()){worldName=typing;genWorld(System.currentTimeMillis());screen=Screen.PLAY;}
-            else if(inBtn(wx,wy,w-60,330,120,36))screen=Screen.WORLD_LIST;return;
+            if(inBtn(wx,wy,w-140,255,280,32)){superflat=!superflat;return;}
+            if(inBtn(wx,wy,w-60,300,120,36)&&!typing.isEmpty()){worldName=typing;genWorld(System.currentTimeMillis());screen=Screen.PLAY;}
+            else if(inBtn(wx,wy,w-60,350,120,36))screen=Screen.WORLD_LIST;return;
         }
         if(screen==Screen.MULTIPLAYER){
             int yy=100+Math.min(discoveredServers.size(),5)*42;
