@@ -1,3 +1,4 @@
+//sha:6fda8454
 //sha:2683f3ad
 //sha:aba4c5bd
 //sha:c93ef505
@@ -199,7 +200,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                     try{socket.receive(pkt);String data=new String(pkt.getData(),0,pkt.getLength());
                         if(data.equals("MINICRAFT_DISCOVER")){
                             int pc=isHost&&server!=null?server.getPlayerCount():0;
-                            String resp="MINICRAFT_SERVER "+serverPort+" "+worldName+" "+pc;
+                            String resp="MINICRAFT_SERVER 25565 "+worldName+" "+pc;
                             byte[] rbuf=resp.getBytes();
                             DatagramPacket rpkt=new DatagramPacket(rbuf,rbuf.length,pkt.getAddress(),pkt.getPort());
                             socket.send(rpkt);
