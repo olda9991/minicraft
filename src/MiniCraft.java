@@ -1,3 +1,4 @@
+//sha:074172dc
 //sha:3bde94bb
 //sha:90f0605e
 //sha:1e9658fd
@@ -212,32 +213,29 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private DiscordRPC discordRPC; 
 
     class DiscordRPC extends Thread{
-        private java.net.Socket sock;private boolean running=true;private java.io.PrintWriter out;
+        private boolean running=true;private Process proc;private java.io.PrintWriter rpcOut;
         public void run(){
             while(running){
                 try{
-                    try{
-                        String pipe=System.getenv("XDG_RUNTIME_DIR");
-                        if(pipe==null)pipe="/run/user/"+System.getProperty("user.name");
-                        pipe+="/discord-ipc-0";
-                        java.net.UnixDomainSocketAddress a=java.net.UnixDomainSocketAddress.of(pipe);
-                        sock=java.nio.channels.SocketChannel.open(a).socket();
-                    }catch(Exception e){try{sock=new java.net.Socket("127.0.0.1",6463);}catch(Exception e2){cleanup();if(running)Thread.sleep(30000);continue;}}
-                    sock.setSoTimeout(2000);
-                    out=new java.io.PrintWriter(sock.getOutputStream(),true);
-                    java.io.BufferedReader in=new java.io.BufferedReader(new java.io.InputStreamReader(sock.getInputStream()));
-                    out.print("{\"v\":1,\"client_id\":\"1512377902195540018\"}\n");out.flush();
-                    String resp=in.readLine();if(resp==null||!resp.contains("READY")){cleanup();if(running)Thread.sleep(30000);continue;}
+                    String dir=System.getProperty("user.dir");
+                    proc=new ProcessBuilder("python3",dir+"/discord_rpc.py").start();
+                    rpcOut=new java.io.PrintWriter(proc.getOutputStream(),true);
                     updatePresence();
-                    while(running){try{Thread.sleep(15000);updatePresence();}catch(Exception e){break;}}
+                    while(running&&proc.isAlive()){try{Thread.sleep(15000);updatePresence();}catch(Exception e){break;}}
                     break;
                 }catch(Exception e){cleanup();if(running)try{Thread.sleep(30000);}catch(Exception ex){break;}}
             }
         }
         void updatePresence(){
-            try{if(out==null)return;String state=screen==Screen.PLAY?(survival?"Survival":"Creative"):"In Menu";out.print("{\"cmd\":\"SET_ACTIVITY\",\"args\":{\"pid\":"+ProcessHandle.current().pid()+",\"activity\":{\"details\":\"MiniCraft v"+VERSION+"\",\"state\":\""+state+"\",\"assets\":{\"large_image\":\"minecraft\",\"large_text\":\"MiniCraft\"}},\"nonce\":\""+System.currentTimeMillis()+"\"}}\n");out.flush();}catch(Exception e){cleanup();}
+            try{
+                String details="MiniCraft v"+VERSION;
+                String state="In Menu";
+                if(screen==Screen.PLAY){state=survival?"Survival":"Creative";if(!worldName.isEmpty())details=worldName;}
+                String json="{\"details\":\""+details+"\",\"state\":\""+state+"\",\"assets\":{\"large_image\":\"minecraft\",\"large_text\":\"MiniCraft\"}}";
+                if(rpcOut!=null){rpcOut.println(json);rpcOut.flush();}
+            }catch(Exception e){}
         }
-        void cleanup(){try{if(sock!=null)sock.close();}catch(Exception e){}sock=null;out=null;}
+        void cleanup(){try{if(proc!=null)proc.destroy();}catch(Exception e){}proc=null;rpcOut=null;}
         void stopRPC(){running=false;cleanup();}
     }
 
