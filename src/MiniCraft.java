@@ -1,3 +1,4 @@
+//sha:dca32d86
 //sha:9fec86eb
 //sha:0ad507ca
 //sha:a27a7a51
@@ -835,7 +836,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             case "survival":survival=true;addChat("Mode","survival");break;
             case "give":if(parts.length>1){try{int b=Integer.parseInt(parts[1]),c=parts.length>2?Integer.parseInt(parts[2]):1;addToInv(b,c);addChat("Give",""+c+"x "+BNAME[Math.min(b,BLOCK_COUNT-1)]);}catch(Exception e){addChat("Give","usage: /give <id> [count]");}}break;
             case "kill":health=0;dead=true;deathDrop();screen=Screen.DEATH;break;
-            case "help":addChat("Cmds","time day/night, tp x y, heal, creative, survival, give id, kill, nether");break;
+            case "help":addChat("Cmds","time day/night, tp x y, heal, creative, survival, give id, kill, nether, rpc");break;
+            case "rpc":if(discordRPC!=null){discordRPC.stopRPC();discordRPC=null;addChat("RPC","stopped");}else{discordRPC=new DiscordRPC();discordRPC.setDaemon(true);discordRPC.start();addChat("RPC","started");}break;
             case "nether":inNether=!inNether;genWorld(worldSeed);addChat("Nether",inNether?"Entered!":"Overworld!");break;
             default:addChat("CMD","unknown: /"+parts[0]+"  use /help");
         }
@@ -1641,5 +1643,5 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
 
     public static void main(String[] args){JFrame f=new JFrame("MiniCraft");MiniCraft g=new MiniCraft();f.add(g);f.pack();f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);f.setLocationRelativeTo(null);f.setResizable(false);f.setVisible(true);
-        f.addWindowListener(new java.awt.event.WindowAdapter(){public void windowClosing(java.awt.event.WindowEvent e){g.saveSettings();g.stopNetworking();if(g.discordRPC!=null)g.discordRPC.stopRPC();}});}
+        f.addWindowListener(new java.awt.event.WindowAdapter(){public void windowClosing(java.awt.event.WindowEvent e){g.saveSettings();g.stopNetworking();if(g.discordRPC!=null)g.discordRPC.stopRPC();try{Runtime.getRuntime().exec("pkill -f discord_rpc.py");}catch(Exception ex){}System.exit(0);}});}
 }
