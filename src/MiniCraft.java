@@ -46,7 +46,7 @@ import javax.sound.sampled.*;
 
 public class MiniCraft extends JPanel implements ActionListener, KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
     private static final int TILE = 32, W = 128, H = 64, VW = 25, VH = 18;
-    private static final String VERSION = "5.0";
+    private static final String VERSION = "5.2";
     private static final String GITHUB_API = "https://api.github.com/repos/olda9991/minicraft/commits/main";
     private static final String GITHUB_RAW = "https://raw.githubusercontent.com/olda9991/minicraft/main/src/MiniCraft.java";
     private static final String DATA_DIR = System.getProperty("user.dir") + "/worlds/";
