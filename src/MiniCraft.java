@@ -1,3 +1,4 @@
+//sha:eb07462a
 //sha:192d03dd
 //sha:ff663c0b
 //sha:a0d703c6
@@ -857,7 +858,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     private void drawConnect(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
         g2.setFont(new Font("PixelPurl",Font.BOLD,28));g2.setColor(new Color(100,200,60));g2.drawString("Connect",w/2-60,60);
-        g2.setFont(new Font("PixelPurl",Font.PLAIN,18));g2.setColor(Color.WHITE);g2.drawString("Server Address",w/2-150,130);
+        g2.setFont(new Font("PixelPurl",Font.PLAIN,18));g2.setColor(Color.WHITE);        g2.drawString("Join Server",w/2-150,130);
         g2.setColor(new Color(40,40,40));g2.fillRect(w/2-150,145,300,35);g2.setColor(Color.WHITE);g2.drawRect(w/2-150,145,300,35);
         g2.setFont(new Font("PixelPurl",Font.PLAIN,16));g2.drawString(typing+(System.currentTimeMillis()/500%2==0?"_":""),w/2-140,170);
         drawBtn(g2,"Connect",w/2-60,220,120,36,menuHover==40);drawBtn(g2,"Back",w/2-60,270,120,36,menuHover==41);
@@ -1200,13 +1201,14 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             int yy=100+Math.min(discoveredServers.size(),5)*42;
             yy=Math.max(yy+10,300);
             if(inBtn(wx,wy,w-100,yy,200,36)){stopNetworking();loadUnconnectedWorld();screen=Screen.HOST;}
-            else if(inBtn(wx,wy,w-100,yy+46,200,36)){typing="localhost:25565";screen=Screen.CONNECT;}
+            else if(inBtn(wx,wy,w-100,yy+46,200,36)){typing="";screen=Screen.CONNECT;}
             else if(inBtn(wx,wy,w-100,yy+92,200,36)){discoveredServers.clear();if(discovery!=null)discovery.stopDisc();discovery=new DiscoveryThread();discovery.start();}
             else if(inBtn(wx,wy,w-100,yy+138,200,36)){if(discovery!=null)discovery.stopDisc();screen=Screen.MENU;}
             else if(selectedServer>=0&&selectedServer<discoveredServers.size()){
                 DiscoveredServer ds=discoveredServers.get(selectedServer);
+                serverIP=ds.ip;serverPort=ds.port;
                 typing=ds.ip+":"+ds.port;
-                screen=Screen.CONNECT;
+                tryConnect();
             }
             return;
         }
