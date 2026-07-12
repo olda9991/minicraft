@@ -1,3 +1,4 @@
+//sha:a503a4cf
 //sha:6b77481f
 //sha:fc6865f2
 //sha:ca4a31c3
@@ -1577,7 +1578,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                             boolean found=false;
                             synchronized(remotePlayers){
                                 for(RemotePlayer rp:remotePlayers)if(rp.name!=null&&rp.name.equals(pname)){rp.targetX=sx;rp.targetY=sy;found=true;break;}
-                                if(!found)remotePlayers.add(new RemotePlayer(pname,sx,sy));
+                                if(!found){remotePlayers.add(new RemotePlayer(pname,sx,sy));System.out.println("[Client] P-ADD "+pname+" @"+sx+","+sy+" total:"+remotePlayers.size());}
                             }
                         });
                     }
@@ -1589,13 +1590,13 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                             boolean exists=false;
                             synchronized(remotePlayers){
                                 for(RemotePlayer rp:remotePlayers)if(rp.name!=null&&rp.name.equals(jname)){rp.targetX=jx;rp.targetY=jy;exists=true;break;}
-                                if(!exists)remotePlayers.add(new RemotePlayer(jname,jx,jy));
+                                if(!exists){remotePlayers.add(new RemotePlayer(jname,jx,jy));System.out.println("[Client] J-ADD "+jname+" @"+jx+","+jy+" total:"+remotePlayers.size());}
                             }
                         });
                     }
                     else if(p[0].equals("L")&&p.length>1){
                         final String lname=p[1];
-                        SwingUtilities.invokeLater(()->{synchronized(remotePlayers){remotePlayers.removeIf(rp->rp.name!=null&&rp.name.equals(lname));}});
+                        SwingUtilities.invokeLater(()->{synchronized(remotePlayers){remotePlayers.removeIf(rp->rp.name!=null&&rp.name.equals(lname));System.out.println("[Client] L-REMOVE "+lname+" total:"+remotePlayers.size());}});
                     }
                     else if(p[0].equals("B")&&p.length>=4){
                         final int bx=Integer.parseInt(p[1]),by=Integer.parseInt(p[2]),bl=Integer.parseInt(p[3]);
