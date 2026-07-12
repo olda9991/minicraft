@@ -218,12 +218,14 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             while(running){
                 try{
                     String dir=System.getProperty("user.dir");
-                    proc=new ProcessBuilder("python3",dir+"/discord_rpc.py").start();
+                    String py="python3";
+                    try{new ProcessBuilder(py,"--version").start().waitFor();}catch(Exception e){py="python";try{new ProcessBuilder(py,"--version").start().waitFor();}catch(Exception e2){return;}}
+                    proc=new ProcessBuilder(py,dir+"/discord_rpc.py").start();
                     rpcOut=new java.io.PrintWriter(proc.getOutputStream(),true);
                     updatePresence();
                     while(running&&proc.isAlive()){try{Thread.sleep(15000);updatePresence();}catch(Exception e){break;}}
                     break;
-                }catch(Exception e){cleanup();if(running)try{Thread.sleep(30000);}catch(Exception ex){break;}}
+                }catch(Exception e){if(running)try{Thread.sleep(30000);}catch(Exception ex){break;}cleanup();}
             }
         }
         void updatePresence(){
