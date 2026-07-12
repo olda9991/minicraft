@@ -1,4 +1,4 @@
-//sha:8254d601
+//sha:ca4a31c3
 //sha:4ec7002e
 //sha:845cfc00
 //sha:6aa16497
@@ -238,21 +238,21 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             while(running){
                 try{
                     try{
-                        String pipe=System.getenv("XDG_RUNTIME_DIR");
-                        if(pipe==null)pipe="/run/user/"+System.getProperty("user.name");
-                        pipe+="/discord-ipc-0";
-                        java.net.UnixDomainSocketAddress a=java.net.UnixDomainSocketAddress.of(pipe);
-                        sock=java.nio.channels.SocketChannel.open(a).socket();
-                    }catch(Exception e){try{sock=new java.net.Socket("127.0.0.1",6463);}catch(Exception e2){cleanup();if(running)Thread.sleep(30000);continue;}}
+                        String[] pipes={System.getenv("XDG_RUNTIME_DIR")+"/discord-ipc-0",
+                            "/run/user/"+System.getProperty("user.name")+"/discord-ipc-0",
+                            System.getProperty("user.home")+"/.config/discord/ipc-0"};
+                        for(String pipe:pipes)try{java.net.UnixDomainSocketAddress a=java.net.UnixDomainSocketAddress.of(pipe);sock=java.nio.channels.SocketChannel.open(a).socket();break;}catch(Exception e2){}
+                        if(sock==null)try{sock=new java.net.Socket("127.0.0.1",6463);sock.setSoTimeout(2000);}catch(Exception e2){cleanup();if(running)Thread.sleep(10000);continue;}
+                    }catch(Exception e){cleanup();if(running)Thread.sleep(10000);continue;}
                     sock.setSoTimeout(2000);
                     out=new java.io.PrintWriter(sock.getOutputStream(),true);
                     java.io.BufferedReader in=new java.io.BufferedReader(new java.io.InputStreamReader(sock.getInputStream()));
                     out.print("{\"v\":1,\"client_id\":\"1512377902195540018\"}\n");out.flush();
-                    String resp=in.readLine();if(resp==null||!resp.contains("READY")){cleanup();if(running)Thread.sleep(30000);continue;}
+                    String resp=in.readLine();if(resp==null||!resp.contains("READY")){cleanup();if(running)Thread.sleep(10000);continue;}
                     updatePresence();
                     while(running){try{Thread.sleep(15000);updatePresence();}catch(Exception e){break;}}
                     break;
-                }catch(Exception e){cleanup();if(running)try{Thread.sleep(30000);}catch(Exception ex){break;}}
+                }catch(Exception e){cleanup();if(running)try{Thread.sleep(10000);}catch(Exception ex){break;}}
             }
         }
         void updatePresence(){
@@ -1445,15 +1445,17 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                         String[] p=line.split(" ",4);
                         if(p[0].equals("J")){
                             name=p.length>1?p[1]:"Player";
-                            int cnt=0;for(ClientHandler ch:clients)if(ch.name!=null&&ch.name.equals(name))cnt++;
+                            int cnt=0;ArrayList<ClientHandler> snap;
+                            synchronized(clients){snap=new ArrayList<>(clients);}
+                            for(ClientHandler ch:snap)if(ch!=this&&ch.name!=null&&ch.name.equals(name))cnt++;
                             if(cnt>0){String base=name.replaceAll("\\d+$","");name=base+(cnt+1);}
                             out.println("N "+name);
-                            int plrIdx=0;for(ClientHandler ch:clients)if(ch!=this&&ch.name!=null)plrIdx++;
+                            int plrIdx=0;for(ClientHandler ch:snap)if(ch!=this&&ch.name!=null)plrIdx++;
                             double spx=px+(plrIdx%3*48)-48;
-                            double spy=py-(plrIdx/3)*48;
-                            int gx=(int)(spx/TILE),gy=(int)((spy+playerH/2)/TILE);
-                            if(gx<0||gx>=W){spx=px;}else{int gy2=getGround(gx);spy=gy2*TILE-playerH/2;}
-                            synchronized(remotePlayers){remotePlayers.add(new RemotePlayer(name,spx,spy));}
+                            double spy=py-(plrIdx*(plrIdx%3==0?64:32));
+                            int gx=(int)(spx/TILE);
+                            if(gx>=0&&gx<W){int gy2=getGround(gx);spy=gy2*TILE-playerH/2;}else{spx=px;}
+                            synchronized(remotePlayers){boolean has=false;for(RemotePlayer rp:remotePlayers)if(rp.name!=null&&rp.name.equals(name))has=true;if(!has)remotePlayers.add(new RemotePlayer(name,spx,spy));}
                             out.println("W "+W+" "+H);
                             StringBuilder batch=new StringBuilder();
                             for(int x=0;x<W;x++)for(int y=0;y<H;y++){
