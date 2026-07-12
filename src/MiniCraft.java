@@ -243,6 +243,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     class DiscordRPC extends Thread{
         private java.nio.channels.SocketChannel chan;private boolean running=true;
+        private long startTime=0;private String lastState="";
         public void run(){
             while(running){
                 try{
@@ -257,16 +258,16 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                             break;
                         }catch(Exception e2){}
                     }
-                    if(chan==null||!chan.isConnected()){if(running)Thread.sleep(30000);continue;}
+                    if(chan==null||!chan.isConnected()){if(running)Thread.sleep(5000);continue;}
                     System.out.println("[RPC] Connected");
-                    // Handshake: opcode 0 (4 bytes little-endian) + length (4 bytes) + JSON
                     writeFrame(0,"{\"v\":1,\"client_id\":\"1512377902195540018\"}");
                     String resp=readFrame();
-                    if(resp==null||!resp.contains("READY")){cleanup();if(running)Thread.sleep(30000);continue;}
+                    if(resp==null||!resp.contains("READY")){cleanup();if(running)Thread.sleep(5000);continue;}
+                    startTime=System.currentTimeMillis();
                     updatePresence();
-                    while(running){try{Thread.sleep(15000);updatePresence();}catch(Exception e){break;}}
+                    while(running){try{Thread.sleep(100);updatePresence();}catch(Exception e){break;}}
                     break;
-                }catch(Exception e){cleanup();if(running)try{Thread.sleep(30000);}catch(Exception ex){break;}}
+                }catch(Exception e){cleanup();if(running)try{Thread.sleep(5000);}catch(Exception ex){break;}}
             }
         }
         private void writeFrame(int opcode,String json) throws Exception{
@@ -288,7 +289,9 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             try{
                 if(chan==null||!chan.isConnected())return;
                 String state=screen==Screen.PLAY?(survival?"Survival":"Creative"):"In Menu";
-                String json="{\"cmd\":\"SET_ACTIVITY\",\"args\":{\"pid\":"+ProcessHandle.current().pid()+",\"activity\":{\"details\":\"MiniCraft v"+VERSION+"\",\"state\":\""+state+"\",\"assets\":{\"large_image\":\"minecraft\",\"large_text\":\"MiniCraft\"}}},\"nonce\":\""+System.currentTimeMillis()+"\"}";
+                if(state.equals(lastState))return;
+                lastState=state;
+                String json="{\"cmd\":\"SET_ACTIVITY\",\"args\":{\"pid\":"+ProcessHandle.current().pid()+",\"activity\":{\"details\":\"MiniCraft v"+VERSION+"\",\"state\":\""+state+"\",\"timestamps\":{\"start\":"+startTime+"},\"assets\":{\"large_image\":\"minecraft\",\"large_text\":\"MiniCraft\"}}},\"nonce\":\""+System.currentTimeMillis()+"\"}";
                 writeFrame(1,json);
                 String ack=readFrame();
             }catch(Exception e){cleanup();}
