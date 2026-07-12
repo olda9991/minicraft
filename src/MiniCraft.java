@@ -1192,9 +1192,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 String[] parts=a.split(":");String ip=parts[0];int port=parts.length>1?Integer.parseInt(parts[1]):25565;
                 serverIP=ip;serverPort=port;
                 client=new MiniClient(ip,port);
-                if(client.connect()){SwingUtilities.invokeLater(()->{screen=Screen.CONNECTING;});}
-                else{SwingUtilities.invokeLater(()->{screen=Screen.CONNECT;lastMsg="Failed: "+ip+":"+port;});}
-            }catch(Exception e){SwingUtilities.invokeLater(()->{screen=Screen.CONNECT;lastMsg="Error!";});}
+                if(client.connect()){
+                    new Thread(()->{try{Thread.sleep(8000);SwingUtilities.invokeLater(()->{if(screen==Screen.CONNECTING){screen=Screen.CONNECT;lastMsg="Timeout! Server not responding.";}});}catch(Exception e){}}).start();}
+                else{SwingUtilities.invokeLater(()->{screen=Screen.CONNECT;lastMsg="Failed: connection refused";});}
+            }catch(Exception e){SwingUtilities.invokeLater(()->{screen=Screen.CONNECT;lastMsg="Error: "+e.getMessage();});}
         }).start();
     }
 
