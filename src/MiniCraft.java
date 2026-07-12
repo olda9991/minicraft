@@ -1,3 +1,4 @@
+//sha:845cfc00
 //sha:6aa16497
 //sha:daf003d6
 //sha:c2888a02
@@ -1442,7 +1443,11 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                         String[] p=line.split(" ",4);
                         if(p[0].equals("J")){
                             name=p.length>1?p[1]:"Player";
-                            synchronized(remotePlayers){remotePlayers.add(new RemotePlayer(name,(int)px,(int)py));}
+                            int plrIdx=0;for(ClientHandler ch:clients)if(ch!=this&&ch.name!=null)plrIdx++;
+                            double spx=px+(plrIdx%3*48)-48;
+                            double spy=py-(plrIdx/3)*48;
+                            if(!isSolid((int)(spx/TILE),(int)((spy+playerH/2)/TILE))){spx=px;spy=py;}
+                            synchronized(remotePlayers){remotePlayers.add(new RemotePlayer(name,spx,spy));}
                             out.println("W "+W+" "+H);
                             StringBuilder batch=new StringBuilder();
                             for(int x=0;x<W;x++)for(int y=0;y<H;y++){
@@ -1451,12 +1456,12 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                             }
                             if(batch.length()>0){out.print(batch.toString());out.flush();}
                             out.println("WD");out.flush();
-                            out.println("S "+(int)px+" "+(int)py);
+                            out.println("S "+(int)spx+" "+(int)spy);
                             out.println("J "+playerName+" "+(int)px+" "+(int)py);
                             for(ClientHandler ch:clients)if(ch!=this&&ch.name!=null){
                                 out.println("J "+ch.name+" "+ch.x+" "+ch.y);
                             }
-                            broadcast("J "+name+" "+px+" "+py,name);
+                            broadcast("J "+name+" "+spx+" "+spy,name);
                             for(int hc=Math.max(0,chatMessages.size()-5);hc<chatMessages.size();hc++){
                                 String cm=chatMessages.get(hc);
                                 int ci=cm.indexOf('>');
@@ -1538,7 +1543,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                         final double jy=p.length>=4?Double.parseDouble(p[3]):0;
                         SwingUtilities.invokeLater(()->{
                             boolean exists=false;
-                            synchronized(remotePlayers){for(RemotePlayer rp:remotePlayers)if(rp.name!=null&&rp.name.equals(jname))exists=true;if(!exists)remotePlayers.add(new RemotePlayer(jname,jx,jy));}
+                            synchronized(remotePlayers){
+                                for(RemotePlayer rp:remotePlayers)if(rp.name!=null&&rp.name.equals(jname)){rp.targetX=jx;rp.targetY=jy;exists=true;break;}
+                                if(!exists)remotePlayers.add(new RemotePlayer(jname,jx,jy));
+                            }
                         });
                     }
                     else if(p[0].equals("L")&&p.length>1){
