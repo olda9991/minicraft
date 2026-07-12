@@ -720,7 +720,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(keys[KeyEvent.VK_A]||keys[KeyEvent.VK_LEFT])dx-=speed;
         if(keys[KeyEvent.VK_D]||keys[KeyEvent.VK_RIGHT])dx+=speed;
         if(keys[KeyEvent.VK_W]||keys[KeyEvent.VK_UP])dy-=speed;
-        if(keys[KeyEvent.VK_S]||keys[KeyEvent.VK_DOWN])dy+=speed;
+        if(keys[KeyEvent.VK_S]||keys[KeyEvent.VK_DOWN]){if(!survival||noclip)dy+=speed;else speed*=0.5;}
         boolean moving=dx!=0||dy!=0;walking=moving;
         if(keys[KeyEvent.VK_SHIFT]&&moving&&!ultraFps&&Math.random()<0.3)particles.add(new Particle(px-playerW/2-Math.random()*playerW,py+playerH/2,COBBLESTONE));
         if(moving){walkSoundTimer++;if(walkSoundTimer>20){walkSoundTimer=0;playSFX("grass");}}
