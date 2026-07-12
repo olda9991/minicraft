@@ -1,3 +1,4 @@
+//sha:9fec86eb
 //sha:0ad507ca
 //sha:a27a7a51
 //sha:38836b38
@@ -292,7 +293,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             }catch(Exception e){cleanup();}
         }
         void cleanup(){try{if(chan!=null)chan.close();}catch(Exception e){}chan=null;}
-        void stopRPC(){running=false;cleanup();}
+        void stopRPC(){running=false;cleanup();this.interrupt();}
     }
 
     public MiniCraft(){
@@ -1640,5 +1641,5 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
 
     public static void main(String[] args){JFrame f=new JFrame("MiniCraft");MiniCraft g=new MiniCraft();f.add(g);f.pack();f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);f.setLocationRelativeTo(null);f.setResizable(false);f.setVisible(true);
-        f.addWindowListener(new java.awt.event.WindowAdapter(){public void windowClosing(java.awt.event.WindowEvent e){g.saveSettings();g.stopNetworking();}});}
+        f.addWindowListener(new java.awt.event.WindowAdapter(){public void windowClosing(java.awt.event.WindowEvent e){g.saveSettings();g.stopNetworking();if(g.discordRPC!=null)g.discordRPC.stopRPC();}});}
 }
