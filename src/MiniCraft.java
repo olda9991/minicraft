@@ -767,7 +767,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(chatTimer>0)chatTimer--;
         long posTime=System.currentTimeMillis();
         if(isHost&&server!=null&&posTime%100<80){
-            server.broadcast("P "+playerName+" "+(int)px+" "+(int)py);
+            server.broadcast("P 0 "+(int)px+" "+(int)py);
         }
         if(!isHost&&client!=null&&client.isConnected()&&posTime%100<80){
             client.send("P "+(int)px+" "+(int)py);
@@ -797,9 +797,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
 
     private void syncName(){
-        String msg="N "+playerName;
-        if(isHost&&server!=null){server.broadcast(msg);}
-        if(client!=null&&client.isConnected())client.send(msg);
+        if(client!=null&&client.isConnected())client.send("N "+playerName);
     }
 
     private void syncBlock(int x,int y,int block){
@@ -1443,20 +1441,21 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
     }
 
-    class RemotePlayer{double x,y,targetX,targetY;String name;RemotePlayer(String n,double x,double y){this.name=n;this.x=this.targetX=x;this.y=this.targetY=y;}}
+    class RemotePlayer{int id;double x,y,targetX,targetY;String name;RemotePlayer(int i,String n,double sx,double sy){id=i;name=n;x=targetX=sx;y=targetY=sy;}}
 
     class MiniServer extends Thread{
         private ServerSocket ss;private boolean running=false;
         private ArrayList<ClientHandler> clients=new ArrayList<>();
+        private int nextId=1;
         MiniServer(int port){try{ss=new ServerSocket(port);System.out.println("Server listening on port "+port);}catch(Exception e){System.err.println("Server FAILED on port "+port+": "+e.getMessage());}}
         public void run(){
             running=true;
             while(running){try{ClientHandler ch=new ClientHandler(ss.accept());ch.start();synchronized(clients){clients.add(ch);}}catch(Exception e){if(running)try{Thread.sleep(100);}catch(Exception ex){}break;}}
         }
-        void broadcast(String msg,String skip){
+        void broadcast(String msg,int skipId){
             ArrayList<ClientHandler> snapshot;
             synchronized(clients){snapshot=new ArrayList<>(clients);}
-            for(ClientHandler ch:snapshot)if(ch.name!=null&&!ch.name.equals(skip))try{ch.send(msg);}catch(Exception e){}
+            for(ClientHandler ch:snapshot)if(ch.name!=null&&ch.id!=skipId)try{ch.send(msg);}catch(Exception e){}
         }
         void broadcast(String msg){
             ArrayList<ClientHandler> snapshot;
@@ -1468,12 +1467,13 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         void stopServer(){running=false;try{if(ss!=null)ss.close();}catch(Exception e){}synchronized(clients){for(ClientHandler ch:clients)ch.interrupt();clients.clear();}}
         void removeClient(ClientHandler ch){
             synchronized(clients){clients.remove(ch);}
-            broadcast("L "+ch.name);
-            synchronized(remotePlayers){remotePlayers.removeIf(rp->rp.name!=null&&rp.name.equals(ch.name));}
+            broadcast("L "+ch.id+" "+ch.name);
+            synchronized(remotePlayers){remotePlayers.removeIf(rp->rp.id==ch.id);}
+            System.out.println("[Server] -Player id:"+ch.id+" "+ch.name);
         }
 
         class ClientHandler extends Thread{
-            Socket s;PrintWriter out;BufferedReader in;String name="";int x,y;
+            Socket s;PrintWriter out;BufferedReader in;String name="";int x,y,id;
             ClientHandler(Socket s){this.s=s;}
             public void run(){
                 try{out=new PrintWriter(s.getOutputStream(),true);in=new BufferedReader(new InputStreamReader(s.getInputStream()));
@@ -1481,18 +1481,19 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                     while((line=in.readLine())!=null){
                         String[] p=line.split(" ",4);
                         if(p[0].equals("J")){
+                            id=nextId++;
                             name=p.length>1?p[1]:"Player";
-                            int cnt=0;ArrayList<ClientHandler> snap;
+                            ArrayList<ClientHandler> snap;
                             synchronized(clients){snap=new ArrayList<>(clients);}
-                            for(ClientHandler ch:snap)if(ch!=this&&ch.name!=null&&ch.name.equals(name))cnt++;
+                            int cnt=0;for(ClientHandler ch:snap)if(ch!=this&&ch.name!=null&&ch.name.equals(name))cnt++;
                             if(cnt>0){String base=name.replaceAll("\\d+$","");int n=2;name=base+n;while(true){boolean taken=false;for(ClientHandler ch:snap)if(ch!=this&&ch.name!=null&&ch.name.equals(name)){taken=true;break;}if(!taken)break;n++;name=base+n;}}
-                            out.println("N "+name);
+                            out.println("N "+id+" "+name);
                             int plrIdx=0;for(ClientHandler ch:snap)if(ch!=this&&ch.name!=null)plrIdx++;
                             double spx=px+(plrIdx%3*48)-48;
                             double spy=py-(plrIdx*(plrIdx%3==0?64:32));
                             int gx=(int)(spx/TILE);
                             if(gx>=0&&gx<W){int gy2=getGround(gx);spy=gy2*TILE-playerH/2;}else{spx=px;}
-                            synchronized(remotePlayers){boolean has=false;for(RemotePlayer rp:remotePlayers)if(rp.name!=null&&rp.name.equals(name))has=true;if(!has){remotePlayers.add(new RemotePlayer(name,spx,spy));System.out.println("[Server] +Player "+name+" @ "+spx+","+spy+" total:"+remotePlayers.size());}else{System.out.println("[Server] !Dup name "+name+" skipped");}}
+                            synchronized(remotePlayers){remotePlayers.add(new RemotePlayer(id,name,spx,spy));System.out.println("[Server] +Player id:"+id+" "+name+" total:"+remotePlayers.size());}
                             out.println("W "+W+" "+H);
                             StringBuilder batch=new StringBuilder();
                             for(int x=0;x<W;x++)for(int y=0;y<H;y++){
@@ -1502,11 +1503,11 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                             if(batch.length()>0){out.print(batch.toString());out.flush();}
                             out.println("WD");out.flush();
                             out.println("S "+(int)spx+" "+(int)spy);
-                            out.println("J "+playerName+" "+(int)px+" "+(int)py);
+                            out.println("J 0 "+playerName+" "+(int)px+" "+(int)py);
                             for(ClientHandler ch:clients)if(ch!=this&&ch.name!=null){
-                                out.println("J "+ch.name+" "+ch.x+" "+ch.y);
+                                out.println("J "+ch.id+" "+ch.name+" "+ch.x+" "+ch.y);
                             }
-                            broadcast("J "+name+" "+spx+" "+spy,name);
+                            broadcast("J "+id+" "+name+" "+spx+" "+spy,id);
                             for(int hc=Math.max(0,chatMessages.size()-5);hc<chatMessages.size();hc++){
                                 String cm=chatMessages.get(hc);
                                 int ci=cm.indexOf('>');
@@ -1516,23 +1517,23 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                         else if(p[0].equals("P")&&p.length>=3){
                             x=(int)Double.parseDouble(p[1]);y=(int)Double.parseDouble(p[2]);
                             synchronized(remotePlayers){
-                                for(RemotePlayer rp:remotePlayers)if(rp.name!=null&&rp.name.equals(name)){rp.targetX=Double.parseDouble(p[1]);rp.targetY=Double.parseDouble(p[2]);}
+                                for(RemotePlayer rp:remotePlayers)if(rp.id==id){rp.targetX=Double.parseDouble(p[1]);rp.targetY=Double.parseDouble(p[2]);break;}
                             }
-                            broadcast("P "+name+" "+p[1]+" "+p[2],name);
+                            broadcast("P "+id+" "+p[1]+" "+p[2],id);
                         }
                         else if(p[0].equals("B")&&p.length>=4){
                             final int bx=Integer.parseInt(p[1]),by=Integer.parseInt(p[2]),bl=Integer.parseInt(p[3]);
                             SwingUtilities.invokeLater(()->{if(bx>=0&&bx<W&&by>=0&&by<H)world[bx][by]=bl;});
-                            broadcast("B "+bx+" "+by+" "+bl,name);
+                            broadcast("B "+bx+" "+by+" "+bl,id);
                         }
                         else if(p[0].equals("C")&&p.length>=3){
                             String msg=p[2];addChat(name,msg);
-                            broadcast("C "+name+" "+msg,name);
+                            broadcast("C "+name+" "+msg,id);
                         }
                         else if(p[0].equals("N")&&p.length>=2){
                             String oldName=name;name=p[1];
-                            synchronized(remotePlayers){remotePlayers.removeIf(rp->rp.name!=null&&rp.name.equals(oldName));remotePlayers.add(new RemotePlayer(name,(int)px,(int)py));}
-                            broadcast("N "+oldName+" "+name,"");
+                            synchronized(remotePlayers){remotePlayers.removeIf(rp->rp.id==id);remotePlayers.add(new RemotePlayer(id,name,(int)px,(int)py));}
+                            broadcast("N "+id+" "+oldName+" "+name,0);
                         }
                     }
                 }catch(Exception e){}finally{try{s.close();}catch(Exception e){}if(name!=null)removeClient(this);}
@@ -1573,43 +1574,45 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                         SwingUtilities.invokeLater(()->{world=tw;screen=Screen.PLAY;});
                     }
                     else if(p[0].equals("P")&&p.length>=4){
-                        final String pname=p[1];final double sx=Double.parseDouble(p[2]),sy=Double.parseDouble(p[3]);
+                        final int pid=Integer.parseInt(p[1]);
+                        final double sx=Double.parseDouble(p[2]),sy=Double.parseDouble(p[3]);
                         SwingUtilities.invokeLater(()->{
-                            boolean found=false;
                             synchronized(remotePlayers){
-                                for(RemotePlayer rp:remotePlayers)if(rp.name!=null&&rp.name.equals(pname)){rp.targetX=sx;rp.targetY=sy;found=true;break;}
-                                if(!found){remotePlayers.add(new RemotePlayer(pname,sx,sy));System.out.println("[Client] P-ADD "+pname+" @"+sx+","+sy+" total:"+remotePlayers.size());}
+                                for(RemotePlayer rp:remotePlayers)if(rp.id==pid){rp.targetX=sx;rp.targetY=sy;return;}
+                                remotePlayers.add(new RemotePlayer(pid,"?",sx,sy));
+                                System.out.println("[Client] P-ADD id:"+pid+" total:"+remotePlayers.size());
                             }
                         });
                     }
-                    else if(p[0].equals("J")&&p.length>1){
-                        final String jname=p[1];
-                        final double jx=p.length>=4?Double.parseDouble(p[2]):0;
-                        final double jy=p.length>=4?Double.parseDouble(p[3]):0;
+                    else if(p[0].equals("J")&&p.length>=5){
+                        final int jid=Integer.parseInt(p[1]);
+                        final String jname=p[2];
+                        final double jx=Double.parseDouble(p[3]),jy=Double.parseDouble(p[4]);
                         SwingUtilities.invokeLater(()->{
-                            boolean exists=false;
                             synchronized(remotePlayers){
-                                for(RemotePlayer rp:remotePlayers)if(rp.name!=null&&rp.name.equals(jname)){rp.targetX=jx;rp.targetY=jy;exists=true;break;}
-                                if(!exists){remotePlayers.add(new RemotePlayer(jname,jx,jy));System.out.println("[Client] J-ADD "+jname+" @"+jx+","+jy+" total:"+remotePlayers.size());}
+                                for(RemotePlayer rp:remotePlayers)if(rp.id==jid){rp.name=jname;rp.targetX=jx;rp.targetY=jy;return;}
+                                remotePlayers.add(new RemotePlayer(jid,jname,jx,jy));
+                                System.out.println("[Client] J-ADD id:"+jid+" "+jname+" total:"+remotePlayers.size());
                             }
                         });
                     }
-                    else if(p[0].equals("L")&&p.length>1){
-                        final String lname=p[1];
-                        SwingUtilities.invokeLater(()->{synchronized(remotePlayers){remotePlayers.removeIf(rp->rp.name!=null&&rp.name.equals(lname));System.out.println("[Client] L-REMOVE "+lname+" total:"+remotePlayers.size());}});
+                    else if(p[0].equals("L")&&p.length>=2){
+                        final int lid=Integer.parseInt(p[1]);
+                        SwingUtilities.invokeLater(()->{synchronized(remotePlayers){remotePlayers.removeIf(rp->rp.id==lid);System.out.println("[Client] L-REMOVE id:"+lid+" total:"+remotePlayers.size());}});
                     }
                     else if(p[0].equals("B")&&p.length>=4){
                         final int bx=Integer.parseInt(p[1]),by=Integer.parseInt(p[2]),bl=Integer.parseInt(p[3]);
                         SwingUtilities.invokeLater(()->{if(world!=null&&bx>=0&&bx<world.length&&by>=0&&by<world[0].length)world[bx][by]=bl;});
                     }
                     else if(p[0].equals("C")&&p.length>=3){addChat(p[1],line.substring(line.indexOf(' ',line.indexOf(' ')+1)+1));}
-                    else if(p[0].equals("N")&&p.length>=2){
-                        if(p.length==2){playerName=p[1];}
-                        else{
-                            final String oldN=p[1],newN=p[2];
+                    else if(p[0].equals("N")&&p.length>=3){
+                        final int nid=Integer.parseInt(p[1]);
+                        if(p.length==3){playerName=p[2];}
+                        else if(p.length>=4){
+                            final String newN=p[3];
                             SwingUtilities.invokeLater(()->{
                                 synchronized(remotePlayers){
-                                    for(RemotePlayer rp:remotePlayers)if(rp.name!=null&&rp.name.equals(oldN)){rp.name=newN;break;}
+                                    for(RemotePlayer rp:remotePlayers)if(rp.id==nid){rp.name=newN;break;}
                                 }
                             });
                         }
