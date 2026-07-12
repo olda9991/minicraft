@@ -1385,7 +1385,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         private boolean worldReady=false;
         MiniClient(String h,int p){host=h;port=p;}
         boolean connect(){
-            try{s=new Socket(host,port);out=new PrintWriter(s.getOutputStream(),true);in=new BufferedReader(new InputStreamReader(s.getInputStream()));connected=true;running=true;start();out.println("J "+playerName);return true;}
+            try{s=new Socket();s.connect(new java.net.InetSocketAddress(host,port),4000);s.setSoTimeout(4000);out=new PrintWriter(s.getOutputStream(),true);in=new BufferedReader(new InputStreamReader(s.getInputStream()));connected=true;running=true;start();out.println("J "+playerName);return true;}
             catch(Exception e){return false;}
         }
         public void run(){
