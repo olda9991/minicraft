@@ -978,18 +978,20 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
 
     @Override public void keyPressed(KeyEvent e){
-        if(e.getKeyCode()==KeyEvent.VK_F1){showFps=!showFps;return;}
-        if(e.getKeyCode()==KeyEvent.VK_F2){showCoords=!showCoords;return;}
-        if(e.getKeyCode()==KeyEvent.VK_F3){ultraFps=!ultraFps;return;}
-        if(e.getKeyCode()==KeyEvent.VK_F4){rtxMode=!rtxMode;return;}
-        if(e.getKeyCode()==KeyEvent.VK_F5){rtxWater=!rtxWater;return;}
-        if(e.getKeyCode()==KeyEvent.VK_F6){physicsLevel=(physicsLevel+1)%3;physicsOn=physicsLevel>0;return;}
-        if(e.getKeyCode()==KeyEvent.VK_M){toggleMusic();return;}
-        if(e.getKeyCode()==KeyEvent.VK_F11&&(screen==Screen.PLAY||screen==Screen.SETTINGS)){
+        if(!chatOpen){
+            if(e.getKeyCode()==KeyEvent.VK_F1){showFps=!showFps;return;}
+            if(e.getKeyCode()==KeyEvent.VK_F2){showCoords=!showCoords;return;}
+            if(e.getKeyCode()==KeyEvent.VK_F3){ultraFps=!ultraFps;return;}
+            if(e.getKeyCode()==KeyEvent.VK_F4){rtxMode=!rtxMode;return;}
+            if(e.getKeyCode()==KeyEvent.VK_F5){rtxWater=!rtxWater;return;}
+            if(e.getKeyCode()==KeyEvent.VK_F6){physicsLevel=(physicsLevel+1)%3;physicsOn=physicsLevel>0;return;}
+            if(e.getKeyCode()==KeyEvent.VK_M){toggleMusic();return;}
+            if(e.getKeyCode()==KeyEvent.VK_F11&&(screen==Screen.PLAY||screen==Screen.SETTINGS)){
             fullscreen=!fullscreen;
             JFrame f=(JFrame)SwingUtilities.getWindowAncestor(this);
             if(f!=null){f.dispose();f.setUndecorated(fullscreen);f.setExtendedState(fullscreen?JFrame.MAXIMIZED_BOTH:JFrame.NORMAL);f.setVisible(true);}
             return;
+        }
         }
         if(e.getKeyCode()==KeyEvent.VK_G&&(screen==Screen.PLAY||screen==Screen.SETTINGS)&&!chatOpen){noclip=!noclip;return;}
         if(screen==Screen.SETTINGS){
