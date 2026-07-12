@@ -686,10 +686,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(msgTimer>0)msgTimer--;
         if(chatTimer>0)chatTimer--;
         long posTime=System.currentTimeMillis();
-        if(isHost&&server!=null&&posTime%200<16){
+        if(isHost&&server!=null&&posTime%100<80){
             server.broadcast("P "+playerName+" "+(int)px+" "+(int)py);
         }
-        if(!isHost&&client!=null&&client.isConnected()&&posTime%100<16){
+        if(!isHost&&client!=null&&client.isConnected()&&posTime%100<80){
             client.send("P "+(int)px+" "+(int)py);
         }
         if(ultraFps||posTime%3!=0||!physicsOn){}else{
