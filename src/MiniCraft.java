@@ -1226,15 +1226,15 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     @Override public void mousePressed(MouseEvent e){int wx=e.getX(),wy=e.getY(),w=getWidth()/2;
         if(screen==Screen.HELP){screen=Screen.MENU;return;}
         if(screen==Screen.MENU){
-            if(inBtn(wx,wy,w-100,140,200,40)){refreshWorldList();screen=worldList.isEmpty()?Screen.CREATE_WORLD:Screen.WORLD_LIST;}
-            else if(inBtn(wx,wy,w-100,190,200,40)){
+            if(inBtn(wx,wy,w-100,140,200,40)){playSound("click");refreshWorldList();screen=worldList.isEmpty()?Screen.CREATE_WORLD:Screen.WORLD_LIST;}
+            else if(inBtn(wx,wy,w-100,190,200,40)){playSound("click");
                 discoveredServers.clear();selectedServer=-1;
                 if(discovery!=null)discovery.stopDisc();discovery=new DiscoveryThread();discovery.start();
                 screen=Screen.MULTIPLAYER;
             }
-            else if(inBtn(wx,wy,w-100,240,200,40)){screen=Screen.SETTINGS;}
-            else if(inBtn(wx,wy,w-100,290,200,40)){try{Runtime.getRuntime().exec(new String[]{"flatpak","run","org.prismlauncher.PrismLauncher"});}catch(Exception ex){try{Runtime.getRuntime().exec(new String[]{"/var/home/olda/PrismLauncher-Linux-x86_64.AppImage"});}catch(Exception ex2){}}}
-            else if(inBtn(wx,wy,w-100,340,200,40))System.exit(0);
+            else if(inBtn(wx,wy,w-100,240,200,40)){playSound("click");screen=Screen.SETTINGS;}
+            else if(inBtn(wx,wy,w-100,290,200,40)){playSound("click");try{Runtime.getRuntime().exec(new String[]{"flatpak","run","org.prismlauncher.PrismLauncher"});}catch(Exception ex){try{Runtime.getRuntime().exec(new String[]{"/var/home/olda/PrismLauncher-Linux-x86_64.AppImage"});}catch(Exception ex2){}}}
+            else if(inBtn(wx,wy,w-100,340,200,40)){playSound("click");System.exit(0);}
             else if(inBtn(wx,wy,w-100,390,95,32)){try{java.awt.Desktop.getDesktop().browse(java.net.URI.create("https://discord.gg/wAWrPCHR5z"));}catch(Exception ex){}}
             else if(inBtn(wx,wy,w+5,390,95,32)){try{java.awt.Desktop.getDesktop().browse(java.net.URI.create("https://github.com/olda9991/minicraft"));}catch(Exception ex){}}
             return;
