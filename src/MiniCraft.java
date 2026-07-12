@@ -1,3 +1,4 @@
+//sha:3a06463f
 //sha:e84488e6
 //sha:eb07462a
 //sha:192d03dd
@@ -381,6 +382,11 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         try{String dir=System.getProperty("user.dir");
             webProcess=new ProcessBuilder("python3",dir+"/webserver.py").redirectErrorStream(true).start();
             boreProcess=new ProcessBuilder("bore","local","25565","--to","bore.pub").redirectErrorStream(true).start();
+            new Thread(()->{
+                try{java.io.BufferedReader r=new java.io.BufferedReader(new java.io.InputStreamReader(boreProcess.getInputStream()));
+                    String l;while((l=r.readLine())!=null){if(l.contains("listening at")){serverPort=Integer.parseInt(l.replaceAll(".*:","").trim());break;}}
+                }catch(Exception e){}
+            }).start();
         }catch(Exception e){}
     }
 
