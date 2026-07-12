@@ -1,17 +1,31 @@
 @echo off
-REM MiniCraft Launcher for Windows
-REM Requires Java 21+ from https://adoptium.net/
+setlocal enabledelayedexpansion
+title MiniCraft
 
-setlocal
-set "JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-21.0.2.13-hotspot"
-set "PATH=%JAVA_HOME%\bin;%PATH%"
-
-where java >nul 2>nul
-if %ERRORLEVEL% neq 0 (
+REM Find Java
+set JAVA=
+for /f "tokens=*" %%i in ('where java 2^>nul') do set JAVA=%%i
+if "%JAVA%"=="" (
+    if defined JAVA_HOME set "JAVA=%JAVA_HOME%\bin\java.exe"
+)
+if "%JAVA%"=="" (
+    if exist "C:\Program Files\Eclipse Adoptium\jdk-21.0.2.13-hotspot\bin\java.exe" (
+        set "JAVA=C:\Program Files\Eclipse Adoptium\jdk-21.0.2.13-hotspot\bin\java.exe"
+    )
+)
+if "%JAVA%"=="" (
     echo Java not found! Install Java 21 from https://adoptium.net/
     pause
     exit /b 1
 )
 
-java -cp build MiniCraft
-pause
+REM Prefer JAR, fallback to compiled classes
+if exist MiniCraft.jar (
+    "%JAVA%" -jar MiniCraft.jar %*
+) else if exist build\MiniCraft.class (
+    "%JAVA%" -cp build MiniCraft %*
+) else (
+    echo No MiniCraft.jar or build\ found! Run update.bat first.
+    pause
+    exit /b 1
+)
