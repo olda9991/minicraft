@@ -1,4 +1,4 @@
-//sha:5bebd9cd
+//sha:90f0605e
 //sha:1e9658fd
 //sha:3a06463f
 //sha:e84488e6
@@ -40,7 +40,7 @@ import javax.sound.sampled.*;
 
 public class MiniCraft extends JPanel implements ActionListener, KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
     private static final int TILE = 32, W = 128, H = 64, VW = 25, VH = 18;
-    private static final String VERSION = "4.0";
+    private static final String VERSION = "5.0";
     private static final String GITHUB_API = "https://api.github.com/repos/olda9991/minicraft/commits/main";
     private static final String GITHUB_RAW = "https://raw.githubusercontent.com/olda9991/minicraft/main/src/MiniCraft.java";
     private static final String DATA_DIR = System.getProperty("user.dir") + "/worlds/";
@@ -211,31 +211,32 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private DiscordRPC discordRPC; 
 
     class DiscordRPC extends Thread{
-        private java.net.Socket sock;private boolean running=true;private java.io.PrintWriter out;
+        private java.net.Socket sock;private boolean running=true;private java.io.PrintWriter out;private java.io.BufferedReader in;
         public void run(){
-            while(running){
-                try{
-                    String pipe=System.getenv("XDG_RUNTIME_DIR");
-                    if(pipe==null)pipe="/run/user/"+System.getProperty("user.name");
-                    pipe+="/discord-ipc-0";
-                    java.net.UnixDomainSocketAddress addr=java.net.UnixDomainSocketAddress.of(pipe);
-                    sock=java.nio.channels.SocketChannel.open(addr).socket();
-                    sock.setSoTimeout(2000);
-                    out=new java.io.PrintWriter(sock.getOutputStream(),true);
-                    out.print("{\"v\":1,\"client_id\":\"1512377902195540018\"}\n");out.flush();
-                    String resp=new java.io.BufferedReader(new java.io.InputStreamReader(sock.getInputStream())).readLine();
-                    if(resp==null||!resp.contains("READY")){cleanup();break;}
-                    updatePresence();
-                    while(running){try{Thread.sleep(15000);updatePresence();}catch(Exception e){break;}}
-                    break;
-                }catch(Exception e){cleanup();if(running)try{Thread.sleep(30000);}catch(Exception ex){break;}}
-            }
+            try{
+                String pipe=System.getenv("XDG_RUNTIME_DIR");
+                if(pipe==null)pipe="/run/user/"+System.getProperty("user.name");
+                pipe+="/discord-ipc-0";
+                java.net.UnixDomainSocketAddress addr=java.net.UnixDomainSocketAddress.of(pipe);
+                java.nio.channels.SocketChannel sc=java.nio.channels.SocketChannel.open(addr);
+                sock=sc.socket();sock.setSoTimeout(2000);
+                if(sock==null)return;
+                out=new java.io.PrintWriter(sock.getOutputStream(),true);in=new java.io.BufferedReader(new java.io.InputStreamReader(sock.getInputStream()));
+                out.print("{\"v\":1,\"client_id\":\"1512377902195540018\"}\n");out.flush();
+                in.readLine();
+                updatePresence();
+                while(running){try{Thread.sleep(15000);updatePresence();}catch(Exception e){break;}}
+            }catch(Exception e){try{Thread.sleep(5000);}catch(Exception ex){}}
         }
         void updatePresence(){
-            try{String state=screen==Screen.PLAY?(survival?"Survival":"Creative"):"In Menu";out.print("{\"cmd\":\"SET_ACTIVITY\",\"args\":{\"pid\":"+ProcessHandle.current().pid()+",\"activity\":{\"details\":\"MiniCraft v"+VERSION+"\",\"state\":\""+state+"\",\"assets\":{\"large_image\":\"minecraft\",\"large_text\":\"MiniCraft\"}},\"nonce\":\""+System.currentTimeMillis()+"\"}}\n");out.flush();}catch(Exception e){cleanup();}
+            try{
+                String state="In Menu";
+                if(screen==Screen.PLAY)state=survival?"Survival":"Creative";
+                String json="{\"cmd\":\"SET_ACTIVITY\",\"args\":{\"pid\":"+ProcessHandle.current().pid()+",\"activity\":{\"details\":\"MiniCraft v"+VERSION+"\",\"state\":\""+state+"\",\"assets\":{\"large_image\":\"minecraft\",\"large_text\":\"MiniCraft\"}},\"nonce\":\""+System.currentTimeMillis()+"\"}}";
+                out.print(json+"\n");out.flush();
+            }catch(Exception e){}
         }
-        void cleanup(){try{if(sock!=null)sock.close();}catch(Exception e){}sock=null;out=null;}
-        void stopRPC(){running=false;cleanup();}
+        void stopRPC(){running=false;try{if(sock!=null)sock.close();}catch(Exception e){}}
     }
 
     public MiniCraft(){
@@ -403,11 +404,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }catch(Exception e){e.printStackTrace();}
     }
 
-     private void playNext(){
+    private void playNext(){
         if(!musicOn||musicFiles.isEmpty())return;
         new Thread(()->{
             try{
-                Thread.sleep(2000);
                 String path=musicFiles.get((int)(Math.random()*musicFiles.size()));
                 System.out.println("Playing: "+path);
                 if(!path.endsWith(".wav")){
@@ -422,7 +422,6 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 if(musicClip!=null){musicClip.stop();musicClip.close();}
                 musicClip=javax.sound.sampled.AudioSystem.getClip();
                 musicClip.open(ais);
-                try{javax.sound.sampled.FloatControl vol=(javax.sound.sampled.FloatControl)musicClip.getControl(javax.sound.sampled.FloatControl.Type.MASTER_GAIN);vol.setValue(-6.0f);}catch(Exception e2){}
                 musicClip.start();
                 musicClip.addLineListener(ev->{if(ev.getType()==javax.sound.sampled.LineEvent.Type.STOP)playNext();});
             }catch(Exception e){e.printStackTrace();playNext();}
