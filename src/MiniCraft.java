@@ -1,3 +1,4 @@
+//sha:192d03dd
 //sha:ff663c0b
 //sha:a0d703c6
 //sha:2e33f393
@@ -264,7 +265,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         loadSettings();
         timer=new javax.swing.Timer(16,this);timer.start();
         new Thread(()->checkUpdate()).start();
-        new Thread(()->{try{Thread.sleep(1000);loadMusic();loadSFX();        discordRPC=new DiscordRPC();discordRPC.setDaemon(true);discordRPC.start();}catch(Exception e){}}).start();
+        new Thread(()->{try{Thread.sleep(1000);loadMusic();loadSFX();discordRPC=new DiscordRPC();discordRPC.setDaemon(true);discordRPC.start();loadMods();}catch(Exception e){}}).start();
     }
 
     private BufferedImage makeIcon(Color c,int s){BufferedImage img=new BufferedImage(s,s,BufferedImage.TYPE_INT_ARGB);Graphics2D g=img.createGraphics();g.setColor(c);g.fillOval(1,1,s-2,s-2);g.setColor(c.brighter());g.fillOval(2,1,s-4,s-3);g.dispose();return img;}
@@ -454,6 +455,20 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(webProcess!=null){webProcess.destroy();webProcess=null;}
     }
 
+    private void loadMods(){
+        try{
+            File mdir=new File(System.getProperty("user.dir")+"/mods");
+            if(!mdir.exists()){mdir.mkdir();return;}
+            File[] files=mdir.listFiles((d,n)->n.endsWith(".class"));
+            if(files==null||files.length==0)return;
+            java.net.URL[] urls={mdir.toURI().toURL()};
+            java.net.URLClassLoader cl=new java.net.URLClassLoader(urls);
+            for(File f:files){
+                try{String n=f.getName().replace(".class","");cl.loadClass(n);System.out.println("[MiniCraft] Mod loaded: "+n);}catch(Exception e){}
+            }
+        }catch(Exception e){}
+    }
+
     private void genWorld(long seed){
         world=new int[W][H];Random r=new Random(seed);
         int[] hm=new int[W];
@@ -506,6 +521,19 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             if((world[x][y]==STONE||world[x][y]==COBBLESTONE)&&r.nextInt(50)==0){
                 int sz=2+r.nextInt(4);
                 for(int cx=x;cx<x+sz&&cx<W;cx++)for(int cy=y;cy<y+sz/2&&cy<H;cy++)if(cx>=0&&cx<W&&cy>=0&&cy<H)world[cx][cy]=0;
+            }
+        }
+        for(int i=0;i<3;i++){
+            int dx=10+r.nextInt(W-20),dy=H/2+r.nextInt(H/3);
+            if(world[dx][dy]==STONE){
+                for(int x=dx-2;x<=dx+2;x++)for(int y=dy-2;y<=dy+2;y++)
+                    if(x>=0&&x<W&&y>=0&&y<H)world[x][y]=0;
+                if(dy+2<H)world[dx][dy+2]=CHEST;
+                world[dx-2][dy]=COBBLESTONE;world[dx+2][dy]=COBBLESTONE;
+                world[dx][dy-2]=COBBLESTONE;world[dx][dy+2]=COBBLESTONE;
+                for(int x=dx-1;x<=dx+1;x++)for(int y=dy-1;y<=dy+1;y++)
+                    if(x>=0&&x<W&&y>=0&&y<H)world[x][y]=0;
+                if(dy<H-1)world[dx][dy]=COAL_ORE;
             }
         }
         px=W/2.0*TILE;py=getGround(W/2)*TILE-playerH/2;health=20;hunger=20;dead=false;fallDist=0;playerVy=0;survival=true;
@@ -636,6 +664,12 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                     }
                 }
             }
+            if(posTime%30==0)for(int y=H-2;y>=0;y--)for(int x=1;x<W-1;x++)if(world[x][y]==LAVA){
+                for(int fx=-1;fx<=1;fx++)for(int fy=-1;fy<=1;fy++){
+                    int b=world[x+fx][y+fy];
+                    if(b==OAK_LOG||b==SPRUCE_LOG||b==BIRCH_LOG||b==JUNGLE_LOG||(b>=OAK_PLANKS&&b<=DARK_OAK_PLANKS)||(b>=OAK_LEAVES&&b<=DARK_OAK_LEAVES)||b==WOOL)world[x+fx][y+fy]=LAVA;
+                }
+            }
         }
         repaint();
     }
@@ -706,7 +740,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private void explode(int bx,int by){
         for(int x=bx-3;x<=bx+3;x++)for(int y=by-3;y<=by+3;y++){
             if(x>=0&&x<W&&y>=0&&y<H&&world[x][y]!=BEDROCK&&Math.abs(x-bx)+Math.abs(y-by)<=4){
-                spawnParticles(x,y,world[x][y]);world[x][y]=0;
+                if(world[x][y]==OAK_LOG||world[x][y]==SPRUCE_LOG||world[x][y]==BIRCH_LOG||world[x][y]==JUNGLE_LOG||world[x][y]==ACACIA_LOG||world[x][y]==DARK_OAK_LOG||world[x][y]==OAK_LEAVES||world[x][y]==SPRUCE_LEAVES||world[x][y]==BIRCH_LEAVES||world[x][y]==JUNGLE_LEAVES||world[x][y]==ACACIA_LEAVES||world[x][y]==DARK_OAK_LEAVES||world[x][y]==WOOL||world[x][y]>=OAK_PLANKS&&world[x][y]<=DARK_OAK_PLANKS)world[x][y]=LAVA;
+                else spawnParticles(x,y,world[x][y]);world[x][y]=0;
             }
         }
         for(int i=0;i<40;i++)particles.add(new Particle(bx*TILE,by*TILE,COAL_ORE));
