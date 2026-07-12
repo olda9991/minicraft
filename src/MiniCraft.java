@@ -1300,17 +1300,18 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         MiniServer(int port){try{ss=new ServerSocket(port);}catch(Exception e){}}
         public void run(){
             running=true;
-            while(running){try{ClientHandler ch=new ClientHandler(ss.accept());ch.start();clients.add(ch);}catch(Exception e){if(running)try{Thread.sleep(100);}catch(Exception ex){}break;}}
+            while(running){try{ClientHandler ch=new ClientHandler(ss.accept());ch.start();synchronized(clients){clients.add(ch);}}catch(Exception e){if(running)try{Thread.sleep(100);}catch(Exception ex){}break;}}
         }
         void broadcast(String msg,String skip){
-            for(ClientHandler ch:clients)if(ch.name!=null&&!ch.name.equals(skip))ch.send(msg);
+            synchronized(clients){for(ClientHandler ch:clients)if(ch.name!=null&&!ch.name.equals(skip))ch.send(msg);}
         }
-        void broadcast(String msg){for(ClientHandler ch:clients)if(ch.name!=null)ch.send(msg);}
+        void broadcast(String msg){synchronized(clients){for(ClientHandler ch:clients)if(ch.name!=null)ch.send(msg);}}
         int getPlayerCount(){return clients.size()+1;}
         boolean isRunning(){return running;}
-        void stopServer(){running=false;try{if(ss!=null)ss.close();}catch(Exception e){}for(ClientHandler ch:clients){try{ch.interrupt();}catch(Exception ex){}}clients.clear();}
+        void stopServer(){running=false;try{if(ss!=null)ss.close();}catch(Exception e){}synchronized(clients){for(ClientHandler ch:clients)ch.interrupt();clients.clear();}}
         void removeClient(ClientHandler ch){
-            clients.remove(ch);broadcast("L "+ch.name);
+            synchronized(clients){clients.remove(ch);}
+            broadcast("L "+ch.name);
             synchronized(remotePlayers){remotePlayers.removeIf(rp->rp.name!=null&&rp.name.equals(ch.name));}
         }
 
