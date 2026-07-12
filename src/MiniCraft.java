@@ -1,3 +1,4 @@
+//sha:c2888a02
 //sha:5ff0b62d
 //sha:d6bc9d04
 //sha:6fda8454
@@ -975,7 +976,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         for(int i=0;i<4;i++){
             if(ultraFps)break;
             g2.setColor(new Color(255,255,255,160));
-            int cx=((int)(500+i*300+frame*2)%(w+600))-300;
+            int cx=((500+i*300+frame*2)%(w+600))-300;
             g2.fillOval(cx,30-i*10,80+i*15,20+i*8);g2.fillOval(cx+40,34-i*8,50+i*10,14+i*5);
         }
         if(worldTime>3000&&worldTime<9000&&!ultraFps){
@@ -1393,7 +1394,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                             out.println("P "+playerName+" "+(int)px+" "+(int)py);
                             for(ClientHandler ch:clients)if(ch!=this&&ch.name!=null){
                                 out.println("J "+ch.name);
-                                out.println("P "+ch.name+" "+(int)ch.x+" "+(int)ch.y);
+                                out.println("P "+ch.name+" "+ch.x+" "+ch.y);
                             }
                             broadcast("J "+name,name);
                             for(int hc=Math.max(0,chatMessages.size()-5);hc<chatMessages.size();hc++){
