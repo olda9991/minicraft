@@ -64,6 +64,18 @@ if %ERRORLEVEL% equ 0 (
     )
 )
 
+REM Try scoop
+where scoop >nul 2>nul
+if %ERRORLEVEL% equ 0 (
+    echo Using Scoop...
+    scoop bucket add java 2>nul
+    scoop install temurin21-jdk 2>nul
+    if %ERRORLEVEL% equ 0 (
+        echo Java 21 installed via Scoop!
+        goto :eof
+    )
+)
+
 REM Fallback: download with PowerShell
 echo Downloading JDK with PowerShell...
 powershell -Command "$url='https://api.adoptium.net/v3/binary/latest/21/ga/windows/x64/jdk/hotspot/normal/eclipse'; $out='%TEMP%\jdk21.msi'; Invoke-WebRequest -Uri $url -OutFile $out; Start-Process msiexec.exe -Wait -ArgumentList '/i',$out,'/quiet','/norestart','INSTALLDIR=C:\Program Files\Eclipse Adoptium\jdk-21.0.2.13-hotspot'; Remove-Item $out" 2>nul
