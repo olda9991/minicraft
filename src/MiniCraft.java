@@ -1,3 +1,4 @@
+//sha:0e6c3572
 //sha:a0d703c6
 //sha:2e33f393
 //sha:d4bf54aa
@@ -41,6 +42,9 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     private BufferedImage[] tex, steveImg, heartImg, hungerImg;
     private BufferedImage logoImg;
+    private BufferedImage[] logoFrames;
+    private int logoFrame=0;
+    private long logoFrameTime=0;
     private int playerW=28, playerH=28;
 
     private static final int AIR=0,GRASS=1,DIRT=2,STONE=3,COBBLESTONE=4,BEDROCK=5,SAND=6,GRAVEL=7;
@@ -239,7 +243,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         steveImg[0]=makeSteve();}
         heartImg=new BufferedImage[1];heartImg[0]=makeIcon(new Color(200,0,0),9);
         hungerImg=new BufferedImage[1];hungerImg[0]=makeIcon(new Color(180,120,40),9);
-        try{logoImg=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/MINICRAFT.gif"));}catch(Exception e){try{logoImg=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/MINICRAFT.png"));}catch(Exception e2){logoImg=null;}}
+        try{javax.imageio.stream.ImageInputStream iis=javax.imageio.ImageIO.createImageInputStream(new File(System.getProperty("user.dir")+"/MINICRAFT.gif"));javax.imageio.ImageReader reader=javax.imageio.ImageIO.getImageReadersByFormatName("gif").next();reader.setInput(iis);int n=reader.getNumImages(true);logoFrames=new BufferedImage[n];for(int i=0;i<n;i++)logoFrames[i]=reader.read(i);reader.dispose();iis.close();}catch(Exception e){try{logoImg=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/MINICRAFT.png"));}catch(Exception e2){logoImg=null;}}
         try{discIcon=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/discord.png"));}catch(Exception e){discIcon=null;}
         try{ghIcon=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/github.png"));}catch(Exception e){ghIcon=null;}
         new File(DATA_DIR).mkdirs();
@@ -724,7 +728,12 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private boolean inBtn(int mx,int my,int x,int y,int w,int h){return mx>=x&&mx<x+w&&my>=y&&my<y+h;}
 
     private void drawMenu(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
-        if(logoImg!=null){
+        if(logoFrames!=null&&logoFrames.length>0){
+            long now=System.currentTimeMillis();if(now-logoFrameTime>80){logoFrame=(logoFrame+1)%logoFrames.length;logoFrameTime=now;}
+            BufferedImage f=logoFrames[logoFrame];
+            int lw=320,lh=(int)(320.0/f.getWidth()*f.getHeight());
+            g2.drawImage(f,w/2-lw/2,10,lw,lh,null);
+        }else if(logoImg!=null){
             int lw=320,lh=84;
             g2.drawImage(logoImg,w/2-lw/2,20,lw,lh,null);
         }else{
