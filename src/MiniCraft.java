@@ -1,3 +1,4 @@
+//sha:daf003d6
 //sha:c2888a02
 //sha:5ff0b62d
 //sha:d6bc9d04
@@ -1456,7 +1457,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                     }
                 }catch(Exception e){}finally{try{s.close();}catch(Exception e){}if(name!=null)removeClient(this);}
             }
-            void send(String m){try{if(out!=null){out.println(m);if(out.checkError())throw new Exception("broken");}}catch(Exception e){out=null;}}
+            void send(String m){try{if(out!=null){out.println(m);if(out.checkError()){out=null;try{s.close();}catch(Exception e2){}removeClient(this);}}}catch(Exception e){out=null;try{s.close();}catch(Exception e2){}removeClient(this);}}
         }
     }
 
