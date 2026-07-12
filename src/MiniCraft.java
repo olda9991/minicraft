@@ -1007,7 +1007,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             for(int i=0;i<60;i++){int rx=(i*117+frame*3)%w,ry=(i*83+frame*5)%h;g2.drawLine(rx,ry,rx,ry+8);}
         }
         int sx=camX/TILE,sy=camY/TILE,ex=Math.min(W,sx+gameFov+2),ey=Math.min(H,sy+gameFov*18/25+2);
-        for(int x=sx;x<ex;x++)for(int y=sy;y<ey;y++)if(world[x][y]>0){g2.drawImage(tex[Math.min(world[x][y],BLOCK_COUNT-1)],x*TILE-camX,y*TILE-camY,null);if(rtxWater&&world[x][y]==WATER){g2.setColor(new Color(60,120,255,40));g2.fillRect(x*TILE-camX-2,y*TILE-camY-2,TILE+4,TILE+4);g2.setColor(new Color(100,180,255,20+Math.abs(bobFrame%40-20)));g2.fillRect(x*TILE-camX,y*TILE-camY,TILE,TILE);}}
+        for(int x=sx;x<ex;x++)for(int y=sy;y<ey;y++)if(world[x][y]>0){g2.drawImage(tex[Math.min(world[x][y],BLOCK_COUNT-1)],x*TILE-camX,y*TILE-camY,null);if(rtxWater&&world[x][y]==WATER){g2.setColor(new Color(60,120,255,40));g2.fillRect(x*TILE-camX-2,y*TILE-camY-2,TILE+4,TILE+4);g2.setColor(new Color(100,180,255,20+Math.abs(bobFrame%40-20)));g2.fillRect(x*TILE-camX,y*TILE-camY,TILE,TILE);}if(world[x][y]==TORCH_ITEM){g2.setColor(new Color(255,200,50,40));g2.fillOval(x*TILE-camX-16,y*TILE-camY-16,64,64);g2.setColor(new Color(255,240,100,20));g2.fillOval(x*TILE-camX-24,y*TILE-camY-24,80,80);}}
         int pxOff=(int)(px-camX),pyOff=(int)(py-camY);
         int bob=(int)(Math.sin(frame*0.3)*2);
         g2.drawImage(steveImg[0],pxOff-playerW/2,pyOff-playerH/2+bob,null);
@@ -1342,7 +1342,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(screen==Screen.PLAY){int tx=(mx+camX)/TILE,ty=(my+camY)/TILE;if(!isIn(tx,ty))return;int pt=(int)(px/TILE),pyt=(int)(py/TILE);if(Math.abs(tx-pt)+Math.abs(ty-pyt)<2)return;
             if(e.getButton()==MouseEvent.BUTTON1){
                 boolean hitMob=false;int dmg=selBlock==SWORD?6:3;
-                for(Mob m:mobs){if(Math.abs((mx+camX)-m.x)<24&&Math.abs((my+camY)-m.y)<24){int critDmg=dmg;boolean onG=false;int fx=(int)((px+14)/TILE),fy=(int)((py+TILE-4)/TILE);if(isSolid(fx,fy))onG=true;if(!onG){critDmg*=2;}m.health-=critDmg;m.hurtT=10;dmgNums.add(new DmgNum(m.x,m.y-20,critDmg));m.x+=(m.x>px?8:-8);if(m.health<=0){drops.add(new DropItem(m.x,m.y,m.type==0?RAW_BEEF:m.type==1?RAW_PORK:m.type==3?WOOL:m.type==4?COOKED_BEEF:COOKED_BEEF));drops.add(new DropItem(m.x-10,m.y-10,EXP_ORB));mobs.remove(m);kills++;if(kills==1)achieve("First Blood!");if(kills==10)achieve("Monster Hunter!");if(kills==50)achieve("Slayer!");}hitMob=true;break;}}
+                for(Mob m:mobs){if(Math.abs((mx+camX)-m.x)<24&&Math.abs((my+camY)-m.y)<24){int critDmg=dmg;boolean onG=false;int fx=(int)((px+14)/TILE),fy=(int)((py+TILE-4)/TILE);if(isSolid(fx,fy))onG=true;if(!onG){critDmg*=2;}m.health-=critDmg;m.hurtT=10;dmgNums.add(new DmgNum(m.x,m.y-20,critDmg));m.x+=(m.x>px?8:-8);if(m.health<=0){if(m.type==6){drops.add(new DropItem(m.x,m.y,DIAMOND_GEM));drops.add(new DropItem(m.x-10,m.y,DIAMOND_GEM));for(int i=0;i<10;i++)drops.add(new DropItem(m.x+Math.random()*40-20,m.y+Math.random()*20-10,EXP_ORB));achieve("BOSS DEFEATED!");}else{drops.add(new DropItem(m.x,m.y,m.type==0?RAW_BEEF:m.type==1?RAW_PORK:m.type==3?WOOL:m.type==4?COOKED_BEEF:COOKED_BEEF));drops.add(new DropItem(m.x-10,m.y-10,EXP_ORB));}mobs.remove(m);kills++;if(kills==1)achieve("First Blood!");if(kills==10)achieve("Monster Hunter!");if(kills==50)achieve("Slayer!");}hitMob=true;break;}}
                 if(!hitMob){if(survival&&world[tx][ty]>0){breakX=tx;breakY=ty;breakTimer=0;int spd=1;if(selBlock==PICKAXE)spd=4;if(selBlock==AXE)spd=4;if(selBlock==SHOVEL)spd=4;breakTime=Math.max(1,BT[Math.min(world[tx][ty],BT.length-1)]/spd);}else if(!survival){world[tx][ty]=0;syncBlock(tx,ty,0);}}
             }
             else if(e.getButton()==MouseEvent.BUTTON3&&selBlock>=0&&(!survival||getInvCount(selBlock)>0)){
@@ -1357,7 +1357,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 if(survival&&selBlock==TOTEM){takeFromInv(TOTEM,1);armor=Math.max(armor,5);playSound("totem");return;}
                 if(survival&&selBlock==IRON_INGOT){takeFromInv(IRON_INGOT,1);armor=Math.max(armor,2);return;}
                 if(survival&&selBlock==DIAMOND_GEM){takeFromInv(DIAMOND_GEM,1);armor=Math.max(armor,3);return;}
-                if(selBlock<=CRAFTING_TABLE){world[tx][ty]=selBlock;if(survival)takeFromInv(selBlock,1);syncBlock(tx,ty,selBlock);}
+                if(survival&&world[tx][ty]==CHEST){for(int i=0;i<8;i++)if(inv[i]>0){addToInv(inv[i],invCount[i]);inv[i]=0;invCount[i]=0;}addChat("Chest","Opened!");}
+                else if(selBlock<=CRAFTING_TABLE){world[tx][ty]=selBlock;if(survival)takeFromInv(selBlock,1);syncBlock(tx,ty,selBlock);}
             }
         }
     }
