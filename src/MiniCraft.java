@@ -719,8 +719,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         double dx=0,dy=0;
         if(keys[KeyEvent.VK_A]||keys[KeyEvent.VK_LEFT])dx-=speed;
         if(keys[KeyEvent.VK_D]||keys[KeyEvent.VK_RIGHT])dx+=speed;
-        if(keys[KeyEvent.VK_W]||keys[KeyEvent.VK_UP])dy-=speed;
         if(keys[KeyEvent.VK_S]||keys[KeyEvent.VK_DOWN]){if(!survival||noclip)dy+=speed;else speed*=0.5;}
+        if(keys[KeyEvent.VK_W]||keys[KeyEvent.VK_UP]){if(!survival||noclip)dy-=speed;}
         boolean moving=dx!=0||dy!=0;walking=moving;
         if(keys[KeyEvent.VK_SHIFT]&&moving&&!ultraFps&&Math.random()<0.3)particles.add(new Particle(px-playerW/2-Math.random()*playerW,py+playerH/2,COBBLESTONE));
         if(moving){walkSoundTimer++;if(walkSoundTimer>20){walkSoundTimer=0;playSFX("grass");}}
@@ -1274,7 +1274,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(screen==Screen.DEATH&&e.getKeyCode()==KeyEvent.VK_ENTER){px=W/2.0*TILE;py=getGround(W/2)*TILE-playerH/2;health=20;hunger=20;dead=false;fallDist=0;playerVy=0;screen=Screen.PLAY;}
         if(screen==Screen.CRAFTING&&e.getKeyCode()==KeyEvent.VK_E){craftingOpen=false;screen=Screen.PLAY;return;}
         if(screen==Screen.CRAFTING&&e.getKeyCode()==KeyEvent.VK_SPACE){int[] r=getCraft();if(r[0]>0){boolean h=true;for(int i=0;i<4;i++)if(craftGrid[i]>0&&!takeFromInv(craftGrid[i],craftCount[i]))h=false;if(h){addToInv(r[0],r[1]);for(int i=0;i<4;i++){craftGrid[i]=0;craftCount[i]=0;}}}}
-        if(screen==Screen.PLAY&&e.getKeyCode()==KeyEvent.VK_SPACE){boolean onG=false;int fx=(int)((px+14)/TILE),fy=(int)((py+TILE-4)/TILE);if(isSolid(fx,fy))onG=true;if(survival&&selBlock==ELYTRA&&!onG){elytraFly=20;}else{int tx=(int)((px)/TILE),ty=(int)((py+playerH/2)/TILE);for(int dy=ty;dy<H;dy++)if(isSolid(tx,dy)){if(dy>0)py=(dy-1)*TILE;playerVy=0;break;}}}
+        if(screen==Screen.PLAY&&e.getKeyCode()==KeyEvent.VK_SPACE){boolean onG=false;for(int gx=-playerW/2;gx<=playerW/2;gx+=8){int fx=(int)((px+gx)/TILE),fy=(int)((py+playerH/2+2)/TILE);if(isSolid(fx,fy)){onG=true;break;}}if(survival&&selBlock==ELYTRA&&!onG){elytraFly=20;}else if(survival&&onG){playerVy=-8;}else if(!survival){int tx=(int)((px)/TILE),ty=(int)((py+playerH/2)/TILE);for(int dy=ty;dy<H;dy++)if(isSolid(tx,dy)){if(dy>0)py=(dy-1)*TILE;playerVy=0;break;}}}
     }
     @Override public void keyReleased(KeyEvent e){if(e.getKeyCode()>=0&&e.getKeyCode()<keys.length)keys[e.getKeyCode()]=false;}
     @Override public void keyTyped(KeyEvent e){}
