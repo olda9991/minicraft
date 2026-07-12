@@ -1,3 +1,4 @@
+//sha:2683f3ad
 //sha:aba4c5bd
 //sha:c93ef505
 //sha:779471cc
@@ -1365,7 +1366,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
 
         class ClientHandler extends Thread{
-            Socket s;PrintWriter out;BufferedReader in;String name="";
+            Socket s;PrintWriter out;BufferedReader in;String name="";int x,y;
             ClientHandler(Socket s){this.s=s;}
             public void run(){
                 try{out=new PrintWriter(s.getOutputStream(),true);in=new BufferedReader(new InputStreamReader(s.getInputStream()));
@@ -1385,7 +1386,11 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                             out.println("WD");out.flush();
                             out.println("S "+(int)px+" "+(int)py);
                             out.println("J "+playerName);
-                            for(ClientHandler ch:clients)if(ch!=this&&ch.name!=null)out.println("J "+ch.name);
+                            out.println("P "+playerName+" "+(int)px+" "+(int)py);
+                            for(ClientHandler ch:clients)if(ch!=this&&ch.name!=null){
+                                out.println("J "+ch.name);
+                                out.println("P "+ch.name+" "+(int)ch.x+" "+(int)ch.y);
+                            }
                             broadcast("J "+name,name);
                             for(int hc=Math.max(0,chatMessages.size()-5);hc<chatMessages.size();hc++){
                                 String cm=chatMessages.get(hc);
@@ -1394,6 +1399,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                             }
                         }
                         else if(p[0].equals("P")&&p.length>=3){
+                            x=(int)Double.parseDouble(p[1]);y=(int)Double.parseDouble(p[2]);
                             synchronized(remotePlayers){
                                 for(RemotePlayer rp:remotePlayers)if(rp.name!=null&&rp.name.equals(name)){rp.x=Double.parseDouble(p[1]);rp.y=Double.parseDouble(p[2]);}
                             }
