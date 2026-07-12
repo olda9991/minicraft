@@ -1,3 +1,4 @@
+//sha:38836b38
 //sha:ad9b24da
 //sha:a503a4cf
 //sha:6b77481f
@@ -119,7 +120,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private String typing="";
     private int selectedWorld=-1;
     private int menuHover=-1;
-    private boolean showFps=false, showCoords=true, noclip=false, fullscreen=false, ultraFps=false, rtxMode=false, rtxWater=false, physicsOn=true, superflat=false;
+    private boolean showFps=false, showCoords=true, noclip=false, fullscreen=false, ultraFps=false, rtxMode=false, rtxWater=false, physicsOn=true, superflat=false, bedrockEdition=false;
     private int shaderMode=0;
     private int physicsLevel=2;
     private int gameFov=25, settingSel=-1;
@@ -425,6 +426,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 if(p[0].equals("rtxWater"))rtxWater=Boolean.parseBoolean(p[1]);
                 if(p[0].equals("physicsLevel")){physicsLevel=Integer.parseInt(p[1]);physicsOn=physicsLevel>0;}
                 if(p[0].equals("shaderMode"))shaderMode=Integer.parseInt(p[1]);
+                if(p[0].equals("bedrockEdition"))bedrockEdition=Boolean.parseBoolean(p[1]);
                 if(p[0].equals("name"))playerName=p[1];
             }
             br.close();
@@ -895,8 +897,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         switch(screen){case MENU:drawMenu(g2);break;case WORLD_LIST:drawWorldList(g2);break;case CREATE_WORLD:drawCreateWorld(g2);break;case MULTIPLAYER:drawMultiplayer(g2);break;case CONNECT:drawConnect(g2);break;case HOST:drawHost(g2);break;case SETTINGS:drawSettings(g2);break;case CONNECTING:drawConnecting(g2);break;case PAUSE:drawPause(g2);break;case HELP:drawHelp(g2);break;case DEATH:drawDeath(g2);break;case CRAFTING:drawCrafting(g2);break;case PLAY:drawGame(g2);break;}
     }
 
-    private void drawDirtBG(Graphics2D g2,int w,int h){for(int x=0;x<w;x+=TILE)for(int y=0;y<h;y+=TILE)g2.drawImage(tex[DIRT],x,y,null);}
-    private void drawBtn(Graphics2D g2,String t,int x,int y,int w,int hh,boolean hov){g2.setColor(hov?new Color(120,120,120,200):new Color(80,80,80,200));g2.fillRect(x,y,w,hh);g2.setColor(hov?Color.WHITE:new Color(180,180,180));g2.drawRect(x,y,w,hh);g2.setFont(new Font("PixelPurl",Font.BOLD,18));g2.drawString(t,x+(w-g2.getFontMetrics().stringWidth(t))/2,y+hh-12);}
+    private void drawDirtBG(Graphics2D g2,int w,int h){for(int x=0;x<w;x+=TILE)for(int y=0;y<h;y+=TILE)g2.drawImage(tex[bedrockEdition?STONE:DIRT],x,y,null);}
+    private void drawBtn(Graphics2D g2,String t,int x,int y,int w,int hh,boolean hov){g2.setColor(hov?new Color(bedrockEdition?100:120,bedrockEdition?140:120,bedrockEdition?220:120,200):new Color(80,80,80,200));g2.fillRect(x,y,w,hh);g2.setColor(hov?Color.WHITE:new Color(180,180,180));g2.drawRect(x,y,w,hh);g2.setFont(new Font("PixelPurl",Font.BOLD,18));g2.drawString(t,x+(w-g2.getFontMetrics().stringWidth(t))/2,y+hh-12);}
     private boolean inBtn(int mx,int my,int x,int y,int w,int h){return mx>=x&&mx<x+w&&my>=y&&my<y+h;}
 
     private void drawMenu(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
@@ -912,14 +914,15 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             g2.setFont(new Font("PixelPurl",Font.PLAIN,36));g2.setColor(new Color(255,220,60));
             String t1="MiniCraft";g2.drawString(t1,w/2-120,68);
         }
-        String t2="v"+VERSION;g2.setFont(new Font("PixelPurl",Font.PLAIN,14));g2.setColor(new Color(180,180,180));g2.drawString(t2,w/2+80,108);
+        String t2=(bedrockEdition?"Bedrock":"Java")+" Edition v"+VERSION;g2.setFont(new Font("PixelPurl",Font.PLAIN,14));g2.setColor(new Color(180,180,180));g2.drawString(t2,w/2+20,108);
         if(updateAvailable){g2.setFont(new Font("PixelPurl",Font.PLAIN,14));g2.setColor(Color.YELLOW);g2.drawString("Update v"+updateVersion+" available! (update.sh or update.bat)",w/2-200,130);}
-        drawBtn(g2,"Singleplayer",w/2-100,140,200,40,menuHover==0);drawBtn(g2,"Multiplayer",w/2-100,190,200,40,menuHover==1);
-        drawBtn(g2,"Options",w/2-100,240,200,40,menuHover==2);drawBtn(g2,"Mods",w/2-100,290,200,40,menuHover==3);
-        drawBtn(g2,"Quit",w/2-100,340,200,40,menuHover==4);
-        drawBtn(g2," Discord",w/2-100,390,95,32,menuHover==5);drawBtn(g2," GitHub",w/2+5,390,95,32,menuHover==6);
-        if(discIcon!=null)g2.drawImage(discIcon,w/2-92,392,24,24,null);
-        if(ghIcon!=null)g2.drawImage(ghIcon,w/2+13,392,24,24,null);
+        drawBtn(g2,"Edition: "+(bedrockEdition?"Bedrock":"Java"),w/2-100,140,200,36,menuHover==7);
+        drawBtn(g2,"Singleplayer",w/2-100,186,200,40,menuHover==0);drawBtn(g2,"Multiplayer",w/2-100,236,200,40,menuHover==1);
+        drawBtn(g2,"Options",w/2-100,286,200,40,menuHover==2);drawBtn(g2,"Mods",w/2-100,336,200,40,menuHover==3);
+        drawBtn(g2,"Quit",w/2-100,386,200,40,menuHover==4);
+        drawBtn(g2," Discord",w/2-100,436,95,32,menuHover==5);drawBtn(g2," GitHub",w/2+5,436,95,32,menuHover==6);
+        if(discIcon!=null)g2.drawImage(discIcon,w/2-92,438,24,24,null);
+        if(ghIcon!=null)g2.drawImage(ghIcon,w/2+13,438,24,24,null);
     }
 
     private void drawWorldList(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
@@ -1309,7 +1312,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     @Override public void mouseMoved(MouseEvent e){mx=e.getX();my=e.getY();menuHover=-1;
         int w=getWidth()/2;
-        if(screen==Screen.MENU){if(inBtn(mx,my,w-100,140,200,40))menuHover=0;else if(inBtn(mx,my,w-100,190,200,40))menuHover=1;else if(inBtn(mx,my,w-100,240,200,40))menuHover=2;else if(inBtn(mx,my,w-100,290,200,40))menuHover=3;else if(inBtn(mx,my,w-100,340,200,40))menuHover=4;else if(inBtn(mx,my,w-100,390,95,32))menuHover=5;else if(inBtn(mx,my,w+5,390,95,32))menuHover=6;}
+        if(screen==Screen.MENU){if(inBtn(mx,my,w-100,140,200,36))menuHover=7;else if(inBtn(mx,my,w-100,186,200,40))menuHover=0;else if(inBtn(mx,my,w-100,236,200,40))menuHover=1;else if(inBtn(mx,my,w-100,286,200,40))menuHover=2;else if(inBtn(mx,my,w-100,336,200,40))menuHover=3;else if(inBtn(mx,my,w-100,386,200,40))menuHover=4;else if(inBtn(mx,my,w-100,436,95,32))menuHover=5;else if(inBtn(mx,my,w+5,436,95,32))menuHover=6;}
         if(screen==Screen.WORLD_LIST){int yy=Math.max(worldList.isEmpty()?130:100+worldList.size()*42+10,350);if(inBtn(mx,my,w-120,yy,240,36))menuHover=10;else if(selectedWorld>=0&&inBtn(mx,my,w-120,yy+46,240,36))menuHover=11;else if(selectedWorld>=0&&inBtn(mx,my,w-60,yy+92,120,36))menuHover=12;else if(inBtn(mx,my,w-60,yy+138,120,36))menuHover=13;}
         if(screen==Screen.CREATE_WORLD){if(inBtn(mx,my,w-60,300,120,36))menuHover=20;else if(inBtn(mx,my,w-60,350,120,36))menuHover=21;else if(inBtn(mx,my,w-140,255,280,32))menuHover=22;}
         if(screen==Screen.MULTIPLAYER){
@@ -1330,17 +1333,18 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     @Override public void mousePressed(MouseEvent e){int wx=e.getX(),wy=e.getY(),w=getWidth()/2;
         if(screen==Screen.HELP){screen=Screen.MENU;return;}
         if(screen==Screen.MENU){
-            if(inBtn(wx,wy,w-100,140,200,40)){playSound("click");refreshWorldList();screen=worldList.isEmpty()?Screen.CREATE_WORLD:Screen.WORLD_LIST;}
-            else if(inBtn(wx,wy,w-100,190,200,40)){playSound("click");
+            if(inBtn(wx,wy,w-100,140,200,36)){bedrockEdition=!bedrockEdition;return;}
+            if(inBtn(wx,wy,w-100,186,200,40)){playSound("click");refreshWorldList();screen=worldList.isEmpty()?Screen.CREATE_WORLD:Screen.WORLD_LIST;}
+            else if(inBtn(wx,wy,w-100,236,200,40)){playSound("click");
                 discoveredServers.clear();selectedServer=-1;
                 if(discovery!=null)discovery.stopDisc();discovery=new DiscoveryThread();discovery.start();
                 screen=Screen.MULTIPLAYER;
             }
-            else if(inBtn(wx,wy,w-100,240,200,40)){playSound("click");screen=Screen.SETTINGS;}
-            else if(inBtn(wx,wy,w-100,290,200,40)){playSound("click");try{Runtime.getRuntime().exec(new String[]{"flatpak","run","org.prismlauncher.PrismLauncher"});}catch(Exception ex){try{Runtime.getRuntime().exec(new String[]{"/var/home/olda/PrismLauncher-Linux-x86_64.AppImage"});}catch(Exception ex2){}}}
-            else if(inBtn(wx,wy,w-100,340,200,40)){playSound("click");System.exit(0);}
-            else if(inBtn(wx,wy,w-100,390,95,32)){try{java.awt.Desktop.getDesktop().browse(java.net.URI.create("https://discord.gg/wAWrPCHR5z"));}catch(Exception ex){}}
-            else if(inBtn(wx,wy,w+5,390,95,32)){try{java.awt.Desktop.getDesktop().browse(java.net.URI.create("https://github.com/olda9991/minicraft"));}catch(Exception ex){}}
+            else if(inBtn(wx,wy,w-100,286,200,40)){playSound("click");screen=Screen.SETTINGS;}
+            else if(inBtn(wx,wy,w-100,336,200,40)){playSound("click");try{Runtime.getRuntime().exec(new String[]{"flatpak","run","org.prismlauncher.PrismLauncher"});}catch(Exception ex){try{Runtime.getRuntime().exec(new String[]{"/var/home/olda/PrismLauncher-Linux-x86_64.AppImage"});}catch(Exception ex2){}}}
+            else if(inBtn(wx,wy,w-100,386,200,40)){playSound("click");System.exit(0);}
+            else if(inBtn(wx,wy,w-100,436,95,32)){try{java.awt.Desktop.getDesktop().browse(java.net.URI.create("https://discord.gg/wAWrPCHR5z"));}catch(Exception ex){}}
+            else if(inBtn(wx,wy,w+5,436,95,32)){try{java.awt.Desktop.getDesktop().browse(java.net.URI.create("https://github.com/olda9991/minicraft"));}catch(Exception ex){}}
             return;
         }
         if(screen==Screen.WORLD_LIST){int yy=100;for(int i=0;i<worldList.size();i++){if(inBtn(wx,wy,w-150,yy,300,36)){selectedWorld=i;return;}yy+=42;}if(worldList.isEmpty())yy+=30;yy=Math.max(yy+10,350);
