@@ -94,7 +94,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private javax.swing.Timer timer;
     private int camX,camY,mx=-999,my=-999;
     private boolean mouseIn=false;
-    private int health=20,hunger=20,xp=0,armor=0,kills=0;
+    private int health=20,hunger=20,xp=0,armor=0,kills=0,elytraFly=0;
     private boolean inNether=false;
     private boolean dead=false;
     private int fallDist=0,breakTimer=0,breakX=-1,breakY=-1,breakTime=0;
@@ -678,6 +678,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             int fx=(int)((px+gx)/TILE),fy=(int)((py+playerH/2)/TILE);
             if(isSolid(fx,fy)){og=true;break;}
         }
+        if(elytraFly>0){playerVy*=.8;elytraFly--;}
         if(survival&&!og&&!noclip&&physicsOn){playerVy+=0.2;py+=playerVy;fallDist++;}else if(survival&&!noclip){if(playerVy>18){health-=(int)(playerVy-18)/10;if(health<=0){dead=true;deathDrop();screen=Screen.DEATH;}}playerVy=0;fallDist=0;}
         int targetX=Math.max(0,Math.min(W*TILE-VW*TILE,(int)(px-VW*TILE/2)));
         int targetY=Math.max(0,Math.min(H*TILE-VH*TILE,(int)(py-VH*TILE/2)));
@@ -714,6 +715,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             client.send("P "+(int)px+" "+(int)py);
         }
         if(ultraFps||posTime%3!=0||!physicsOn){}else{
+            boolean bossAlive=false;for(Mob m:mobs)if(m.type==6)bossAlive=true;
+            if(!bossAlive&&worldTime>17500&&worldTime<18500&&Math.random()<0.005){int bx=(int)(10+Math.random()*(W-20));mobs.add(new Mob(bx*TILE,getGround(bx)*TILE-playerH/2,6));}
             for(int y=H-2;y>=0;y--)for(int x=W-1;x>=0;x--){
                 if(world[x][y]==SAND||world[x][y]==GRAVEL){if(y+1<H&&world[x][y+1]==0){world[x][y+1]=world[x][y];world[x][y]=0;}}
                 else if(world[x][y]==WATER||world[x][y]==LAVA){
@@ -1198,7 +1201,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(screen==Screen.DEATH&&e.getKeyCode()==KeyEvent.VK_ENTER){px=W/2.0*TILE;py=getGround(W/2)*TILE-playerH/2;health=20;hunger=20;dead=false;fallDist=0;playerVy=0;screen=Screen.PLAY;}
         if(screen==Screen.CRAFTING&&e.getKeyCode()==KeyEvent.VK_E){craftingOpen=false;screen=Screen.PLAY;return;}
         if(screen==Screen.CRAFTING&&e.getKeyCode()==KeyEvent.VK_SPACE){int[] r=getCraft();if(r[0]>0){boolean h=true;for(int i=0;i<4;i++)if(craftGrid[i]>0&&!takeFromInv(craftGrid[i],craftCount[i]))h=false;if(h){addToInv(r[0],r[1]);for(int i=0;i<4;i++){craftGrid[i]=0;craftCount[i]=0;}}}}
-        if(screen==Screen.PLAY&&e.getKeyCode()==KeyEvent.VK_SPACE){int tx=(int)((px)/TILE),ty=(int)((py+playerH/2)/TILE);for(int dy=ty;dy<H;dy++)if(isSolid(tx,dy)){if(dy>0)py=(dy-1)*TILE;playerVy=0;break;}}
+        if(screen==Screen.PLAY&&e.getKeyCode()==KeyEvent.VK_SPACE){boolean onG=false;int fx=(int)((px+14)/TILE),fy=(int)((py+TILE-4)/TILE);if(isSolid(fx,fy))onG=true;if(survival&&selBlock==ELYTRA&&!onG){elytraFly=20;}else{int tx=(int)((px)/TILE),ty=(int)((py+playerH/2)/TILE);for(int dy=ty;dy<H;dy++)if(isSolid(tx,dy)){if(dy>0)py=(dy-1)*TILE;playerVy=0;break;}}}
     }
     @Override public void keyReleased(KeyEvent e){if(e.getKeyCode()>=0&&e.getKeyCode()<keys.length)keys[e.getKeyCode()]=false;}
     @Override public void keyTyped(KeyEvent e){}
