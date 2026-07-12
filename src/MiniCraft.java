@@ -1,3 +1,4 @@
+//sha:4ec7002e
 //sha:845cfc00
 //sha:6aa16497
 //sha:daf003d6
@@ -1443,6 +1444,9 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                         String[] p=line.split(" ",4);
                         if(p[0].equals("J")){
                             name=p.length>1?p[1]:"Player";
+                            int cnt=0;for(ClientHandler ch:clients)if(ch.name!=null&&ch.name.equals(name))cnt++;
+                            if(cnt>0){String base=name.replaceAll("\\d+$","");name=base+(cnt+1);}
+                            out.println("N "+name);
                             int plrIdx=0;for(ClientHandler ch:clients)if(ch!=this&&ch.name!=null)plrIdx++;
                             double spx=px+(plrIdx%3*48)-48;
                             double spy=py-(plrIdx/3)*48;
@@ -1558,13 +1562,16 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                         SwingUtilities.invokeLater(()->{if(world!=null&&bx>=0&&bx<world.length&&by>=0&&by<world[0].length)world[bx][by]=bl;});
                     }
                     else if(p[0].equals("C")&&p.length>=3){addChat(p[1],line.substring(line.indexOf(' ',line.indexOf(' ')+1)+1));}
-                    else if(p[0].equals("N")&&p.length>=3){
-                        final String oldN=p[1],newN=p[2];
-                        SwingUtilities.invokeLater(()->{
-                            synchronized(remotePlayers){
-                                for(RemotePlayer rp:remotePlayers)if(rp.name!=null&&rp.name.equals(oldN)){rp.name=newN;break;}
-                            }
-                        });
+                    else if(p[0].equals("N")&&p.length>=2){
+                        if(p.length==2){playerName=p[1];}
+                        else{
+                            final String oldN=p[1],newN=p[2];
+                            SwingUtilities.invokeLater(()->{
+                                synchronized(remotePlayers){
+                                    for(RemotePlayer rp:remotePlayers)if(rp.name!=null&&rp.name.equals(oldN)){rp.name=newN;break;}
+                                }
+                            });
+                        }
                     }
                 }
             }catch(Exception e){}finally{connected=false;try{if(s!=null)s.close();}catch(Exception ex){}}
