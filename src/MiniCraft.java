@@ -1026,7 +1026,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
         drawChat(g2);
         if(showFps){g2.setColor(new Color(0,0,0,150));g2.fillRect(getWidth()-70,10,60,16);g2.setColor(Color.YELLOW);g2.setFont(new Font("PixelPurl",Font.PLAIN,13));g2.drawString(fps+" FPS",getWidth()-65,22);fpsCount++;long now=System.currentTimeMillis();if(now-fpsTimer>1000){fps=fpsCount;fpsCount=0;fpsTimer=now;}}
-        if(isHost&&server!=null){g2.setFont(new Font("PixelPurl",Font.BOLD,13));g2.setColor(Color.GREEN);g2.drawString("SERVER "+server.getPlayerCount()+" players  Code: "+serverPort,10,35);}
+        if(isHost&&server!=null){g2.setFont(new Font("PixelPurl",Font.BOLD,13));g2.setColor(server.isRunning()?Color.GREEN:Color.RED);g2.drawString(server.isRunning()?"SERVER "+server.getPlayerCount()+" players  Code: "+serverPort:"SERVER FAILED - Check port "+serverPort,10,35);}
         if(client!=null&&client.isConnected()){g2.setFont(new Font("PixelPurl",Font.BOLD,13));g2.setColor(Color.CYAN);g2.drawString("CONNECTED",10,45);}
     }
 
