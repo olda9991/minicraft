@@ -1,3 +1,4 @@
+//sha:6b77481f
 //sha:fc6865f2
 //sha:ca4a31c3
 //sha:4ec7002e
@@ -1071,7 +1072,17 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         drawNameTag(g2,pxOff,pyOff+bob,playerName,new Color(255,255,255));
         g2.setColor(new Color(0,0,0,30));g2.fillOval(pxOff-8,pyOff+TILE-6,16,4);
 
-        synchronized(remotePlayers){for(RemotePlayer rp:remotePlayers){int rx=(int)(rp.x-camX),ry=(int)(rp.y-camY);g2.drawImage(steveImg[0],rx-playerW/2,ry-playerH/2,null);drawNameTag(g2,rx,ry,rp.name,new Color(150,200,255));}}
+        synchronized(remotePlayers){
+            Color[] tagColors={new Color(150,200,255),new Color(255,150,150),new Color(150,255,150),new Color(255,255,100),new Color(255,180,80),new Color(200,150,255)};
+            int idx=0;
+            for(RemotePlayer rp:remotePlayers){
+                if(rp.name==null)continue;
+                int rx=(int)(rp.x-camX)+(idx%3-1)*8,ry=(int)(rp.y-camY)+(idx/3)*4;
+                g2.drawImage(steveImg[0],rx-playerW/2,ry-playerH/2,null);
+                drawNameTag(g2,rx,ry,rp.name+" ["+(idx+1)+"]",tagColors[idx%tagColors.length]);
+                idx++;
+            }
+        }
 
         for(Particle pt:particles){
             int alpha=pt.life*255/pt.maxLife;
@@ -1116,7 +1127,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
         if(showFps){g2.setColor(new Color(0,0,0,150));g2.fillRect(getWidth()-70,10,60,16);g2.setColor(Color.YELLOW);g2.setFont(new Font("PixelPurl",Font.PLAIN,13));g2.drawString(fps+" FPS",getWidth()-65,22);fpsCount++;long now=System.currentTimeMillis();if(now-fpsTimer>1000){fps=fpsCount;fpsCount=0;fpsTimer=now;}}
         if(isHost&&server!=null){g2.setFont(new Font("PixelPurl",Font.BOLD,13));g2.setColor(server.isRunning()?Color.GREEN:Color.RED);g2.drawString(server.isRunning()?"SERVER "+server.getPlayerCount()+" players  Code: "+serverPort:"SERVER FAILED - Check port "+serverPort,10,35);}
-        if(client!=null&&client.isConnected()){g2.setFont(new Font("PixelPurl",Font.BOLD,13));g2.setColor(Color.CYAN);g2.drawString("CONNECTED",10,45);}
+        if(client!=null&&client.isConnected()){g2.setFont(new Font("PixelPurl",Font.BOLD,13));g2.setColor(Color.CYAN);g2.drawString("CONNECTED  R:"+remotePlayers.size(),10,45);}
     }
 
     private void drawNameTag(Graphics2D g2,int x,int y,String name,Color c){
