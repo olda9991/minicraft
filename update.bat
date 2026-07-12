@@ -41,6 +41,8 @@ if "%JAVAC%"=="" (
 echo Using javac: %JAVAC%
 echo Compiling...
 
+rmdir /s /q build 2>nul
+mkdir build
 "%JAVAC%" -d build src\MiniCraft.java
 if %ERRORLEVEL% neq 0 (
     echo COMPILE FAILED! Check the errors above.
@@ -50,6 +52,18 @@ if %ERRORLEVEL% neq 0 (
 )
 
 del mini_temp.java 2>nul
+
+REM Rebuild JAR
+echo Rebuilding JAR...
+if exist manifest.txt (
+    jar cfm MiniCraft.jar manifest.txt -C build .
+    if %ERRORLEVEL% equ 0 (
+        echo JAR rebuilt!
+    ) else (
+        echo JAR rebuild skipped
+    )
+)
+
 echo ===============================
 echo   Update complete!
 echo   Run: run.bat
