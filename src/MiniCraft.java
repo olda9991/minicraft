@@ -1,4 +1,4 @@
-//sha:7d983081
+//sha:5ff0b62d
 //sha:d6bc9d04
 //sha:6fda8454
 //sha:2683f3ad
@@ -1426,7 +1426,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                     }
                 }catch(Exception e){}finally{try{s.close();}catch(Exception e){}if(name!=null)removeClient(this);}
             }
-            void send(String m){if(out!=null)out.println(m);}
+            void send(String m){try{if(out!=null){out.println(m);if(out.checkError())throw new Exception("broken");}}catch(Exception e){out=null;}}
         }
     }
 
@@ -1498,7 +1498,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 }
             }catch(Exception e){}finally{connected=false;try{if(s!=null)s.close();}catch(Exception ex){}}
         }
-        void send(String m){if(out!=null)out.println(m);}
+        void send(String m){try{if(out!=null){out.println(m);if(out.checkError())throw new Exception("broken");}}catch(Exception e){out=null;}}
         void disconnect(){running=false;try{if(s!=null)s.close();}catch(Exception e){}connected=false;}
         boolean isConnected(){return connected;}
     }
