@@ -243,7 +243,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     class DiscordRPC extends Thread{
         private java.nio.channels.SocketChannel chan;private boolean running=true;
-        private long startTime=0;private String lastState="";
+        private long startTime=0;private String lastState="";private int lastPartySize=-1;
+        String currentJson="";String currentSecret="";
         public void run(){
             while(running){
                 try{
@@ -265,10 +266,41 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                     if(resp==null||!resp.contains("READY")){cleanup();if(running)Thread.sleep(5000);continue;}
                     startTime=System.currentTimeMillis();
                     updatePresence();
-                    while(running){try{Thread.sleep(100);updatePresence();}catch(Exception e){break;}}
+                    new Thread(()->eventLoop()).start();
+                    while(running){try{Thread.sleep(1000);updatePresence();}catch(Exception e){break;}}
                     break;
                 }catch(Exception e){cleanup();if(running)try{Thread.sleep(5000);}catch(Exception ex){break;}}
             }
+        }
+        private void eventLoop(){
+            while(running&&chan!=null&&chan.isConnected()){
+                try{
+                    String evt=readFrame();
+                    if(evt==null)break;
+                    if(evt.contains("ACTIVITY_JOIN")){
+                        int i1=evt.indexOf("\"secret\":\"");if(i1>0){
+                            int i2=evt.indexOf("\"",i1+10);if(i2>0){
+                                String sec=evt.substring(i1+10,i2);
+                                System.out.println("[RPC] Join request: "+sec);
+                                SwingUtilities.invokeLater(()->{addChat("Discord","Join request received!");handleJoinSecret(sec);});
+                            }
+                        }
+                    }
+                }catch(Exception e){break;}
+            }
+        }
+        private void handleJoinSecret(String sec){
+            try{
+                if(isHost&&server!=null&&server.isRunning()){
+                    addChat("Discord","Hosting - invite others with port "+serverPort);return;
+                }
+                if(client!=null&&client.isConnected())return;
+                if(sec.startsWith("mc:")){
+                    String rest=sec.substring(3);
+                    if(rest.contains(":")){String[] p=rest.split(":");connectToServer(p[0],Integer.parseInt(p[1]));}
+                    else{int pr=Integer.parseInt(rest);connectToServer("bore.pub",pr);}
+                }
+            }catch(Exception e){System.out.println("[RPC] Join error: "+e.getMessage());}
         }
         private void writeFrame(int opcode,String json) throws Exception{
             byte[] data=json.getBytes("UTF-8");
@@ -289,15 +321,108 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             try{
                 if(chan==null||!chan.isConnected())return;
                 String state=screen==Screen.PLAY?(survival?"Survival":"Creative"):"In Menu";
-                if(state.equals(lastState))return;
-                lastState=state;
-                String json="{\"cmd\":\"SET_ACTIVITY\",\"args\":{\"pid\":"+ProcessHandle.current().pid()+",\"activity\":{\"details\":\"MiniCraft v"+VERSION+"\",\"state\":\""+state+"\",\"timestamps\":{\"start\":"+startTime+"},\"assets\":{\"large_image\":\"minecraft\",\"large_text\":\"MiniCraft\"}}},\"nonce\":\""+System.currentTimeMillis()+"\"}";
+                int partySize=1,partyMax=8;
+                if(isHost&&server!=null&&server.isRunning()){partySize=server.getPlayerCount();}
+                else if(client!=null&&client.isConnected()){partySize=remotePlayers.size()+1;}
+                if(state.equals(lastState)&&partySize==lastPartySize)return;
+                lastState=state;lastPartySize=partySize;
+                String partyId="mc_"+worldName.hashCode()+"_"+serverPort;
+                String joinSec="";String spectateSec="";String matchSec="";
+                if(isHost&&server!=null&&server.isRunning()){
+                    joinSec="mc:"+serverPort;
+                    spectateSec="mc:spec:"+serverPort;
+                    matchSec="mc:match:"+serverPort;
+                }else if(client!=null&&client.isConnected()){
+                    joinSec="mc:client:"+serverIP+":"+serverPort;
+                }
+                currentSecret=joinSec;
+                String secretsJson="";
+                if(!joinSec.isEmpty())secretsJson=",\"secrets\":{\"join\":\""+joinSec+"\",\"spectate\":\""+spectateSec+"\",\"match\":\""+matchSec+"\"}";
+                String json="{\"cmd\":\"SET_ACTIVITY\",\"args\":{\"pid\":"+ProcessHandle.current().pid()+",\"activity\":{\"details\":\"MiniCraft v"+VERSION+"\",\"state\":\""+state+"\",\"timestamps\":{\"start\":"+startTime+"},\"assets\":{\"large_image\":\"minecraft\",\"large_text\":\"MiniCraft\"},\"party\":{\"id\":\""+partyId+"\",\"size\":["+partySize+","+partyMax+"]"+secretsJson+"}},\"nonce\":\""+System.currentTimeMillis()+"\"}";
+                currentJson=json;
                 writeFrame(1,json);
                 String ack=readFrame();
             }catch(Exception e){cleanup();}
         }
         void cleanup(){try{if(chan!=null)chan.close();}catch(Exception e){}chan=null;}
         void stopRPC(){running=false;cleanup();this.interrupt();}
+    }
+
+    class RPCVisualizer extends JDialog{
+        private JLabel statusLbl,partyLbl,timeLbl,detailsLbl,stateLbl,secLbl;
+        private JTextArea jsonArea;
+        private javax.swing.Timer timer;
+        RPCVisualizer(){
+            super((JFrame)SwingUtilities.getWindowAncestor(MiniCraft.this),"Rich Presence Visualizer");
+            setSize(420,580);setLocationRelativeTo(null);setLayout(null);getContentPane().setBackground(new Color(24,25,28));
+            JLabel title=new JLabel("Discord Rich Presence Preview");title.setBounds(20,10,380,24);
+            title.setFont(new Font("PixelPurl",Font.BOLD,16));title.setForeground(new Color(220,220,220));add(title);
+            JPanel card=new JPanel(null);card.setBounds(20,40,380,180);
+            card.setBackground(new Color(48,49,54));card.setBorder(BorderFactory.createLineBorder(new Color(32,34,37)));
+            JPanel img=new JPanel(){public void paintComponent(Graphics g){super.paintComponent(g);g.setColor(new Color(60,180,60));g.fillRect(0,0,60,60);g.setColor(Color.WHITE);g.setFont(new Font("Arial",Font.BOLD,20));g.drawString("MC",12,38);}};
+            img.setBounds(12,12,60,60);img.setBackground(new Color(48,49,54));card.add(img);
+            detailsLbl=new JLabel("MiniCraft v"+VERSION);detailsLbl.setBounds(82,12,280,20);
+            detailsLbl.setFont(new Font("PixelPurl",Font.BOLD,14));detailsLbl.setForeground(Color.WHITE);card.add(detailsLbl);
+            stateLbl=new JLabel("In Menu");stateLbl.setBounds(82,34,280,18);
+            stateLbl.setFont(new Font("PixelPurl",Font.PLAIN,13));stateLbl.setForeground(new Color(180,180,180));card.add(stateLbl);
+            partyLbl=new JLabel("1 of 8");partyLbl.setBounds(82,54,280,18);
+            partyLbl.setFont(new Font("PixelPurl",Font.PLAIN,12));partyLbl.setForeground(new Color(140,140,140));card.add(partyLbl);
+            timeLbl=new JLabel("00:00 elapsed");timeLbl.setBounds(82,74,280,18);
+            timeLbl.setFont(new Font("PixelPurl",Font.PLAIN,12));timeLbl.setForeground(new Color(140,140,140));card.add(timeLbl);
+            JLabel btn1=new JLabel("[ Ask to Join ]");btn1.setBounds(82,100,120,22);
+            btn1.setFont(new Font("PixelPurl",Font.BOLD,11));btn1.setForeground(new Color(100,200,100));card.add(btn1);
+            JLabel btn2=new JLabel("[ Spectate ]");btn2.setBounds(210,100,100,22);
+            btn2.setFont(new Font("PixelPurl",Font.BOLD,11));btn2.setForeground(new Color(100,200,100));card.add(btn2);
+            add(card);
+            JLabel secTitle=new JLabel("Join Secret / Invite");secTitle.setBounds(20,230,200,20);
+            secTitle.setFont(new Font("PixelPurl",Font.BOLD,13));secTitle.setForeground(new Color(180,180,180));add(secTitle);
+            secLbl=new JLabel("");secLbl.setBounds(20,252,300,18);
+            secLbl.setFont(new Font("Monospaced",Font.PLAIN,11));secLbl.setForeground(new Color(100,200,100));
+            add(secLbl);
+            JButton copyBtn=new JButton("Copy Invite");copyBtn.setBounds(320,250,80,24);
+            copyBtn.setFont(new Font("PixelPurl",Font.PLAIN,10));copyBtn.setBackground(new Color(60,60,70));
+            copyBtn.setForeground(Color.WHITE);copyBtn.setFocusPainted(false);
+            copyBtn.addActionListener(e->{
+                if(discordRPC!=null&&!discordRPC.currentSecret.isEmpty()){
+                    java.awt.datatransfer.StringSelection sel=new java.awt.datatransfer.StringSelection(discordRPC.currentSecret);
+                    java.awt.Toolkit.getDefaultToolkit().getSystemClipboard().setContents(sel,null);
+                    copyBtn.setText("Copied!");new Thread(()->{try{Thread.sleep(1500);SwingUtilities.invokeLater(()->copyBtn.setText("Copy Invite"));}catch(Exception ex){}}).start();
+                }
+            });add(copyBtn);
+            JLabel jsonTitle=new JLabel("Raw JSON Payload");jsonTitle.setBounds(20,284,200,20);
+            jsonTitle.setFont(new Font("PixelPurl",Font.BOLD,13));jsonTitle.setForeground(new Color(180,180,180));add(jsonTitle);
+            jsonArea=new JTextArea();jsonArea.setEditable(false);jsonArea.setLineWrap(true);jsonArea.setWrapStyleWord(true);
+            jsonArea.setFont(new Font("Monospaced",Font.PLAIN,10));jsonArea.setBackground(new Color(32,34,37));
+            jsonArea.setForeground(new Color(180,180,180));jsonArea.setBorder(BorderFactory.createEmptyBorder(5,5,5,5));
+            JScrollPane sp=new JScrollPane(jsonArea);sp.setBounds(20,306,380,180);add(sp);
+            statusLbl=new JLabel("Status: Checking...");statusLbl.setBounds(20,496,380,20);
+            statusLbl.setFont(new Font("PixelPurl",Font.PLAIN,12));statusLbl.setForeground(new Color(140,140,140));add(statusLbl);
+            JButton closeBtn=new JButton("Close");closeBtn.setBounds(160,520,100,28);
+            closeBtn.setBackground(new Color(60,60,70));closeBtn.setForeground(Color.WHITE);closeBtn.setFocusPainted(false);
+            closeBtn.addActionListener(e->dispose());add(closeBtn);
+            timer=new javax.swing.Timer(500,e->refresh());
+            timer.start();refresh();
+            addWindowListener(new java.awt.event.WindowAdapter(){public void windowClosing(java.awt.event.WindowEvent e){timer.stop();}});
+        }
+        void refresh(){
+            if(discordRPC!=null){
+                statusLbl.setText("Status: Connected | PID "+ProcessHandle.current().pid());
+                String j=discordRPC.currentJson;if(j==null)j="";
+                jsonArea.setText(j.isEmpty()?"(waiting for update...)":j);
+                secLbl.setText(discordRPC.currentSecret.isEmpty()?"(no secret)":discordRPC.currentSecret);
+                try{
+                    if(j.contains("\"state\":\"")){int i1=j.indexOf("\"state\":\"")+9;int i2=j.indexOf("\"",i1);stateLbl.setText(j.substring(i1,i2));}
+                    if(j.contains("\"details\":\"")){int i1=j.indexOf("\"details\":\"")+11;int i2=j.indexOf("\"",i1);detailsLbl.setText(j.substring(i1,i2));}
+                    if(j.contains("\"size\":[")){int i1=j.indexOf("\"size\":[")+8;int i2=j.indexOf("]",i1);partyLbl.setText(j.substring(i1,i2).replace(","," of "));
+                    partyLbl.setText(partyLbl.getText()+" players");}
+                }catch(Exception ex){}
+            }else{
+                statusLbl.setText("Status: Not connected. Use /rpc to start.");
+                jsonArea.setText("");stateLbl.setText("In Menu");partyLbl.setText("1 of 1");secLbl.setText("");
+            }
+            long elapsed=(discordRPC!=null&&discordRPC.startTime>0)?(System.currentTimeMillis()-discordRPC.startTime)/1000:0;
+            timeLbl.setText(String.format("%02d:%02d elapsed",elapsed/60,elapsed%60));
+        }
     }
 
     public MiniCraft(){
@@ -839,8 +964,9 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             case "survival":survival=true;addChat("Mode","survival");break;
             case "give":if(parts.length>1){try{int b=Integer.parseInt(parts[1]),c=parts.length>2?Integer.parseInt(parts[2]):1;addToInv(b,c);addChat("Give",""+c+"x "+BNAME[Math.min(b,BLOCK_COUNT-1)]);}catch(Exception e){addChat("Give","usage: /give <id> [count]");}}break;
             case "kill":health=0;dead=true;deathDrop();screen=Screen.DEATH;break;
-            case "help":addChat("Cmds","time day/night, tp x y, heal, creative, survival, give id, kill, nether, rpc");break;
+            case "help":addChat("Cmds","time day/night, tp x y, heal, creative, survival, give id, kill, nether, rpc, rpcviz");break;
             case "rpc":if(discordRPC!=null){discordRPC.stopRPC();discordRPC=null;addChat("RPC","stopped");}else{discordRPC=new DiscordRPC();discordRPC.setDaemon(true);discordRPC.start();addChat("RPC","started");}break;
+            case "rpcviz":SwingUtilities.invokeLater(()->new RPCVisualizer().setVisible(true));break;
             case "nether":inNether=!inNether;genWorld(worldSeed);addChat("Nether",inNether?"Entered!":"Overworld!");break;
             default:addChat("CMD","unknown: /"+parts[0]+"  use /help");
         }
@@ -1298,13 +1424,11 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         remotePlayers.clear();
     }
 
-    private void tryConnect(){
-        final String addr=typing.trim();
+    private void connectToServer(String ip,int port){
+        if(screen==Screen.PLAY)return;
         screen=Screen.CONNECTING;lastMsg="";
         new Thread(()->{
             try{
-                String a=addr;if(a.matches("\\d{4,6}"))a="bore.pub:"+a;
-                String[] parts=a.split(":");String ip=parts[0];int port=parts.length>1?Integer.parseInt(parts[1]):25565;
                 serverIP=ip;serverPort=port;
                 client=new MiniClient(ip,port);
                 if(client.connect()){
@@ -1312,6 +1436,11 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 else{SwingUtilities.invokeLater(()->{screen=Screen.CONNECT;lastMsg="Failed: connection refused";});}
             }catch(Exception e){SwingUtilities.invokeLater(()->{screen=Screen.CONNECT;lastMsg="Error: "+e.getMessage();});}
         }).start();
+    }
+    private void tryConnect(){
+        String a=typing.trim();if(a.matches("\\d{4,6}"))a="bore.pub:"+a;
+        String[] parts=a.split(":");String ip=parts[0];int port=parts.length>1?Integer.parseInt(parts[1]):25565;
+        connectToServer(ip,port);
     }
 
     private boolean loadUnconnectedWorld(){
