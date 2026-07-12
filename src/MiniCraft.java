@@ -1,3 +1,4 @@
+//sha:12b070e4
 //sha:dca32d86
 //sha:9fec86eb
 //sha:0ad507ca
@@ -242,52 +243,47 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private DiscordRPC discordRPC; 
 
     class DiscordRPC extends Thread{
-        private java.nio.channels.SocketChannel chan;private boolean running=true;
-        private long startTime=0;private String lastState="";private int lastPartySize=-1;
+        private Process rpcProcess;
+        private PrintWriter rpcOut;
+        private BufferedReader rpcIn;
+        private boolean running=true;
+        private long startTime=0;
+        private String lastState="";private int lastPartySize=-1;
         String currentJson="";String currentSecret="";
         public void run(){
+            startPythonRPC();
+            startTime=System.currentTimeMillis();
+            updatePresence();
             while(running){
-                try{
-                    String[] pipes={System.getenv("XDG_RUNTIME_DIR")+"/discord-ipc-0",
-                        "/run/user/"+System.getProperty("user.name")+"/discord-ipc-0",
-                        System.getenv("XDG_RUNTIME_DIR")+"/app/com.discordapp.Discord/discord-ipc-0",
-                        System.getenv("XDG_RUNTIME_DIR")+"/app/dev.vencord.Vesktop/discord-ipc-0"};
-                    for(String pipe:pipes){
-                        try{
-                            if(!new java.io.File(pipe).exists())continue;
-                            chan=java.nio.channels.SocketChannel.open(java.net.UnixDomainSocketAddress.of(pipe));
-                            break;
-                        }catch(Exception e2){}
-                    }
-                    if(chan==null||!chan.isConnected()){if(running)Thread.sleep(5000);continue;}
-                    System.out.println("[RPC] Connected");
-                    writeFrame(0,"{\"v\":1,\"client_id\":\"1512377902195540018\"}");
-                    String resp=readFrame();
-                    if(resp==null||!resp.contains("READY")){cleanup();if(running)Thread.sleep(5000);continue;}
-                    startTime=System.currentTimeMillis();
-                    updatePresence();
-                    new Thread(()->eventLoop()).start();
-                    while(running){try{Thread.sleep(1000);updatePresence();}catch(Exception e){break;}}
-                    break;
-                }catch(Exception e){cleanup();if(running)try{Thread.sleep(5000);}catch(Exception ex){break;}}
+                try{Thread.sleep(1000);updatePresence();}
+                catch(Exception e){break;}
             }
         }
-        private void eventLoop(){
-            while(running&&chan!=null&&chan.isConnected()){
-                try{
-                    String evt=readFrame();
-                    if(evt==null)break;
-                    if(evt.contains("ACTIVITY_JOIN")){
-                        int i1=evt.indexOf("\"secret\":\"");if(i1>0){
-                            int i2=evt.indexOf("\"",i1+10);if(i2>0){
-                                String sec=evt.substring(i1+10,i2);
+        private void startPythonRPC(){
+            try{
+                String dir=System.getProperty("user.dir");
+                ProcessBuilder pb=new ProcessBuilder("python3",dir+"/discord_rpc.py");
+                pb.redirectErrorStream(true);
+                rpcProcess=pb.start();
+                rpcOut=new PrintWriter(new OutputStreamWriter(rpcProcess.getOutputStream()),true);
+                rpcIn=new BufferedReader(new InputStreamReader(rpcProcess.getInputStream()));
+                new Thread(()->{
+                    String line;
+                    try{
+                        while((line=rpcIn.readLine())!=null){
+                            if(line.startsWith("EVENT:JOIN:")){
+                                String sec=line.substring(11);
                                 System.out.println("[RPC] Join request: "+sec);
                                 SwingUtilities.invokeLater(()->{addChat("Discord","Join request received!");handleJoinSecret(sec);});
+                            }else if(line.startsWith("EVENT:SPECTATE:")){
+                                System.out.println("[RPC] Spectate: "+line.substring(15));
+                            }else if(line.startsWith("EVENT:REQUEST:")){
+                                System.out.println("[RPC] Join request from: "+line.substring(14));
                             }
                         }
-                    }
-                }catch(Exception e){break;}
-            }
+                    }catch(Exception e){}
+                }).start();
+            }catch(Exception e){System.out.println("[RPC] Failed to start python: "+e.getMessage());}
         }
         private void handleJoinSecret(String sec){
             try{
@@ -302,24 +298,9 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 }
             }catch(Exception e){System.out.println("[RPC] Join error: "+e.getMessage());}
         }
-        private void writeFrame(int opcode,String json) throws Exception{
-            byte[] data=json.getBytes("UTF-8");
-            java.nio.ByteBuffer buf=java.nio.ByteBuffer.allocate(8+data.length);
-            buf.order(java.nio.ByteOrder.LITTLE_ENDIAN);buf.putInt(opcode);buf.putInt(data.length);buf.put(data);buf.flip();
-            while(buf.hasRemaining())chan.write(buf);
-        }
-        private String readFrame() throws Exception{
-            java.nio.ByteBuffer h=java.nio.ByteBuffer.allocate(8);h.order(java.nio.ByteOrder.LITTLE_ENDIAN);
-            while(h.hasRemaining()){if(chan.read(h)<0)return null;}
-            h.flip();int op=h.getInt();int len=h.getInt();
-            if(len<0||len>65536)return null;
-            java.nio.ByteBuffer b=java.nio.ByteBuffer.allocate(len);
-            while(b.hasRemaining()){if(chan.read(b)<0)return null;}
-            return new String(b.array(),"UTF-8");
-        }
         void updatePresence(){
             try{
-                if(chan==null||!chan.isConnected())return;
+                if(rpcOut==null)return;
                 String state=screen==Screen.PLAY?(survival?"Survival":"Creative"):"In Menu";
                 int partySize=1,partyMax=8;
                 if(isHost&&server!=null&&server.isRunning()){partySize=server.getPlayerCount();}
@@ -336,16 +317,27 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                     joinSec="mc:client:"+serverIP+":"+serverPort;
                 }
                 currentSecret=joinSec;
-                String secretsJson="";
-                if(!joinSec.isEmpty())secretsJson=",\"secrets\":{\"join\":\""+joinSec+"\",\"spectate\":\""+spectateSec+"\",\"match\":\""+matchSec+"\"}";
-                String json="{\"cmd\":\"SET_ACTIVITY\",\"args\":{\"pid\":"+ProcessHandle.current().pid()+",\"activity\":{\"details\":\"MiniCraft v"+VERSION+"\",\"state\":\""+state+"\",\"timestamps\":{\"start\":"+startTime+"},\"assets\":{\"large_image\":\"minecraft\",\"large_text\":\"MiniCraft\"},\"party\":{\"id\":\""+partyId+"\",\"size\":["+partySize+","+partyMax+"]"+secretsJson+"}},\"nonce\":\""+System.currentTimeMillis()+"\"}";
-                currentJson=json;
-                writeFrame(1,json);
-                String ack=readFrame();
-            }catch(Exception e){cleanup();}
+                StringBuilder sb=new StringBuilder();
+                sb.append("{\"details\":\"MiniCraft v").append(VERSION).append("\",");
+                sb.append("\"state\":\"").append(state).append("\",");
+                sb.append("\"timestamps\":{\"start\":").append(startTime).append("},");
+                sb.append("\"assets\":{\"large_image\":\"minecraft\",\"large_text\":\"MiniCraft\"},");
+                sb.append("\"party\":{\"id\":\"").append(partyId).append("\",\"size\":[").append(partySize).append(",").append(partyMax).append("]}");
+                if(!joinSec.isEmpty()){
+                    sb.append(",\"secrets\":{\"join\":\"").append(joinSec).append("\",\"spectate\":\"").append(spectateSec).append("\",\"match\":\"").append(matchSec).append("\"}");
+                }
+                sb.append("}");
+                currentJson=sb.toString();
+                rpcOut.println(currentJson);
+            }catch(Exception e){System.out.println("[RPC] Update error: "+e.getMessage());}
         }
-        void cleanup(){try{if(chan!=null)chan.close();}catch(Exception e){}chan=null;}
-        void stopRPC(){running=false;cleanup();this.interrupt();}
+        void stopRPC(){
+            running=false;
+            try{if(rpcOut!=null)rpcOut.close();}catch(Exception e){}
+            try{if(rpcIn!=null)rpcIn.close();}catch(Exception e){}
+            try{if(rpcProcess!=null)rpcProcess.destroy();}catch(Exception e){}
+            this.interrupt();
+        }
     }
 
     class RPCVisualizer extends JDialog{

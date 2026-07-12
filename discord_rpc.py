@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""MiniCraft Discord RPC - proper IPC framing protocol"""
-import socket, json, os, sys, time, struct
+"""MiniCraft Discord RPC - reads activity JSON from stdin, prints events to stdout"""
+import socket, json, os, sys, time, struct, threading
 
 CLIENT_ID = "1512377902195540018"
 PIPES = [
@@ -46,7 +46,7 @@ def connect():
         sock.connect(pipe)
         send_frame(sock, 0, {"v": 1, "client_id": CLIENT_ID})
         resp = recv_frame(sock)
-        if resp and resp[0] == 1 and "evt" in resp[1]:
+        if resp and resp[0] == 1:
             return sock
         sock.close()
     except Exception as e:
@@ -60,13 +60,40 @@ def update_activity(sock, activity):
             "args": {"pid": os.getpid(), "activity": activity},
             "nonce": str(int(time.time() * 1000))
         })
-        return recv_frame(sock) is not None
+        return True
     except:
         return False
 
+def event_loop(sock):
+    """Read Discord events and print them to stdout for Java to consume."""
+    while True:
+        try:
+            frame = recv_frame(sock)
+            if frame is None:
+                break
+            opcode, payload = frame
+            if opcode == 1 and "evt" in payload:
+                evt = payload.get("evt", "")
+                data = payload.get("data", {})
+                if evt == "ACTIVITY_JOIN":
+                    secret = data.get("secret", "")
+                    if secret:
+                        print(f"EVENT:JOIN:{secret}", flush=True)
+                elif evt == "ACTIVITY_SPECTATE":
+                    secret = data.get("secret", "")
+                    if secret:
+                        print(f"EVENT:SPECTATE:{secret}", flush=True)
+                elif evt == "ACTIVITY_JOIN_REQUEST":
+                    user = data.get("user", {})
+                    uname = user.get("username", "?")
+                    print(f"EVENT:REQUEST:{uname}", flush=True)
+                # Silently ignore READY, ERROR, etc.
+        except Exception as e:
+            break
+
 def main():
     sock = None
-    last_activity = None
+    event_thread = None
     print("RPC ready", flush=True)
     
     for line in sys.stdin:
@@ -80,12 +107,20 @@ def main():
         
         if sock is None:
             sock = connect()
+            if sock:
+                event_thread = threading.Thread(target=event_loop, args=(sock,), daemon=True)
+                event_thread.start()
         
         if sock is not None:
             if not update_activity(sock, activity):
-                sock.close()
+                try: sock.close()
+                except: pass
+                sock = None
+                event_thread = None
                 sock = connect()
                 if sock:
+                    event_thread = threading.Thread(target=event_loop, args=(sock,), daemon=True)
+                    event_thread.start()
                     update_activity(sock, activity)
         
         if sock is None:
