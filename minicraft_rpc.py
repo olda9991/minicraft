@@ -1,7 +1,18 @@
 #!/usr/bin/env python3
 """MiniCraft Discord RPC Bridge - HTTP server that forwards to Discord IPC"""
-import socket, json, os, sys, time, struct, threading, queue
+import socket, json, os, sys, time, struct, threading, queue, fcntl
 from http.server import HTTPServer, BaseHTTPRequestHandler
+
+# Use threaded HTTP server so Discord connect delays don't block other requests
+try:
+    from http.server import ThreadingHTTPServer
+    ServerClass = ThreadingHTTPServer
+except ImportError:
+    import socketserver
+    class ThreadedHTTPServer(socketserver.ThreadingMixIn, HTTPServer):
+        daemon_threads = True
+        allow_reuse_address = True
+    ServerClass = ThreadedHTTPServer
 
 CLIENT_ID = "1512377902195540018"
 PORT = 6464
@@ -10,6 +21,18 @@ PIPES = [
     os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}") + "/app/com.discordapp.Discord/discord-ipc-0",
     os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}") + "/app/dev.vencord.Vesktop/discord-ipc-0",
 ]
+
+LOCK_FILE = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}") + "/minicraft_rpc.lock"
+
+def acquire_bridge_lock():
+    try:
+        fd = os.open(LOCK_FILE, os.O_CREAT | os.O_RDWR)
+        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        os.ftruncate(fd, 0)
+        os.write(fd, f"{os.getpid()}\n".encode())
+        return fd
+    except (IOError, OSError) as e:
+        return None
 
 events_queue = queue.Queue()
 sock = None
@@ -46,7 +69,9 @@ def connect_discord():
     global sock
     pipe = find_pipe()
     if not pipe:
+        print("[RPC-Bridge] No Discord IPC pipe found", flush=True)
         return False
+    s = None
     try:
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         s.settimeout(3)
@@ -59,10 +84,15 @@ def connect_discord():
         s.settimeout(None)
         with sock_lock:
             sock = s
-        print(f"[RPC-Bridge] Connected to Discord IPC", flush=True)
+        print(f"[RPC-Bridge] Connected to Discord IPC at {pipe}", flush=True)
         return True
     except Exception as e:
         print(f"[RPC-Bridge] Connect error: {e}", flush=True)
+        if s is not None:
+            try:
+                s.close()
+            except Exception:
+                pass
     return False
 
 def event_reader():
@@ -76,15 +106,26 @@ def event_reader():
         try:
             frame = recv_frame(s)
             if frame is None:
+                print("[RPC-Bridge] Discord closed connection", flush=True)
                 with sock_lock:
+                    if sock:
+                        try:
+                            sock.close()
+                        except Exception:
+                            pass
                     sock = None
                 time.sleep(1)
                 continue
             opcode, payload = frame
             # Log ALL frames for debugging
+            evt_name = payload.get("evt", payload.get("cmd", "unknown"))
+            if payload.get("cmd") == "SET_ACTIVITY":
+                print(f"[RPC-Bridge] Response: {json.dumps(payload)[:300]}", flush=True)
             if "evt" in payload:
-                evt_name = payload.get("evt", "")
                 print(f"[RPC-Bridge] Event: {evt_name} | {json.dumps(payload)[:200]}", flush=True)
+            # Log ERROR frames explicitly
+            if payload.get("evt") == "ERROR" or "error" in json.dumps(payload).lower():
+                print(f"[RPC-Bridge] ERROR frame: {json.dumps(payload)}", flush=True)
             if opcode == 1:
                 evt = payload.get("evt", "")
                 data = payload.get("data", {})
@@ -99,7 +140,13 @@ def event_reader():
                     events_queue.put({"type": "REQUEST", "user": uname})
                     print(f"[RPC-Bridge] REQUEST event: {uname}", flush=True)
         except Exception as e:
+            print(f"[RPC-Bridge] Event reader error: {e}", flush=True)
             with sock_lock:
+                if sock:
+                    try:
+                        sock.close()
+                    except Exception:
+                        pass
                 sock = None
             time.sleep(1)
 
@@ -109,10 +156,13 @@ def update_discord(activity, pid=None):
     global sock, game_pid
     if pid is not None:
         game_pid = pid
+    t0 = time.time()
     with sock_lock:
         s = sock
     if s is None:
+        print("[RPC-Bridge] No Discord socket, attempting connect...", flush=True)
         if not connect_discord():
+            print("[RPC-Bridge] Connect failed, skipping update", flush=True)
             return False
         with sock_lock:
             s = sock
@@ -123,13 +173,19 @@ def update_discord(activity, pid=None):
             "args": {"pid": game_pid, "activity": activity},
             "nonce": nonce
         }
-        print(f"[RPC-Bridge] SET_ACTIVITY nonce={nonce}", flush=True)
+        elapsed = time.time() - t0
+        print(f"[RPC-Bridge] SET_ACTIVITY nonce={nonce} (connect took {elapsed:.2f}s)", flush=True)
         send_frame(s, 1, payload)
         # Do NOT read response here - event_reader handles all socket reads
         return True
     except Exception as e:
         print(f"[RPC-Bridge] Update error: {e}", flush=True)
         with sock_lock:
+            if sock:
+                try:
+                    sock.close()
+                except Exception:
+                    pass
             sock = None
         return False
 
@@ -154,6 +210,7 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
 
     def do_POST(self):
+        t0 = time.time()
         if self.path == "/update":
             length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(length).decode('utf-8')
@@ -167,6 +224,8 @@ class Handler(BaseHTTPRequestHandler):
                     pid = os.getpid()
                     activity = data
                 ok = update_discord(activity, pid)
+                dt = time.time() - t0
+                print(f"[RPC-Bridge] /update handled in {dt:.3f}s -> {'OK' if ok else 'FAIL'}", flush=True)
                 self.send_response(200 if ok else 503)
                 self.send_header("Content-Type", "text/plain")
                 self.end_headers()
@@ -180,14 +239,23 @@ class Handler(BaseHTTPRequestHandler):
             self.end_headers()
 
 def main():
+    lock_fd = acquire_bridge_lock()
+    if lock_fd is None:
+        print("[RPC-Bridge] Another bridge is already running. Exiting.", flush=True)
+        sys.exit(0)
     threading.Thread(target=event_reader, daemon=True).start()
-    server = HTTPServer(("127.0.0.1", PORT), Handler)
+    server = ServerClass(("127.0.0.1", PORT), Handler)
     print(f"[RPC-Bridge] Listening on http://127.0.0.1:{PORT}", flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         pass
     server.server_close()
+    try:
+        os.close(lock_fd)
+        os.unlink(LOCK_FILE)
+    except Exception:
+        pass
     print("[RPC-Bridge] Exited", flush=True)
 
 if __name__ == "__main__":
