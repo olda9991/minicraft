@@ -1,3 +1,4 @@
+//sha:793ad1de
 //sha:7504f537
 //sha:faf40073
 //sha:1ba6abd0
@@ -276,7 +277,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
         private boolean isBridgeReady(){
             try{
-                java.net.URL url=new java.net.URL(BRIDGE_URL+"/events");
+                java.net.URL url=new java.net.URI(BRIDGE_URL+"/events").toURL();
                 java.net.HttpURLConnection c=(java.net.HttpURLConnection)url.openConnection();
                 c.setConnectTimeout(200);c.setReadTimeout(200);c.setRequestMethod("GET");
                 c.getResponseCode();c.disconnect();return true;
@@ -284,7 +285,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
         private void httpPost(String path,String json){
             try{
-                java.net.URL url=new java.net.URL(BRIDGE_URL+path);
+                java.net.URL url=new java.net.URI(BRIDGE_URL+path).toURL();
                 java.net.HttpURLConnection c=(java.net.HttpURLConnection)url.openConnection();
                 c.setDoOutput(true);c.setRequestMethod("POST");
                 c.setRequestProperty("Content-Type","application/json");
@@ -295,7 +296,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
         private String httpGet(String path){
             try{
-                java.net.URL url=new java.net.URL(BRIDGE_URL+path);
+                java.net.URL url=new java.net.URI(BRIDGE_URL+path).toURL();
                 java.net.HttpURLConnection c=(java.net.HttpURLConnection)url.openConnection();
                 c.setConnectTimeout(500);c.setReadTimeout(500);c.setRequestMethod("GET");
                 int code=c.getResponseCode();
