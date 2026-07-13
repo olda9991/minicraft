@@ -1,3 +1,4 @@
+//sha:2e5bf1b8
 //sha:63641afe
 //sha:7504f537
 //sha:faf40073
@@ -857,13 +858,25 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             if(beach<2&&s<H/2-2){
                 for(int by=s;by<=s+2;by++)if(by>=0&&by<H)world[x][by]=SAND;
             }
-            if(s<H-6&&r.nextInt(14)==0&&x>3&&x<W-4&&world[x][s-1]!=WATER){
+            if(s<H-6&&r.nextInt(12)==0&&x>3&&x<W-4&&world[x][s-1]!=WATER){
                 int tt=r.nextInt(6),lg=OAK_LOG+tt,lf=OAK_LEAVES+tt;
-                int th=4+r.nextInt(4);
+                int th=4+r.nextInt(5);
+                boolean wide=th>6;
+                // Trunk
                 for(int ty=s-1;ty>s-th-1&&ty>=0;ty--)world[x][ty]=lg;
-                int ls=th+2;
-                for(int lx=x-2;lx<=x+2;lx++)for(int ly=s-ls;ly<=s-2;ly++)
-                    if(lx>=0&&lx<W&&ly>=0&&ly<H&&Math.abs(lx-x)+Math.abs(ly-(s-3))<=3&&world[lx][ly]==0)world[lx][ly]=lf;
+                if(wide&&x+1<W)for(int ty=s-1;ty>s-th/2-1&&ty>=0;ty--)world[x+1][ty]=lg;
+                // Leaves - rounded canopy
+                int crownY=s-th/2;
+                int crownR=th/2+1;
+                for(int lx=x-crownR-1;lx<=x+crownR+(wide?2:1);lx++){
+                    for(int ly=crownY-crownR;ly<=s-1;ly++){
+                        if(lx>=0&&lx<W&&ly>=0&&ly<H&&world[lx][ly]==0){
+                            int dx=lx-(x+(wide?1:0)),dy=ly-crownY;
+                            double dist=Math.sqrt(dx*dx+dy*dy*0.8);
+                            if(dist<=crownR+0.5)world[lx][ly]=lf;
+                        }
+                    }
+                }
             }
         }
         for(int x=3;x<W-3;x++)for(int y=H/2;y<H-3;y++){
@@ -1342,7 +1355,11 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             g2.setColor(new Color(FB[Math.min(pt.block,FB.length-1)].getRed(),FB[Math.min(pt.block,FB.length-1)].getGreen(),FB[Math.min(pt.block,FB.length-1)].getBlue(),alpha));
             g2.fillRect((int)(pt.x-camX),(int)(pt.y-camY),2+pt.life/5,2+pt.life/5);
         }
-        for(DropItem d:drops){int dbob=(int)(Math.sin(d.life*0.1)*2);g2.drawImage(tex[Math.min(d.block,BLOCK_COUNT-1)],(int)(d.x-camX)-6,(int)(d.y-camY)-6+dbob,null);}
+        for(DropItem d:drops){
+            int dx=(int)(d.x-camX)-6,dy=(int)(d.y-camY)-6+(int)(Math.sin(d.life*0.1)*2);
+            if(dx>-20&&dx<getWidth()+20&&dy>-20&&dy<getHeight()+20)
+                g2.drawImage(tex[Math.min(d.block,BLOCK_COUNT-1)],dx,dy,null);
+        }
         for(DmgNum dn:dmgNums){
             g2.setColor(new Color(255,0,0,dn.life>30?255:dn.life*8));g2.setFont(new Font("PixelPurl",Font.BOLD,14));
             g2.drawString(""+dn.val,(int)(dn.x-camX)-8,(int)(dn.y-camY));
@@ -1350,15 +1367,37 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         for(Arrow a:arrows){g2.setColor(Color.WHITE);g2.drawLine((int)(a.x-camX),(int)(a.y-camY),(int)(a.x-a.vx*2-camX),(int)(a.y-a.vy*2-camY));}
         for(Mob m:mobs){
             int mx=(int)(m.x-camX),my=(int)(m.y-camY);
-            g2.fillRect(mx-10,my-14,20,24);
-            g2.setColor(Color.WHITE);g2.drawString(m.type==0?"Cow":m.type==1?"Pig":m.type==2?"Zomb":m.type==3?"Sheep":m.type==4?"Skele":m.type==5?"Spider":"Chick",mx-10,my-18);
-            g2.setColor(new Color(0,0,0,100));g2.fillRect(mx-12,my-24,24,3);
-            g2.setColor(new Color(255,0,0));g2.fillRect(mx-12,my-24,m.health*24/m.maxHealth,3);
-            if(m.hurtT>0)g2.setColor(new Color(255,0,0,100));g2.fillRect(mx-10,my-14,20,24);
+            // Cull off-screen mobs
+            if(mx<-40||mx>getWidth()+40||my<-40||my>getHeight()+40)continue;
+            Color mobColor=m.type==0?new Color(100,80,60):m.type==1?new Color(255,180,180):m.type==2?new Color(60,100,60):m.type==3?new Color(200,200,200):m.type==4?new Color(180,180,160):m.type==5?new Color(40,40,40):new Color(255,220,100);
+            g2.setColor(mobColor);g2.fillRect(mx-10,my-14,20,24);
+            // Eyes
+            g2.setColor(m.type==2||m.type==5?new Color(255,0,0):Color.BLACK);
+            g2.fillRect(mx-6,my-10,3,3);g2.fillRect(mx+3,my-10,3,3);
+            g2.setColor(Color.WHITE);g2.setFont(new Font("PixelPurl",Font.PLAIN,10));
+            g2.drawString(m.type==0?"Cow":m.type==1?"Pig":m.type==2?"Zomb":m.type==3?"Sheep":m.type==4?"Skele":m.type==5?"Spider":"Chick",mx-10,my-20);
+            g2.setColor(new Color(0,0,0,100));g2.fillRect(mx-12,my-26,24,3);
+            g2.setColor(new Color(255,0,0));g2.fillRect(mx-12,my-26,m.health*24/m.maxHealth,3);
+            if(m.hurtT>0){g2.setColor(new Color(255,0,0,100));g2.fillRect(mx-10,my-14,20,24);}
         }
 
-        if(mouseIn&&breakX<0){int hx=(mx+camX)/TILE,hy=(my+camY)/TILE;if(isIn(hx,hy)){g2.setColor(new Color(255,255,255,100));g2.drawRect(hx*TILE-camX,hy*TILE-camY,TILE,TILE);}}
-        if(breakX>=0){g2.setColor(new Color(255,255,255,100));g2.drawRect(breakX*TILE-camX,breakY*TILE-camY,TILE,TILE);float pct=Math.min(1f,(float)breakTimer/(float)Math.max(1,breakTime));g2.setColor(new Color(0,0,0,80));g2.fillRect(breakX*TILE-camX,breakY*TILE-camY,(int)(TILE*pct),3);}
+        if(mouseIn&&breakX<0){int hx=(mx+camX)/TILE,hy=(my+camY)/TILE;if(isIn(hx,hy)){g2.setColor(new Color(255,255,255,100));g2.drawRect(hx*TILE-camX,hy*TILE-camY,TILE,TILE);if(world[hx][hy]>0){g2.setFont(new Font("PixelPurl",Font.PLAIN,11));g2.setColor(Color.WHITE);g2.drawString(BNAME[Math.min(world[hx][hy],BLOCK_COUNT-1)],hx*TILE-camX+2,hy*TILE-camY-4);}}}
+        if(breakX>=0){
+            int bx=breakX*TILE-camX,by=breakY*TILE-camY;
+            g2.setColor(new Color(255,255,255,100));g2.drawRect(bx,by,TILE,TILE);
+            float pct=Math.min(1f,(float)breakTimer/(float)Math.max(1,breakTime));
+            // Draw crack stages
+            int stage=(int)(pct*7);
+            if(stage>0){
+                g2.setColor(new Color(0,0,0,40+stage*25));
+                for(int i=0;i<stage*3;i++){
+                    int cx=bx+4+(i*17+breakX*3+breakY*7)%24;
+                    int cy=by+4+(i*13+breakX*5+breakY*11)%24;
+                    g2.fillRect(cx,cy,3+(i%4),2+(i%3));
+                }
+            }
+            g2.setColor(new Color(0,0,0,80));g2.fillRect(bx,by,(int)(TILE*pct),3);
+        }
         drawHUD(g2);
         if(shaderMode>0&&!ultraFps){
             int vw=getWidth(),vh=getHeight();
@@ -1424,6 +1463,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             g2.setColor(i==(selBlock-1-creativeOffset)||(!survival&&i==selBlock-1)?Color.WHITE:new Color(100,100,100));
             g2.drawRect(sx,sy,hs,hs);
             g2.drawImage(tex[Math.min(idx,BLOCK_COUNT-1)],sx+2,sy+2,null);
+            g2.setFont(new Font("PixelPurl",Font.PLAIN,9));g2.setColor(new Color(180,180,180));
+            g2.drawString(""+(i+1),sx+2,sy+10);
             if(survival){int cnt=getInvCount(idx);if(cnt>0){g2.setFont(new Font("PixelPurl",Font.PLAIN,12));g2.setColor(Color.WHITE);g2.drawString(""+cnt,sx+hs-10,sy+hs-3);}}
         }
         if(!survival){
@@ -1684,7 +1725,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 if(survival&&selBlock==IRON_INGOT){takeFromInv(IRON_INGOT,1);armor=Math.max(armor,2);return;}
                 if(survival&&selBlock==DIAMOND_GEM){takeFromInv(DIAMOND_GEM,1);armor=Math.max(armor,3);return;}
                 if(survival&&world[tx][ty]==CHEST){for(int i=0;i<8;i++)if(inv[i]>0){addToInv(inv[i],invCount[i]);inv[i]=0;invCount[i]=0;}addChat("Chest","Opened!");}
-                else if(selBlock<=CRAFTING_TABLE){world[tx][ty]=selBlock;if(survival)takeFromInv(selBlock,1);syncBlock(tx,ty,selBlock);}
+                else if(selBlock<=CRAFTING_TABLE){world[tx][ty]=selBlock;if(survival)takeFromInv(selBlock,1);syncBlock(tx,ty,selBlock);for(int i=0;i<4;i++)particles.add(new Particle(tx*TILE+TILE/2,ty*TILE+TILE/2,selBlock));playSFX("place");}
             }
         }
     }
