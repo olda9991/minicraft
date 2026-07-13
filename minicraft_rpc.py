@@ -51,22 +51,16 @@ def connect_discord():
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         s.settimeout(3)
         s.connect(pipe)
+        # Send handshake - DO NOT read response here (event_reader handles ALL reads)
         send_frame(s, 0, {"v": 1, "client_id": CLIENT_ID})
-        resp = recv_frame(s)
-        if resp and resp[0] == 1:
-            # Subscribe to events
-            for evt in ["ACTIVITY_JOIN", "ACTIVITY_SPECTATE", "ACTIVITY_JOIN_REQUEST"]:
-                send_frame(s, 1, {"cmd": "SUBSCRIBE", "evt": evt, "nonce": str(int(time.time()*1000))})
-                try:
-                    s.settimeout(0.5)
-                    ack = recv_frame(s)
-                except:
-                    pass
-            s.settimeout(None)
-            with sock_lock:
-                sock = s
-            return True
-        s.close()
+        # Send subscriptions - fire and forget
+        for evt in ["ACTIVITY_JOIN", "ACTIVITY_SPECTATE", "ACTIVITY_JOIN_REQUEST"]:
+            send_frame(s, 1, {"cmd": "SUBSCRIBE", "evt": evt, "nonce": str(int(time.time()*1000))})
+        s.settimeout(None)
+        with sock_lock:
+            sock = s
+        print(f"[RPC-Bridge] Connected to Discord IPC", flush=True)
+        return True
     except Exception as e:
         print(f"[RPC-Bridge] Connect error: {e}", flush=True)
     return False
