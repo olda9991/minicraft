@@ -1,3 +1,4 @@
+//sha:48c38495
 //sha:3de0e629
 //sha:e9ead95f
 //sha:2e5bf1b8
@@ -294,8 +295,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 c.setRequestProperty("Content-Type","application/json");
                 c.setConnectTimeout(500);c.setReadTimeout(500);
                 try(java.io.OutputStream os=c.getOutputStream()){os.write(json.getBytes("UTF-8"));}
-                c.getResponseCode();c.disconnect();
-            }catch(Exception e){}
+                int code=c.getResponseCode();
+                if(code!=200)System.out.println("[RPC] HTTP "+code);
+                c.disconnect();
+            }catch(Exception e){System.out.println("[RPC] POST error: "+e.getMessage());}
         }
         private String httpGet(String path){
             try{
@@ -304,8 +307,9 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 c.setConnectTimeout(500);c.setReadTimeout(500);c.setRequestMethod("GET");
                 int code=c.getResponseCode();
                 if(code==200){try(java.io.BufferedReader r=new java.io.BufferedReader(new java.io.InputStreamReader(c.getInputStream()))){StringBuilder sb=new StringBuilder();String l;while((l=r.readLine())!=null)sb.append(l);return sb.toString();}}
+                if(code!=200)System.out.println("[RPC] GET HTTP "+code);
                 c.disconnect();
-            }catch(Exception e){}
+            }catch(Exception e){System.out.println("[RPC] GET error: "+e.getMessage());}
             return "";
         }
         private void pollEvents(){
@@ -367,6 +371,11 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
         void updatePresence(){
             try{
+                if(bridgeProcess!=null&&!bridgeProcess.isAlive()){
+                    System.out.println("[RPC] Bridge died, restarting...");
+                    startBridge();
+                    for(int i=0;i<20&&running;i++){if(isBridgeReady())break;try{Thread.sleep(250);}catch(Exception e){break;}}
+                }
                 String state=screen==Screen.PLAY?(survival?"Survival":"Creative"):"In Menu";
                 int partySize=1,partyMax=8;
                 if(isHost&&server!=null&&server.isRunning()){partySize=server.getPlayerCount();}
@@ -1090,7 +1099,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             case "give":if(parts.length>1){try{int b=Integer.parseInt(parts[1]),c=parts.length>2?Integer.parseInt(parts[2]):1;addToInv(b,c);addChat("Give",""+c+"x "+BNAME[Math.min(b,BLOCK_COUNT-1)]);}catch(Exception e){addChat("Give","usage: /give <id> [count]");}}break;
             case "kill":health=0;dead=true;deathDrop();screen=Screen.DEATH;break;
             case "help":addChat("Cmds","time day/night, tp x y, heal, creative, survival, give id, kill, nether, rpc, rpcviz, rpcdebug");break;
-            case "rpcdebug":if(discordRPC!=null){addChat("RPC-JSON",discordRPC.currentJson);}else{addChat("RPC","Not running. Use /rpc to start.");}break;
+            case "rpcdebug":if(discordRPC!=null){addChat("RPC-State",discordRPC.lastState);addChat("RPC-Secret",discordRPC.currentSecret.isEmpty()?"(none)":discordRPC.currentSecret);addChat("RPC-JSON",discordRPC.currentJson);}else{addChat("RPC","Not running. Use /rpc to start.");}break;
             case "rpc":if(discordRPC!=null){discordRPC.stopRPC();discordRPC=null;addChat("RPC","stopped");}else{discordRPC=new DiscordRPC();discordRPC.setDaemon(true);discordRPC.start();addChat("RPC","started");}break;
             case "rpcviz":SwingUtilities.invokeLater(()->new RPCVisualizer().setVisible(true));break;
             case "nether":inNether=!inNether;genWorld(worldSeed);addChat("Nether",inNether?"Entered!":"Overworld!");break;
