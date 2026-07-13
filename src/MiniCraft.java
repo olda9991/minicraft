@@ -1,3 +1,4 @@
+//sha:7504f537
 //sha:faf40073
 //sha:1ba6abd0
 //sha:9d113e53
@@ -287,7 +288,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             while(running&&chan!=null&&chan.isConnected()){
                 try{
                     String frame=readFrame();
-                    if(frame==null)break;
+                    if(frame==null){System.out.println("[RPC] Socket closed");break;}
+                    if(frame.contains("\"cmd\":\"SET_ACTIVITY\"")){continue;}
                     if(frame.contains("ACTIVITY_JOIN_REQUEST")){
                         String user=parseUserFromFrame(frame);
                         System.out.println("[RPC] Ask to Join from: "+user);
@@ -305,7 +307,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                             SwingUtilities.invokeLater(()->{addChat("Discord","Join accepted!");handleJoinSecret(sec);});
                         }
                     }
-                }catch(Exception e){break;}
+                }catch(Exception e){System.out.println("[RPC] Reader error: "+e.getMessage());break;}
             }
         }
         private String parseUserFromFrame(String frame){
@@ -343,15 +345,13 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             }
         }
         private String readFrame() throws Exception{
-            synchronized(chanLock){
-                java.nio.ByteBuffer h=java.nio.ByteBuffer.allocate(8);h.order(java.nio.ByteOrder.LITTLE_ENDIAN);
-                while(h.hasRemaining()){if(chan.read(h)<0)return null;}
-                h.flip();int op=h.getInt();int len=h.getInt();
-                if(len<0||len>65536)return null;
-                java.nio.ByteBuffer b=java.nio.ByteBuffer.allocate(len);
-                while(b.hasRemaining()){if(chan.read(b)<0)return null;}
-                return new String(b.array(),"UTF-8");
-            }
+            java.nio.ByteBuffer h=java.nio.ByteBuffer.allocate(8);h.order(java.nio.ByteOrder.LITTLE_ENDIAN);
+            while(h.hasRemaining()){if(chan.read(h)<0)return null;}
+            h.flip();int op=h.getInt();int len=h.getInt();
+            if(len<0||len>65536)return null;
+            java.nio.ByteBuffer b=java.nio.ByteBuffer.allocate(len);
+            while(b.hasRemaining()){if(chan.read(b)<0)return null;}
+            return new String(b.array(),"UTF-8");
         }
         void updatePresence(){
             try{
@@ -380,7 +380,6 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 sb.append("}},\"nonce\":\"").append(System.currentTimeMillis()).append("\"}");
                 currentJson=sb.toString();
                 writeFrame(1,currentJson);
-                String ack=readFrame();
             }catch(Exception e){cleanup();}
         }
         void cleanup(){try{if(chan!=null)chan.close();}catch(Exception e){}chan=null;}
