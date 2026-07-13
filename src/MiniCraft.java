@@ -271,6 +271,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                     if(resp==null||!resp.contains("READY")){cleanup();if(running)Thread.sleep(5000);continue;}
                     writeFrame(1,"{\"cmd\":\"SUBSCRIBE\",\"evt\":\"ACTIVITY_JOIN\",\"nonce\":\""+System.currentTimeMillis()+"\"}");
                     readFrame();
+                    writeFrame(1,"{\"cmd\":\"SUBSCRIBE\",\"evt\":\"ACTIVITY_JOIN_REQUEST\",\"nonce\":\""+System.currentTimeMillis()+"\"}");
+                    readFrame();
                     writeFrame(1,"{\"cmd\":\"SUBSCRIBE\",\"evt\":\"ACTIVITY_SPECTATE\",\"nonce\":\""+System.currentTimeMillis()+"\"}");
                     readFrame();
                     startTime=System.currentTimeMillis();
@@ -286,28 +288,49 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 try{
                     String frame=readFrame();
                     if(frame==null)break;
-                    if(frame.contains("ACTIVITY_JOIN")){
-                        int i1=frame.indexOf("\"secret\":\"");if(i1>0){
-                            int i2=frame.indexOf("\"",i1+10);if(i2>0){
-                                String sec=frame.substring(i1+10,i2);
-                                System.out.println("[RPC] Join request: "+sec);
-                                SwingUtilities.invokeLater(()->{addChat("Discord","Join request received!");handleJoinSecret(sec);});
+                    if(frame.contains("ACTIVITY_JOIN_REQUEST")){
+                        String user=parseUserFromFrame(frame);
+                        System.out.println("[RPC] Ask to Join from: "+user);
+                        SwingUtilities.invokeLater(()->{
+                            if(isHost&&server!=null&&server.isRunning()){
+                                addChat("Discord",user+" wants to join! Code: "+serverPort);
+                            }else{
+                                addChat("Discord",user+" wants to join!");
                             }
+                        });
+                    }else if(frame.contains("ACTIVITY_JOIN")){
+                        String sec=parseSecretFromFrame(frame);
+                        if(!sec.isEmpty()){
+                            System.out.println("[RPC] Join event secret="+sec);
+                            SwingUtilities.invokeLater(()->{addChat("Discord","Join accepted!");handleJoinSecret(sec);});
                         }
                     }
                 }catch(Exception e){break;}
             }
         }
+        private String parseUserFromFrame(String frame){
+            int i1=frame.indexOf("\"user\":");if(i1<0)return"Someone";
+            int i2=frame.indexOf("\"username\":\"",i1);if(i2<0)return"Someone";
+            int i3=frame.indexOf("\"",i2+13);if(i3<0)return"Someone";
+            return frame.substring(i2+13,i3);
+        }
+        private String parseSecretFromFrame(String frame){
+            int i1=frame.indexOf("\"secret\":\"");if(i1<0)return"";
+            int i2=frame.indexOf("\"",i1+10);if(i2<0)return"";
+            return frame.substring(i1+10,i2);
+        }
         private void handleJoinSecret(String sec){
             try{
                 if(isHost&&server!=null&&server.isRunning()){
-                    addChat("Discord","Hosting - invite others with port "+serverPort);return;
+                    addChat("Discord","Friend wants to join! Tell them code: "+serverPort);return;
                 }
-                if(client!=null&&client.isConnected())return;
+                if(screen==Screen.PLAY){addChat("Discord","Already in a game!");return;}
+                if(client!=null&&client.isConnected()){addChat("Discord","Already connected!");return;}
                 if(sec.startsWith("mc:")){
                     String rest=sec.substring(3);
                     if(rest.contains(":")){String[] p=rest.split(":");connectToServer(p[0],Integer.parseInt(p[1]));}
                     else{int pr=Integer.parseInt(rest);connectToServer("bore.pub",pr);}
+                    addChat("Discord","Auto-connecting to server...");
                 }
             }catch(Exception e){System.out.println("[RPC] Join error: "+e.getMessage());}
         }
