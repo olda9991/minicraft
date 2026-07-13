@@ -87,7 +87,11 @@ def event_reader():
                 time.sleep(1)
                 continue
             opcode, payload = frame
-            if opcode == 1 and "evt" in payload:
+            # Log ALL frames for debugging
+            if "evt" in payload:
+                evt_name = payload.get("evt", "")
+                print(f"[RPC-Bridge] Event: {evt_name} | {json.dumps(payload)[:200]}", flush=True)
+            if opcode == 1:
                 evt = payload.get("evt", "")
                 data = payload.get("data", {})
                 if evt == "ACTIVITY_JOIN":
@@ -115,6 +119,7 @@ def update_discord(activity):
         with sock_lock:
             s = sock
     try:
+        print(f"[RPC-Bridge] SET_ACTIVITY: {json.dumps(activity)[:300]}", flush=True)
         send_frame(s, 1, {
             "cmd": "SET_ACTIVITY",
             "args": {"pid": os.getpid(), "activity": activity},

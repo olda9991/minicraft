@@ -498,13 +498,13 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 boolean canInvite=isHost&&server!=null&&server.isRunning();
                 askBtn.setEnabled(canInvite);
                 if(canInvite){
-                    inviteStatusLbl.setText("Hosting - friends can Ask to Join!");
+                    inviteStatusLbl.setText("Hosting! Give friends the code below");
                     inviteStatusLbl.setForeground(new Color(100,200,100));
                     codeLbl.setText("Server Code: "+serverPort);
                 }else{
-                    inviteStatusLbl.setText("Start a server to enable invites");
+                    inviteStatusLbl.setText("Host a world to get a server code");
                     inviteStatusLbl.setForeground(new Color(140,140,140));
-                    codeLbl.setText("Server Code: --");
+                    codeLbl.setText("Server Code: --");askBtn.setEnabled(false);
                 }
                 try{
                     if(j.contains("\"state\":\"")){int i1=j.indexOf("\"state\":\"")+9;int i2=j.indexOf("\"",i1);stateLbl.setText(j.substring(i1,i2));}
@@ -1085,7 +1085,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             case "survival":survival=true;addChat("Mode","survival");break;
             case "give":if(parts.length>1){try{int b=Integer.parseInt(parts[1]),c=parts.length>2?Integer.parseInt(parts[2]):1;addToInv(b,c);addChat("Give",""+c+"x "+BNAME[Math.min(b,BLOCK_COUNT-1)]);}catch(Exception e){addChat("Give","usage: /give <id> [count]");}}break;
             case "kill":health=0;dead=true;deathDrop();screen=Screen.DEATH;break;
-            case "help":addChat("Cmds","time day/night, tp x y, heal, creative, survival, give id, kill, nether, rpc, rpcviz");break;
+            case "help":addChat("Cmds","time day/night, tp x y, heal, creative, survival, give id, kill, nether, rpc, rpcviz, rpcdebug");break;
+            case "rpcdebug":if(discordRPC!=null){addChat("RPC-JSON",discordRPC.currentJson);}else{addChat("RPC","Not running. Use /rpc to start.");}break;
             case "rpc":if(discordRPC!=null){discordRPC.stopRPC();discordRPC=null;addChat("RPC","stopped");}else{discordRPC=new DiscordRPC();discordRPC.setDaemon(true);discordRPC.start();addChat("RPC","started");}break;
             case "rpcviz":SwingUtilities.invokeLater(()->new RPCVisualizer().setVisible(true));break;
             case "nether":inNether=!inNether;genWorld(worldSeed);addChat("Nether",inNether?"Entered!":"Overworld!");break;
@@ -1688,6 +1689,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                     if(client!=null){client.disconnect();client=null;}remotePlayers.clear();screen=Screen.MULTIPLAYER;
                 }else{
                     server=new MiniServer(serverPort);isHost=true;server.start();
+                    addChat("Server","Running on port "+serverPort+". Invite friends: give them this code.");
                     if(responder!=null)responder.stopDisc();responder=new DiscoveryResponder();responder.start();
                     if(!loadUnconnectedWorld()){genWorld(System.currentTimeMillis());worldName="host_"+System.currentTimeMillis();}
                     startWebServer();
