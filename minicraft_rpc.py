@@ -131,18 +131,7 @@ def update_discord(activity, pid=None):
         }
         print(f"[RPC-Bridge] SET_ACTIVITY nonce={nonce}", flush=True)
         send_frame(s, 1, payload)
-        # Read Discord's response (non-blocking with short timeout)
-        s.settimeout(2.0)
-        resp = recv_frame(s)
-        s.settimeout(None)
-        if resp:
-            opcode, data = resp
-            evt = data.get("evt", "")
-            if evt == "ERROR":
-                print(f"[RPC-Bridge] Discord ERROR: {data}", flush=True)
-                return False
-            else:
-                print(f"[RPC-Bridge] Discord OK: {evt}", flush=True)
+        # Do NOT read response here - event_reader handles all socket reads
         return True
     except Exception as e:
         print(f"[RPC-Bridge] Update error: {e}", flush=True)
