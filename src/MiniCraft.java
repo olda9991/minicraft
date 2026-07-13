@@ -1,3 +1,4 @@
+//sha:79cc3b37
 //sha:2e5bf1b8
 //sha:63641afe
 //sha:7504f537
@@ -422,34 +423,18 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             partyLbl.setFont(new Font("PixelPurl",Font.PLAIN,12));partyLbl.setForeground(new Color(140,140,140));card.add(partyLbl);
             timeLbl=new JLabel("00:00 elapsed");timeLbl.setBounds(82,74,320,18);
             timeLbl.setFont(new Font("PixelPurl",Font.PLAIN,12));timeLbl.setForeground(new Color(140,140,140));card.add(timeLbl);
-            askBtn=new JButton("Ask to Join");askBtn.setBounds(82,100,110,24);
-            askBtn.setFont(new Font("PixelPurl",Font.BOLD,10));askBtn.setForeground(new Color(100,200,100));
-            askBtn.setBackground(new Color(48,49,54));askBtn.setFocusPainted(false);
-            askBtn.setBorder(BorderFactory.createLineBorder(new Color(100,200,100)));
-            askBtn.setEnabled(false);
-            askBtn.addActionListener(e->{
-                if(discordRPC!=null&&!discordRPC.currentSecret.isEmpty()){
-                    SwingUtilities.invokeLater(()->{addChat("Discord","Join request received!");discordRPC.handleJoinSecret(discordRPC.currentSecret);});
-                }
-            });card.add(askBtn);
-            JButton btn2=new JButton("Spectate");btn2.setBounds(200,100,90,24);
-            btn2.setFont(new Font("PixelPurl",Font.BOLD,10));btn2.setForeground(new Color(100,200,100));
-            btn2.setBackground(new Color(48,49,54));btn2.setFocusPainted(false);
-            btn2.setBorder(BorderFactory.createLineBorder(new Color(100,200,100)));
-            btn2.setEnabled(false);
-            btn2.addActionListener(e->{addChat("Discord","Spectate not implemented yet");});card.add(btn2);
+            JLabel askLbl=new JLabel("[ Ask to Join appears when hosting ]");askLbl.setBounds(82,100,280,18);
+            askLbl.setFont(new Font("PixelPurl",Font.PLAIN,11));askLbl.setForeground(new Color(100,200,100));card.add(askLbl);
             add(card);
 
             // Invite section
-            JLabel invTitle=new JLabel("Invite Friends");invTitle.setBounds(20,228,200,20);
+            JLabel invTitle=new JLabel("Invite Friends (Server Code)");invTitle.setBounds(20,228,300,20);
             invTitle.setFont(new Font("PixelPurl",Font.BOLD,13));invTitle.setForeground(new Color(180,180,180));add(invTitle);
-            inviteStatusLbl=new JLabel("Start a server to enable invites");inviteStatusLbl.setBounds(20,250,420,18);
+            inviteStatusLbl=new JLabel("Host a world to get a server code");inviteStatusLbl.setBounds(20,250,420,18);
             inviteStatusLbl.setFont(new Font("PixelPurl",Font.PLAIN,12));inviteStatusLbl.setForeground(new Color(140,140,140));add(inviteStatusLbl);
-            codeLbl=new JLabel("Server Code: --");codeLbl.setBounds(20,272,300,18);
-            codeLbl.setFont(new Font("Monospaced",Font.PLAIN,12));codeLbl.setForeground(new Color(100,200,100));add(codeLbl);
-            secLbl=new JLabel("Secret: --");secLbl.setBounds(20,294,300,18);
-            secLbl.setFont(new Font("Monospaced",Font.PLAIN,11));secLbl.setForeground(new Color(100,200,100));add(secLbl);
-            JButton copyCodeBtn=new JButton("Copy Code");copyCodeBtn.setBounds(340,250,90,24);
+            codeLbl=new JLabel("Code: --");codeLbl.setBounds(20,272,300,18);
+            codeLbl.setFont(new Font("Monospaced",Font.PLAIN,14));codeLbl.setForeground(new Color(100,200,100));add(codeLbl);
+            JButton copyCodeBtn=new JButton("Copy Invite");copyCodeBtn.setBounds(340,250,100,24);
             copyCodeBtn.setFont(new Font("PixelPurl",Font.PLAIN,10));copyCodeBtn.setBackground(new Color(60,60,70));
             copyCodeBtn.setForeground(Color.WHITE);copyCodeBtn.setFocusPainted(false);
             copyCodeBtn.addActionListener(e->{
@@ -457,19 +442,9 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                     String invite="Join my MiniCraft server! Code: "+serverPort;
                     java.awt.datatransfer.StringSelection sel=new java.awt.datatransfer.StringSelection(invite);
                     java.awt.Toolkit.getDefaultToolkit().getSystemClipboard().setContents(sel,null);
-                    copyCodeBtn.setText("Copied!");new Thread(()->{try{Thread.sleep(1500);SwingUtilities.invokeLater(()->copyCodeBtn.setText("Copy Code"));}catch(Exception ex){}}).start();
+                    copyCodeBtn.setText("Copied!");new Thread(()->{try{Thread.sleep(1500);SwingUtilities.invokeLater(()->copyCodeBtn.setText("Copy Invite"));}catch(Exception ex){}}).start();
                 }
             });add(copyCodeBtn);
-            JButton copyBtn=new JButton("Copy Secret");copyBtn.setBounds(340,280,90,24);
-            copyBtn.setFont(new Font("PixelPurl",Font.PLAIN,10));copyBtn.setBackground(new Color(60,60,70));
-            copyBtn.setForeground(Color.WHITE);copyBtn.setFocusPainted(false);
-            copyBtn.addActionListener(e->{
-                if(discordRPC!=null&&!discordRPC.currentSecret.isEmpty()){
-                    java.awt.datatransfer.StringSelection sel=new java.awt.datatransfer.StringSelection(discordRPC.currentSecret);
-                    java.awt.Toolkit.getDefaultToolkit().getSystemClipboard().setContents(sel,null);
-                    copyBtn.setText("Copied!");new Thread(()->{try{Thread.sleep(1500);SwingUtilities.invokeLater(()->copyBtn.setText("Copy Secret"));}catch(Exception ex){}}).start();
-                }
-            });add(copyBtn);
 
             // JSON viewer
             JLabel jsonTitle=new JLabel("Raw JSON Payload");jsonTitle.setBounds(20,324,200,20);
@@ -494,17 +469,15 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 statusLbl.setText("Status: Connected | PID "+ProcessHandle.current().pid());
                 String j=discordRPC.currentJson;if(j==null)j="";
                 jsonArea.setText(j.isEmpty()?"(waiting for update...)":j);
-                secLbl.setText("Secret: "+(discordRPC.currentSecret.isEmpty()?"--":discordRPC.currentSecret));
                 boolean canInvite=isHost&&server!=null&&server.isRunning();
-                askBtn.setEnabled(canInvite);
                 if(canInvite){
-                    inviteStatusLbl.setText("Hosting! Give friends the code below");
+                    inviteStatusLbl.setText("Hosting! Ask to Join is active");
                     inviteStatusLbl.setForeground(new Color(100,200,100));
                     codeLbl.setText("Server Code: "+serverPort);
                 }else{
-                    inviteStatusLbl.setText("Host a world to get a server code");
+                    inviteStatusLbl.setText("Host a world to enable invites");
                     inviteStatusLbl.setForeground(new Color(140,140,140));
-                    codeLbl.setText("Server Code: --");askBtn.setEnabled(false);
+                    codeLbl.setText("Server Code: --");
                 }
                 try{
                     if(j.contains("\"state\":\"")){int i1=j.indexOf("\"state\":\"")+9;int i2=j.indexOf("\"",i1);stateLbl.setText(j.substring(i1,i2));}
@@ -514,8 +487,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 }catch(Exception ex){}
             }else{
                 statusLbl.setText("Status: Not connected. Use /rpc to start.");
-                jsonArea.setText("");stateLbl.setText("In Menu");partyLbl.setText("1 of 1");secLbl.setText("Secret: --");
-                codeLbl.setText("Server Code: --");inviteStatusLbl.setText("Start a server to enable invites");askBtn.setEnabled(false);
+                jsonArea.setText("");stateLbl.setText("In Menu");partyLbl.setText("1 of 1");
+                codeLbl.setText("Server Code: --");inviteStatusLbl.setText("Host a world to enable invites");
             }
             long elapsed=(discordRPC!=null&&discordRPC.startTime>0)?(System.currentTimeMillis()-discordRPC.startTime)/1000:0;
             timeLbl.setText(String.format("%02d:%02d elapsed",elapsed/60,elapsed%60));
