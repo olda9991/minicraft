@@ -109,8 +109,12 @@ def event_reader():
                 sock = None
             time.sleep(1)
 
-def update_discord(activity):
-    global sock
+game_pid = os.getpid()
+
+def update_discord(activity, pid=None):
+    global sock, game_pid
+    if pid is not None:
+        game_pid = pid
     with sock_lock:
         s = sock
     if s is None:
@@ -119,12 +123,26 @@ def update_discord(activity):
         with sock_lock:
             s = sock
     try:
-        print(f"[RPC-Bridge] SET_ACTIVITY: {json.dumps(activity)[:300]}", flush=True)
-        send_frame(s, 1, {
+        nonce = str(int(time.time() * 1000))
+        payload = {
             "cmd": "SET_ACTIVITY",
-            "args": {"pid": os.getpid(), "activity": activity},
-            "nonce": str(int(time.time() * 1000))
-        })
+            "args": {"pid": game_pid, "activity": activity},
+            "nonce": nonce
+        }
+        print(f"[RPC-Bridge] SET_ACTIVITY nonce={nonce}", flush=True)
+        send_frame(s, 1, payload)
+        # Read Discord's response (non-blocking with short timeout)
+        s.settimeout(2.0)
+        resp = recv_frame(s)
+        s.settimeout(None)
+        if resp:
+            opcode, data = resp
+            evt = data.get("evt", "")
+            if evt == "ERROR":
+                print(f"[RPC-Bridge] Discord ERROR: {data}", flush=True)
+                return False
+            else:
+                print(f"[RPC-Bridge] Discord OK: {evt}", flush=True)
         return True
     except Exception as e:
         print(f"[RPC-Bridge] Update error: {e}", flush=True)
@@ -157,8 +175,15 @@ class Handler(BaseHTTPRequestHandler):
             length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(length).decode('utf-8')
             try:
-                activity = json.loads(body)
-                ok = update_discord(activity)
+                data = json.loads(body)
+                # Support both {activity: {...}} and raw activity object
+                if "activity" in data and "pid" in data:
+                    pid = data.get("pid", os.getpid())
+                    activity = data["activity"]
+                else:
+                    pid = os.getpid()
+                    activity = data
+                ok = update_discord(activity, pid)
                 self.send_response(200 if ok else 503)
                 self.send_header("Content-Type", "text/plain")
                 self.end_headers()
