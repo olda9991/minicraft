@@ -1,3 +1,4 @@
+//sha:faf40073
 //sha:1ba6abd0
 //sha:9d113e53
 //sha:12b070e4
@@ -1117,10 +1118,11 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         drawBtn(g2,"Edition: "+(bedrockEdition?"Bedrock":"Java"),w/2-100,140,200,36,menuHover==7);
         drawBtn(g2,"Singleplayer",w/2-100,186,200,40,menuHover==0);drawBtn(g2,"Multiplayer",w/2-100,236,200,40,menuHover==1);
         drawBtn(g2,"Options",w/2-100,286,200,40,menuHover==2);drawBtn(g2,"Mods",w/2-100,336,200,40,menuHover==3);
-        drawBtn(g2,"Quit",w/2-100,386,200,40,menuHover==4);
-        drawBtn(g2," Discord",w/2-100,436,95,32,menuHover==5);drawBtn(g2," GitHub",w/2+5,436,95,32,menuHover==6);
-        if(discIcon!=null)g2.drawImage(discIcon,w/2-92,438,24,24,null);
-        if(ghIcon!=null)g2.drawImage(ghIcon,w/2+13,438,24,24,null);
+        drawBtn(g2,"Invite (RPC)",w/2-100,386,200,40,menuHover==80);
+        drawBtn(g2,"Quit",w/2-100,436,200,40,menuHover==4);
+        drawBtn(g2," Discord",w/2-100,486,95,32,menuHover==5);drawBtn(g2," GitHub",w/2+5,486,95,32,menuHover==6);
+        if(discIcon!=null)g2.drawImage(discIcon,w/2-92,488,24,24,null);
+        if(ghIcon!=null)g2.drawImage(ghIcon,w/2+13,488,24,24,null);
     }
 
     private void drawWorldList(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
@@ -1179,7 +1181,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         String t="Game Menu";g2.drawString(t,(w-g2.getFontMetrics().stringWidth(t))/2,h/2-60);
         drawBtn(g2,"Back to Game",w/2-100,h/2-10,200,36,menuHover==70);
         drawBtn(g2,"Options",w/2-100,h/2+40,200,36,menuHover==71);
-        drawBtn(g2,"Save and Quit to Title",w/2-100,h/2+90,200,36,menuHover==72);
+        drawBtn(g2,"Invite (RPC)",w/2-100,h/2+90,200,36,menuHover==73);
+        drawBtn(g2,"Save and Quit to Title",w/2-100,h/2+140,200,36,menuHover==72);
     }
 
     private void drawConnect(Graphics2D g2){int w=getWidth(),h=getHeight();drawDirtBG(g2,w,h);
@@ -1513,7 +1516,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     @Override public void mouseMoved(MouseEvent e){mx=e.getX();my=e.getY();menuHover=-1;
         int w=getWidth()/2;
-        if(screen==Screen.MENU){if(inBtn(mx,my,w-100,140,200,36))menuHover=7;else if(inBtn(mx,my,w-100,186,200,40))menuHover=0;else if(inBtn(mx,my,w-100,236,200,40))menuHover=1;else if(inBtn(mx,my,w-100,286,200,40))menuHover=2;else if(inBtn(mx,my,w-100,336,200,40))menuHover=3;else if(inBtn(mx,my,w-100,386,200,40))menuHover=4;else if(inBtn(mx,my,w-100,436,95,32))menuHover=5;else if(inBtn(mx,my,w+5,436,95,32))menuHover=6;}
+        if(screen==Screen.MENU){if(inBtn(mx,my,w-100,140,200,36))menuHover=7;else if(inBtn(mx,my,w-100,186,200,40))menuHover=0;else if(inBtn(mx,my,w-100,236,200,40))menuHover=1;else if(inBtn(mx,my,w-100,286,200,40))menuHover=2;else if(inBtn(mx,my,w-100,336,200,40))menuHover=3;else if(inBtn(mx,my,w-100,386,200,40))menuHover=80;else if(inBtn(mx,my,w-100,436,200,40))menuHover=4;else if(inBtn(mx,my,w-100,486,95,32))menuHover=5;else if(inBtn(mx,my,w+5,486,95,32))menuHover=6;}
         if(screen==Screen.WORLD_LIST){int yy=Math.max(worldList.isEmpty()?130:100+worldList.size()*42+10,350);if(inBtn(mx,my,w-120,yy,240,36))menuHover=10;else if(selectedWorld>=0&&inBtn(mx,my,w-120,yy+46,240,36))menuHover=11;else if(selectedWorld>=0&&inBtn(mx,my,w-60,yy+92,120,36))menuHover=12;else if(inBtn(mx,my,w-60,yy+138,120,36))menuHover=13;}
         if(screen==Screen.CREATE_WORLD){if(inBtn(mx,my,w-60,300,120,36))menuHover=20;else if(inBtn(mx,my,w-60,350,120,36))menuHover=21;else if(inBtn(mx,my,w-140,255,280,32))menuHover=22;}
         if(screen==Screen.MULTIPLAYER){
@@ -1528,7 +1531,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(screen==Screen.CONNECT){if(inBtn(mx,my,w-60,220,120,36))menuHover=40;else if(inBtn(mx,my,w-60,270,120,36))menuHover=41;}
         if(screen==Screen.SETTINGS){if(inBtn(mx,my,w-60,getHeight()-80,120,36))menuHover=60;}
         if(screen==Screen.HOST){if(inBtn(mx,my,w-80,300,160,36))menuHover=50;else if(inBtn(mx,my,w-60,360,120,36))menuHover=51;}
-        if(screen==Screen.PAUSE){int bw=getWidth()/2,cy=getHeight()/2;if(inBtn(mx,my,bw-100,cy-10,200,36))menuHover=70;else if(inBtn(mx,my,bw-100,cy+40,200,36))menuHover=71;else if(inBtn(mx,my,bw-100,cy+90,200,36))menuHover=72;}
+        if(screen==Screen.PAUSE){int bw=getWidth()/2,cy=getHeight()/2;if(inBtn(mx,my,bw-100,cy-10,200,36))menuHover=70;else if(inBtn(mx,my,bw-100,cy+40,200,36))menuHover=71;else if(inBtn(mx,my,bw-100,cy+90,200,36))menuHover=73;else if(inBtn(mx,my,bw-100,cy+140,200,36))menuHover=72;}
     }
 
     @Override public void mousePressed(MouseEvent e){int wx=e.getX(),wy=e.getY(),w=getWidth()/2;
@@ -1543,9 +1546,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             }
             else if(inBtn(wx,wy,w-100,286,200,40)){playSound("click");screen=Screen.SETTINGS;}
             else if(inBtn(wx,wy,w-100,336,200,40)){playSound("click");try{Runtime.getRuntime().exec(new String[]{"flatpak","run","org.prismlauncher.PrismLauncher"});}catch(Exception ex){try{Runtime.getRuntime().exec(new String[]{"/var/home/olda/PrismLauncher-Linux-x86_64.AppImage"});}catch(Exception ex2){}}}
-            else if(inBtn(wx,wy,w-100,386,200,40)){playSound("click");System.exit(0);}
-            else if(inBtn(wx,wy,w-100,436,95,32)){try{java.awt.Desktop.getDesktop().browse(java.net.URI.create("https://discord.gg/wAWrPCHR5z"));}catch(Exception ex){}}
-            else if(inBtn(wx,wy,w+5,436,95,32)){try{java.awt.Desktop.getDesktop().browse(java.net.URI.create("https://github.com/olda9991/minicraft"));}catch(Exception ex){}}
+            else if(inBtn(wx,wy,w-100,386,200,40)){playSound("click");if(discordRPC==null){discordRPC=new DiscordRPC();discordRPC.setDaemon(true);discordRPC.start();addChat("RPC","started");}SwingUtilities.invokeLater(()->new RPCVisualizer().setVisible(true));}
+            else if(inBtn(wx,wy,w-100,436,200,40)){playSound("click");System.exit(0);}
+            else if(inBtn(wx,wy,w-100,486,95,32)){try{java.awt.Desktop.getDesktop().browse(java.net.URI.create("https://discord.gg/wAWrPCHR5z"));}catch(Exception ex){}}
+            else if(inBtn(wx,wy,w+5,486,95,32)){try{java.awt.Desktop.getDesktop().browse(java.net.URI.create("https://github.com/olda9991/minicraft"));}catch(Exception ex){}}
             return;
         }
         if(screen==Screen.WORLD_LIST){int yy=100;for(int i=0;i<worldList.size();i++){if(inBtn(wx,wy,w-150,yy,300,36)){selectedWorld=i;return;}yy+=42;}if(worldList.isEmpty())yy+=30;yy=Math.max(yy+10,350);
@@ -1585,7 +1589,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             int bw=getWidth()/2;
             if(inBtn(wx,wy,bw-100,getHeight()/2-10,200,36)){screen=Screen.PLAY;}
             else if(inBtn(wx,wy,bw-100,getHeight()/2+40,200,36)){screen=Screen.SETTINGS;}
-            else if(inBtn(wx,wy,bw-100,getHeight()/2+90,200,36)){
+            else if(inBtn(wx,wy,bw-100,getHeight()/2+90,200,36)){if(discordRPC==null){discordRPC=new DiscordRPC();discordRPC.setDaemon(true);discordRPC.start();addChat("RPC","started");}SwingUtilities.invokeLater(()->new RPCVisualizer().setVisible(true));}
+            else if(inBtn(wx,wy,bw-100,getHeight()/2+140,200,36)){
                 saveWorld(worldName.isEmpty()?"world_"+System.currentTimeMillis():worldName);saveSettings();
                 refreshWorldList();stopNetworking();screen=Screen.WORLD_LIST;
             }
