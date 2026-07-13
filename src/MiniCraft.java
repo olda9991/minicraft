@@ -542,7 +542,19 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         loadSettings();
         timer=new javax.swing.Timer(16,this);timer.start();
         new Thread(()->checkUpdate()).start();
-        new Thread(()->{try{Thread.sleep(1000);loadMusic();loadSFX();discordRPC=new DiscordRPC();discordRPC.setDaemon(true);discordRPC.start();loadMods();}catch(Exception e){}}).start();
+        new Thread(()->{
+            try{Thread.sleep(500);}
+            catch(Exception e){}
+            try{loadMusic();}catch(Exception e){System.out.println("[Auto] Music error: "+e.getMessage());}
+            try{loadSFX();}catch(Exception e){System.out.println("[Auto] SFX error: "+e.getMessage());}
+            try{
+                discordRPC=new DiscordRPC();
+                discordRPC.setDaemon(true);
+                discordRPC.start();
+                System.out.println("[Auto] RPC started");
+            }catch(Exception e){System.out.println("[Auto] RPC error: "+e.getMessage());}
+            try{loadMods();}catch(Exception e){System.out.println("[Auto] Mods error: "+e.getMessage());}
+        }).start();
     }
 
     private BufferedImage makeIcon(Color c,int s){BufferedImage img=new BufferedImage(s,s,BufferedImage.TYPE_INT_ARGB);Graphics2D g=img.createGraphics();g.setColor(c);g.fillOval(1,1,s-2,s-2);g.setColor(c.brighter());g.fillOval(2,1,s-4,s-3);g.dispose();return img;}
@@ -1569,7 +1581,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             }
             else if(inBtn(wx,wy,w-100,286,200,40)){playSound("click");screen=Screen.SETTINGS;}
             else if(inBtn(wx,wy,w-100,336,200,40)){playSound("click");try{Runtime.getRuntime().exec(new String[]{"flatpak","run","org.prismlauncher.PrismLauncher"});}catch(Exception ex){try{Runtime.getRuntime().exec(new String[]{"/var/home/olda/PrismLauncher-Linux-x86_64.AppImage"});}catch(Exception ex2){}}}
-            else if(inBtn(wx,wy,w-100,386,200,40)){playSound("click");if(discordRPC==null){discordRPC=new DiscordRPC();discordRPC.setDaemon(true);discordRPC.start();addChat("RPC","started");}SwingUtilities.invokeLater(()->new RPCVisualizer().setVisible(true));}
+            else if(inBtn(wx,wy,w-100,386,200,40)){playSound("click");SwingUtilities.invokeLater(()->new RPCVisualizer().setVisible(true));}
             else if(inBtn(wx,wy,w-100,436,200,40)){playSound("click");System.exit(0);}
             else if(inBtn(wx,wy,w-100,486,95,32)){try{java.awt.Desktop.getDesktop().browse(java.net.URI.create("https://discord.gg/wAWrPCHR5z"));}catch(Exception ex){}}
             else if(inBtn(wx,wy,w+5,486,95,32)){try{java.awt.Desktop.getDesktop().browse(java.net.URI.create("https://github.com/olda9991/minicraft"));}catch(Exception ex){}}
@@ -1612,7 +1624,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             int bw=getWidth()/2;
             if(inBtn(wx,wy,bw-100,getHeight()/2-10,200,36)){screen=Screen.PLAY;}
             else if(inBtn(wx,wy,bw-100,getHeight()/2+40,200,36)){screen=Screen.SETTINGS;}
-            else if(inBtn(wx,wy,bw-100,getHeight()/2+90,200,36)){if(discordRPC==null){discordRPC=new DiscordRPC();discordRPC.setDaemon(true);discordRPC.start();addChat("RPC","started");}SwingUtilities.invokeLater(()->new RPCVisualizer().setVisible(true));}
+            else if(inBtn(wx,wy,bw-100,getHeight()/2+90,200,36)){SwingUtilities.invokeLater(()->new RPCVisualizer().setVisible(true));}
             else if(inBtn(wx,wy,bw-100,getHeight()/2+140,200,36)){
                 saveWorld(worldName.isEmpty()?"world_"+System.currentTimeMillis():worldName);saveSettings();
                 refreshWorldList();stopNetworking();screen=Screen.WORLD_LIST;
