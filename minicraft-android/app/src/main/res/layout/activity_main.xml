@@ -8,19 +8,19 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|start"
-        android:layout_margin="16dp"
+        android:layout_margin="12dp"
         android:orientation="vertical">
 
         <Button
             android:id="@+id/btnUp"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_width="72dp"
+            android:layout_height="60dp"
             android:layout_gravity="center_horizontal"
-            android:alpha="0.5"
-            android:backgroundTint="#333333"
-            android:text="^"
+            android:alpha="0.6"
+            android:backgroundTint="#444444"
+            android:text="JUMP"
             android:textColor="#FFFFFF"
-            android:textSize="24sp" />
+            android:textSize="14sp" />
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -29,33 +29,33 @@
 
             <Button
                 android:id="@+id/btnLeft"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:alpha="0.5"
-                android:backgroundTint="#333333"
-                android:text="&lt;"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:alpha="0.6"
+                android:backgroundTint="#444444"
+                android:text="LEFT"
                 android:textColor="#FFFFFF"
-                android:textSize="24sp" />
+                android:textSize="13sp" />
 
             <Button
                 android:id="@+id/btnDown"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:alpha="0.5"
-                android:backgroundTint="#333333"
-                android:text="v"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:alpha="0.6"
+                android:backgroundTint="#444444"
+                android:text="FLY DN"
                 android:textColor="#FFFFFF"
-                android:textSize="24sp" />
+                android:textSize="12sp" />
 
             <Button
                 android:id="@+id/btnRight"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:alpha="0.5"
-                android:backgroundTint="#333333"
-                android:text=">"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:alpha="0.6"
+                android:backgroundTint="#444444"
+                android:text="RIGHT"
                 android:textColor="#FFFFFF"
-                android:textSize="24sp" />
+                android:textSize="13sp" />
         </LinearLayout>
     </LinearLayout>
 
@@ -64,16 +64,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
+        android:layout_margin="12dp"
         android:orientation="vertical">
 
         <Button
             android:id="@+id/btnJump"
-            android:layout_width="80dp"
-            android:layout_height="64dp"
+            android:layout_width="90dp"
+            android:layout_height="56dp"
             android:layout_gravity="center_horizontal"
-            android:alpha="0.5"
-            android:backgroundTint="#444444"
+            android:alpha="0.6"
+            android:backgroundTint="#555555"
             android:text="JUMP"
             android:textColor="#FFFFFF"
             android:textSize="14sp" />
@@ -87,9 +87,9 @@
                 android:id="@+id/btnBreak"
                 android:layout_width="80dp"
                 android:layout_height="80dp"
-                android:alpha="0.5"
+                android:alpha="0.6"
                 android:backgroundTint="#AA3333"
-                android:text="BREAK"
+                android:text="HOLD"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp" />
 
@@ -97,12 +97,25 @@
                 android:id="@+id/btnPlace"
                 android:layout_width="80dp"
                 android:layout_height="80dp"
-                android:alpha="0.5"
+                android:alpha="0.6"
                 android:backgroundTint="#33AA33"
-                android:text="PLACE"
+                android:text="TAP"
                 android:textColor="#FFFFFF"
                 android:textSize="14sp" />
         </LinearLayout>
     </LinearLayout>
+
+    <!-- Mode toggle (top-right) -->
+    <Button
+        android:id="@+id/btnMode"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="8dp"
+        android:alpha="0.7"
+        android:backgroundTint="#666666"
+        android:text="S/C"
+        android:textColor="#FFFFFF"
+        android:textSize="12sp" />
 
 </FrameLayout>

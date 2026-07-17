@@ -2,26 +2,25 @@ package com.olda.minicraft;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 /**
- * SurfaceView that hosts the MiniCraft game loop and renders the world.
+ * MiniCraft Android - Game SurfaceView
+ * Handles render thread + touch input
  */
 public class GameView extends SurfaceView implements SurfaceHolder.Callback, Runnable {
 
     private Thread gameThread;
     private boolean running = false;
     private MiniCraftGame game;
-    private Paint paint = new Paint();
 
     public GameView(Context context) {
         super(context);
         getHolder().addCallback(this);
         game = new MiniCraftGame(context);
+        setFocusable(true);
     }
 
     @Override
@@ -34,13 +33,17 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Run
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        // Viewport already set in init; resize if needed
+        // Handle resize if needed
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         running = false;
-        try { gameThread.join(); } catch (InterruptedException e) { e.printStackTrace(); }
+        try {
+            gameThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -71,9 +74,22 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Run
                 if (c != null) getHolder().unlockCanvasAndPost(c);
             }
 
-            try { Thread.sleep(2); } catch (InterruptedException e) { break; }
+            try {
+                Thread.sleep(2);
+            } catch (InterruptedException e) {
+                break;
+            }
         }
     }
 
-    public MiniCraftGame getGame() { return game; }
+    @Override
+    public boolean onTouchEvent(MotionEvent e) {
+        // Forward touch to game for world interactions
+        game.onTouch(e, e.getActionMasked());
+        return true;
+    }
+
+    public MiniCraftGame getGame() {
+        return game;
+    }
 }

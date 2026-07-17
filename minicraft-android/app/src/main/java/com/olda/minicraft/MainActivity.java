@@ -9,8 +9,8 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 
 /**
- * MiniCraft Android MainActivity
- * Fullscreen landscape with virtual touch controls.
+ * MiniCraft Android - Main Activity
+ * Fullscreen with virtual controls
  */
 public class MainActivity extends Activity {
 
@@ -28,7 +28,7 @@ public class MainActivity extends Activity {
         game = gameView.getGame();
         root.addView(gameView);
 
-        // Touch overlay with virtual controls
+        // Inflate touch control overlay
         View overlay = getLayoutInflater().inflate(R.layout.activity_main, root, false);
         root.addView(overlay);
         setContentView(root);
@@ -37,60 +37,53 @@ public class MainActivity extends Activity {
     }
 
     private void setupControls(View overlay) {
-        // D-Pad
-        Button left = overlay.findViewById(R.id.btnLeft);
-        Button right = overlay.findViewById(R.id.btnRight);
-        Button up = overlay.findViewById(R.id.btnUp);
-        Button down = overlay.findViewById(R.id.btnDown);
-        Button jump = overlay.findViewById(R.id.btnJump);
-        Button breakBtn = overlay.findViewById(R.id.btnBreak);
-        Button placeBtn = overlay.findViewById(R.id.btnPlace);
+        // D-Pad buttons
+        Button btnLeft = overlay.findViewById(R.id.btnLeft);
+        Button btnRight = overlay.findViewById(R.id.btnRight);
+        Button btnUp = overlay.findViewById(R.id.btnUp);
+        Button btnDown = overlay.findViewById(R.id.btnDown);
+        Button btnJump = overlay.findViewById(R.id.btnJump);
+        Button btnBreak = overlay.findViewById(R.id.btnBreak);
+        Button btnPlace = overlay.findViewById(R.id.btnPlace);
+        Button btnMode = overlay.findViewById(R.id.btnMode);
 
-        setPressListener(left, () -> game.touchLeft = true, () -> game.touchLeft = false);
-        setPressListener(right, () -> game.touchRight = true, () -> game.touchRight = false);
-        setPressListener(up, () -> game.touchUp = true, () -> game.touchUp = false);
-        setPressListener(down, () -> game.touchDown = true, () -> game.touchDown = false);
-        setPressListener(jump, () -> game.touchUp = true, () -> game.touchUp = false);
+        // Movement (hold to move)
+        setHoldListener(btnLeft, () -> game.moveLeft = true, () -> game.moveLeft = false);
+        setHoldListener(btnRight, () -> game.moveRight = true, () -> game.moveRight = false);
+        setHoldListener(btnUp, () -> game.moveUp = true, () -> game.moveUp = false);
+        setHoldListener(btnDown, () -> game.moveDown = true, () -> game.moveDown = false);
+        setHoldListener(btnJump, () -> game.btnJump = true, () -> game.btnJump = false);
 
-        breakBtn.setOnTouchListener((v, e) -> {
+        // Break (hold to break)
+        setHoldListener(btnBreak, () -> game.btnBreak = true, () -> game.btnBreak = false);
+
+        // Place (tap to place once)
+        btnPlace.setOnTouchListener((v, e) -> {
             if (e.getAction() == MotionEvent.ACTION_DOWN) {
-                game.touchBreak = true;
-                game.touchBreakX = e.getRawX();
-                game.touchBreakY = e.getRawY();
-            } else if (e.getAction() == MotionEvent.ACTION_UP || e.getAction() == MotionEvent.ACTION_CANCEL) {
-                game.touchBreak = false;
+                game.btnPlace = true;
+                // Set touch at crosshair position
+                game.touchX = gameView.getWidth() / 2f;
+                game.touchY = gameView.getHeight() / 2f;
             }
             return true;
         });
 
-        placeBtn.setOnTouchListener((v, e) -> {
-            if (e.getAction() == MotionEvent.ACTION_DOWN) {
-                game.touchPlace = true;
-                game.touchBreakX = e.getRawX();
-                game.touchBreakY = e.getRawY();
-            }
-            return true;
-        });
+        // Mode toggle
+        btnMode.setOnClickListener(v -> game.toggleMode());
     }
 
-    private void setPressListener(Button btn, Runnable onPress, Runnable onRelease) {
+    private void setHoldListener(Button btn, Runnable onPress, Runnable onRelease) {
         btn.setOnTouchListener((v, e) -> {
-            if (e.getAction() == MotionEvent.ACTION_DOWN) onPress.run();
-            else if (e.getAction() == MotionEvent.ACTION_UP || e.getAction() == MotionEvent.ACTION_CANCEL) onRelease.run();
-            return true;
+            switch (e.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    onPress.run();
+                    return true;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    onRelease.run();
+                    return true;
+            }
+            return false;
         });
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        // Tap-to-break in world area
-        if (event.getAction() == MotionEvent.ACTION_DOWN || event.getAction() == MotionEvent.ACTION_MOVE) {
-            game.touchBreak = true;
-            game.touchBreakX = event.getX();
-            game.touchBreakY = event.getY();
-        } else if (event.getAction() == MotionEvent.ACTION_UP) {
-            game.touchBreak = false;
-        }
-        return true;
     }
 }
