@@ -1,3 +1,4 @@
+//sha:ef94d81d
 //sha:8eeefdea
 //sha:dbae507a
 //sha:48c38495
@@ -152,7 +153,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private String typing="";
     private int selectedWorld=-1;
     private int menuHover=-1;
-    private boolean showFps=false, showCoords=true, showDebug=false, noclip=false, fullscreen=false, ultraFps=false, rtxMode=false, rtxWater=false, physicsOn=true, superflat=false, bedrockEdition=false;
+    private boolean showFps=false, showCoords=true, showDebug=false, noclip=false, fullscreen=false, ultraFps=false, rtxMode=false, rtxWater=false, physicsOn=true, superflat=false, bedrockEdition=false, threeDMode=false;
     private int shaderMode=0;
     private int physicsLevel=2;
     private int gameFov=25, settingSel=-1;
@@ -167,6 +168,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private java.util.ArrayList<Particle> particles=new java.util.ArrayList<>();
     private int bobFrame=0;
     private double camSmoothX=0, camSmoothY=0;
+    private double playerDir=0; // 3D mode: facing angle in radians (0=right/+X)
     private boolean walking=false;
     private double playerVy=0;
     private long worldTime=12000;
@@ -1092,10 +1094,17 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         int pfoot=(int)((py+playerH/2)/TILE);
         if(pfoot>=0&&pfoot<H&&(world[(int)(px/TILE)][pfoot]==WATER||world[(int)(px/TILE)][pfoot]==LAVA)){speed*=0.4;if(world[(int)(px/TILE)][pfoot]==LAVA&&hungerTimer%30==0){health--;if(health<=0){dead=true;deathDrop();screen=Screen.DEATH;}}}
         double dx=0,dy=0;
-        if(keys[KeyEvent.VK_A]||keys[KeyEvent.VK_LEFT])dx-=speed;
-        if(keys[KeyEvent.VK_D]||keys[KeyEvent.VK_RIGHT])dx+=speed;
-        if(keys[KeyEvent.VK_S]||keys[KeyEvent.VK_DOWN]){if(!survival||noclip)dy+=speed;else speed*=0.5;}
-        if((keys[KeyEvent.VK_W]||keys[KeyEvent.VK_UP]||keys[KeyEvent.VK_SPACE])){if(!survival||noclip)dy-=speed;else if(playerVy==0){boolean jg=false;for(int gx=-playerW/2;gx<=playerW/2;gx+=8){int fx=(int)((px+gx)/TILE),fy=(int)((py+playerH/2+2)/TILE);if(isSolid(fx,fy)){jg=true;break;}}if(jg)playerVy=-8;}}
+        if(threeDMode){
+            if(keys[KeyEvent.VK_W]||keys[KeyEvent.VK_UP]){dx+=Math.cos(playerDir)*speed;dy+=Math.sin(playerDir)*speed;}
+            if(keys[KeyEvent.VK_S]||keys[KeyEvent.VK_DOWN]){dx-=Math.cos(playerDir)*speed;dy-=Math.sin(playerDir)*speed;}
+            if(keys[KeyEvent.VK_A]||keys[KeyEvent.VK_LEFT]){dx+=Math.cos(playerDir-Math.PI/2)*speed;dy+=Math.sin(playerDir-Math.PI/2)*speed;}
+            if(keys[KeyEvent.VK_D]||keys[KeyEvent.VK_RIGHT]){dx+=Math.cos(playerDir+Math.PI/2)*speed;dy+=Math.sin(playerDir+Math.PI/2)*speed;}
+        }else{
+            if(keys[KeyEvent.VK_A]||keys[KeyEvent.VK_LEFT])dx-=speed;
+            if(keys[KeyEvent.VK_D]||keys[KeyEvent.VK_RIGHT])dx+=speed;
+            if(keys[KeyEvent.VK_S]||keys[KeyEvent.VK_DOWN]){if(!survival||noclip)dy+=speed;else speed*=0.5;}
+        }
+        if((keys[KeyEvent.VK_W]||keys[KeyEvent.VK_UP]||keys[KeyEvent.VK_SPACE])&&!threeDMode){if(!survival||noclip)dy-=speed;else if(playerVy==0){boolean jg=false;for(int gx=-playerW/2;gx<=playerW/2;gx+=8){int fx=(int)((px+gx)/TILE),fy=(int)((py+playerH/2+2)/TILE);if(isSolid(fx,fy)){jg=true;break;}}if(jg)playerVy=-8;}}
         // Fire spread & damage
         if(rand.nextInt(5)==0){
             for(int fx=0;fx<W;fx++){
@@ -1505,7 +1514,11 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 }
             }
         }
-        for(int x=sx;x<ex;x++)for(int y=sy;y<ey;y++)if(world[x][y]>0){g2.drawImage(tex[Math.min(world[x][y],BLOCK_COUNT-1)],x*TILE-camX,y*TILE-camY,null);if(rtxWater&&world[x][y]==WATER){g2.setColor(new Color(60,120,255,40));g2.fillRect(x*TILE-camX-2,y*TILE-camY-2,TILE+4,TILE+4);g2.setColor(new Color(100,180,255,20+Math.abs(bobFrame%40-20)));g2.fillRect(x*TILE-camX,y*TILE-camY,TILE,TILE);}if(world[x][y]==TORCH_ITEM){g2.setColor(new Color(255,200,50,40));g2.fillOval(x*TILE-camX-16,y*TILE-camY-16,64,64);g2.setColor(new Color(255,240,100,20));g2.fillOval(x*TILE-camX-24,y*TILE-camY-24,80,80);}}
+        if(threeDMode&&screen==Screen.PLAY){
+            render3D(g2);
+        }else{
+            for(int x=sx;x<ex;x++)for(int y=sy;y<ey;y++)if(world[x][y]>0){g2.drawImage(tex[Math.min(world[x][y],BLOCK_COUNT-1)],x*TILE-camX,y*TILE-camY,null);if(rtxWater&&world[x][y]==WATER){g2.setColor(new Color(60,120,255,40));g2.fillRect(x*TILE-camX-2,y*TILE-camY-2,TILE+4,TILE+4);g2.setColor(new Color(100,180,255,20+Math.abs(bobFrame%40-20)));g2.fillRect(x*TILE-camX,y*TILE-camY,TILE,TILE);}if(world[x][y]==TORCH_ITEM){g2.setColor(new Color(255,200,50,40));g2.fillOval(x*TILE-camX-16,y*TILE-camY-16,64,64);g2.setColor(new Color(255,240,100,20));g2.fillOval(x*TILE-camX-24,y*TILE-camY-24,80,80);}}
+        }
         int pxOff=(int)(px-camX),pyOff=(int)(py-camY);
         int bob=(int)(Math.sin(frame*0.3)*2);
         g2.drawImage(steveImg[0],pxOff-playerW/2,pyOff-playerH/2+bob,null);
@@ -1609,6 +1622,74 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(client!=null&&client.isConnected()){g2.setFont(new Font("PixelPurl",Font.BOLD,13));g2.setColor(Color.CYAN);g2.drawString("CONNECTED  R:"+remotePlayers.size(),10,45);}
     }
 
+    // ==================== 3D RAYCASTING MODE ====================
+    private void render3D(Graphics2D g2){
+        int w=getWidth(),h=getHeight();
+        // Floor
+        g2.setColor(new Color(60,100,60));
+        g2.fillRect(0,h/2,w,h/2);
+        // Sky
+        g2.setColor(new Color(135,206,235));
+        g2.fillRect(0,0,w,h/2);
+        // Raycast walls
+        double dirX=Math.cos(playerDir),dirY=Math.sin(playerDir);
+        double planeX=-Math.sin(playerDir)*0.66,planeY=Math.cos(playerDir)*0.66;
+        double pTileX=px/TILE,pTileY=py/TILE;
+        for(int x=0;x<w;x+=2){
+            double cameraX=2.0*x/w-1.0;
+            double rayDirX=dirX+planeX*cameraX;
+            double rayDirY=dirY+planeY*cameraX;
+            int mapX=(int)pTileX,mapY=(int)pTileY;
+            double sideDistX,sideDistY;
+            double deltaDistX=Math.abs(1.0/rayDirX);
+            double deltaDistY=Math.abs(1.0/rayDirY);
+            double perpWallDist;
+            int stepX,stepY,hit=0,side=0;
+            if(rayDirX<0){stepX=-1;sideDistX=(pTileX-mapX)*deltaDistX;}
+            else{stepX=1;sideDistX=(mapX+1.0-pTileX)*deltaDistX;}
+            if(rayDirY<0){stepY=-1;sideDistY=(pTileY-mapY)*deltaDistY;}
+            else{stepY=1;sideDistY=(mapY+1.0-pTileY)*deltaDistY;}
+            for(int i=0;i<W+H&&hit==0;i++){
+                if(sideDistX<sideDistY){sideDistX+=deltaDistX;mapX+=stepX;side=0;}
+                else{sideDistY+=deltaDistY;mapY+=stepY;side=1;}
+                if(mapX<0||mapX>=W||mapY<0||mapY>=H||world[mapX][mapY]>0)hit=1;
+            }
+            if(hit==0)continue;
+            if(mapX<0)mapX=0;if(mapX>=W)mapX=W-1;
+            if(mapY<0)mapY=0;if(mapY>=H)mapY=H-1;
+            int block=world[mapX][mapY];
+            if(block<=0)continue;
+            if(side==0)perpWallDist=(mapX-pTileX+(1-stepX)/2)/rayDirX;
+            else perpWallDist=(mapY-pTileY+(1-stepY)/2)/rayDirY;
+            if(perpWallDist<=0)perpWallDist=0.01;
+            int lineHeight=(int)(h/perpWallDist);
+            int drawStart=-lineHeight/2+h/2;if(drawStart<0)drawStart=0;
+            int drawEnd=lineHeight/2+h/2;if(drawEnd>=h)drawEnd=h-1;
+            Color c=FB[Math.min(block,FB.length-1)];
+            if(side==1)c=new Color(Math.max(0,c.getRed()-40),Math.max(0,c.getGreen()-40),Math.max(0,c.getBlue()-40));
+            g2.setColor(c);
+            g2.fillRect(x,drawStart,2,drawEnd-drawStart+1);
+        }
+        // Mini-map overlay
+        g2.setColor(new Color(0,0,0,150));
+        g2.fillRect(w-130,10,120,120);
+        int ms=2;
+        for(int mx2=0;mx2<W;mx2++)for(int my2=0;my2<H;my2++){
+            if(world[mx2][my2]>0){
+                Color mc=FB[Math.min(world[mx2][my2],FB.length-1)];
+                g2.setColor(mc);
+                g2.fillRect(w-130+mx2*ms,10+my2*ms,ms,ms);
+            }
+        }
+        // Player dot on mini-map
+        g2.setColor(Color.RED);
+        g2.fillRect(w-130+(int)(px/TILE)*ms,10+(int)(py/TILE)*ms,ms,ms);
+        // Direction line
+        g2.setColor(Color.YELLOW);
+        int mpx=w-130+(int)(px/TILE)*ms+1,mpy=10+(int)(py/TILE)*ms+1;
+        g2.drawLine(mpx,mpy,(int)(mpx+Math.cos(playerDir)*8),(int)(mpy+Math.sin(playerDir)*8));
+    }
+
     private void drawNameTag(Graphics2D g2,int x,int y,String name,Color c){
         g2.setFont(new Font("PixelPurl",Font.BOLD,12));
         int tw=g2.getFontMetrics().stringWidth(name);
@@ -1698,6 +1779,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             if(e.getKeyCode()==KeyEvent.VK_F6){rtxWater=!rtxWater;return;}
             if(e.getKeyCode()==KeyEvent.VK_F7){physicsLevel=(physicsLevel+1)%3;physicsOn=physicsLevel>0;return;}
             if(e.getKeyCode()==KeyEvent.VK_F8){shaderMode=(shaderMode+1)%3;return;}
+            if(e.getKeyCode()==KeyEvent.VK_F9){threeDMode=!threeDMode;addChat("3D","Mode: "+(threeDMode?"ON":"OFF"));return;}
             if(e.getKeyCode()==KeyEvent.VK_M){toggleMusic();return;}
             if(e.getKeyCode()==KeyEvent.VK_F11&&(screen==Screen.PLAY||screen==Screen.SETTINGS)){
                 toggleFullscreen();
@@ -1790,6 +1872,11 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
 
     @Override public void mouseMoved(MouseEvent e){mx=e.getX();my=e.getY();menuHover=-1;
+        if(threeDMode&&screen==Screen.PLAY){
+            int cx=getWidth()/2;
+            playerDir+=(mx-cx)*0.002;
+            try{java.awt.Robot r=new java.awt.Robot();r.mouseMove(cx,my);}catch(Exception ex){}
+        }
         int w=getWidth()/2;
         if(screen==Screen.MENU){if(inBtn(mx,my,w-100,140,200,36))menuHover=7;else if(inBtn(mx,my,w-100,186,200,40))menuHover=0;else if(inBtn(mx,my,w-100,236,200,40))menuHover=1;else if(inBtn(mx,my,w-100,286,200,40))menuHover=2;else if(inBtn(mx,my,w-100,336,200,40))menuHover=3;else if(inBtn(mx,my,w-100,386,200,40))menuHover=80;else if(inBtn(mx,my,w-100,436,200,40))menuHover=4;else if(inBtn(mx,my,w-100,486,95,32))menuHover=5;else if(inBtn(mx,my,w+5,486,95,32))menuHover=6;}
         if(screen==Screen.WORLD_LIST){int yy=Math.max(worldList.isEmpty()?130:100+worldList.size()*42+10,350);if(inBtn(mx,my,w-120,yy,240,36))menuHover=10;else if(selectedWorld>=0&&inBtn(mx,my,w-120,yy+46,240,36))menuHover=11;else if(selectedWorld>=0&&inBtn(mx,my,w-60,yy+92,120,36))menuHover=12;else if(inBtn(mx,my,w-60,yy+138,120,36))menuHover=13;}
