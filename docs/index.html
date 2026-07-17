@@ -28,13 +28,18 @@ button:disabled { background:#333; color:#666; cursor:not-allowed; }
 </style>
 </head>
 <body>
+<script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(r => console.log('SW registered'));
+}
+</script>
 <h1>MiniCraft Web</h1>
 <p class="subtitle">v6.4.2 — Original Java JAR running in browser via CheerpJ</p>
 
 <div id="game-container">
     <div id="loading">
         <h2>Loading MiniCraft...</h2>
-        <p>Downloading CheerpJ runtime (~30 MB) and initializing the Java virtual machine.<br>This takes 20-40 seconds on first load. Assets (textures, audio, fonts) are loaded from the same server.</p>
+        <p>Downloading CheerpJ runtime (~30 MB) and initializing the Java virtual machine.<br><b>First visit:</b> 20-40 seconds. <b>Second visit:</b> loads from browser cache in ~2 seconds.</p>
         <div id="progress-bar"><div id="progress-fill"></div></div>
         <p id="status-text">Initializing...</p>
     </div>
