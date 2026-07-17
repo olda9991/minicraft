@@ -2,6 +2,7 @@ package com.olda.minicraft;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.MotionEvent;
@@ -10,6 +11,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 /**
  * MiniCraft Android MainActivity
@@ -107,7 +109,22 @@ public class MainActivity extends Activity {
         overlay.findViewById(R.id.btnStop).setOnClickListener(v -> game.stopNetworking());
 
         // Voice chat toggle
-        overlay.findViewById(R.id.btnVoice).setOnClickListener(v -> game.toggleVoice());
+        overlay.findViewById(R.id.btnVoice).setOnClickListener(v -> {
+            if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{android.Manifest.permission.RECORD_AUDIO}, 100);
+            } else {
+                game.toggleVoice();
+            }
+        });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (requestCode == 100 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            game.toggleVoice();
+        } else {
+            Toast.makeText(this, "Microphone permission needed for voice chat", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void setHoldListener(View btn, Runnable onPress, Runnable onRelease) {
