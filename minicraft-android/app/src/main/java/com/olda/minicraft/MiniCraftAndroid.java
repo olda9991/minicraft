@@ -429,13 +429,13 @@ public class MiniCraftAndroid {
                             }
                         }
                         if (rand.nextInt(8) == 0) {
-                            int nx = fx + rand.nextInt(3) - 1;
-                            int ny = fy + rand.nextInt(3) - 1;
-                            if (isIn(nx, ny) && world[nx][ny] == AIR) {
-                                int below = ny + 1 < H ? world[nx][ny + 1] : 0;
+                            int fnx = fx + rand.nextInt(3) - 1;
+                            int fny = fy + rand.nextInt(3) - 1;
+                            if (isIn(fnx, fny) && world[fnx][fny] == AIR) {
+                                int below = fny + 1 < H ? world[fnx][fny + 1] : 0;
                                 if (below > 0 && below != BEDROCK && below != WATER) {
                                     boolean soul = world[fx][fy] == SOUL_FIRE || (below == SOUL_SAND || below == SOUL_SOIL);
-                                    world[nx][ny] = soul ? SOUL_FIRE : FIRE;
+                                    world[fnx][fny] = soul ? SOUL_FIRE : FIRE;
                                 }
                             }
                         }
