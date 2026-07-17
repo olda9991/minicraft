@@ -9,15 +9,30 @@
 body { background:#111; color:#ddd; font-family:'Segoe UI',sans-serif; display:flex; flex-direction:column; align-items:center; padding:20px; }
 h1 { color:#64c864; margin-bottom:4px; }
 .subtitle { color:#888; font-size:14px; margin-bottom:20px; }
-#game-container { width:800px; height:576px; background:#000; border:3px solid #444; position:relative; overflow:hidden; }
+#game-container {
+    width:800px; height:576px; background:#000; border:3px solid #444;
+    position:relative; overflow:hidden;
+}
 #loading {
     position:absolute; inset:0; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; background:#1a1a1a; z-index:5;
+    align-items:center; justify-content:center; background:#1a1a1a; z-index:10;
+    transition:opacity 0.5s;
 }
 #loading h2 { color:#64c864; margin-bottom:12px; }
 #loading p { color:#aaa; font-size:13px; max-width:500px; text-align:center; line-height:1.6; }
 #progress-bar { width:300px; height:6px; background:#333; border-radius:3px; margin:16px 0; overflow:hidden; }
 #progress-fill { width:0%; height:100%; background:#64c864; transition:width 0.3s; }
+#spinner {
+    width:40px; height:40px; border:3px solid #333; border-top-color:#64c864;
+    border-radius:50%; animation:spin 1s linear infinite; margin:12px 0;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+#status-text { font-family:monospace; font-size:12px; color:#888; margin-top:8px; }
+#loading.done { opacity:0; pointer-events:none; }
+#loading.error { background:#2a0a0a; }
+#loading.error h2 { color:#c86464; }
+#error-actions { display:none; gap:8px; margin-top:12px; }
+#loading.error #error-actions { display:flex; }
 #controls { margin-top:16px; display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
 button { padding:10px 18px; border:none; border-radius:6px; background:#3a5a3a; color:#fff; font-weight:bold; cursor:pointer; }
 button:hover { background:#4a7a4a; }
@@ -25,8 +40,6 @@ button:disabled { background:#333; color:#666; cursor:not-allowed; }
 #info { margin-top:16px; max-width:800px; font-size:13px; line-height:1.6; color:#aaa; }
 #info code { background:#222; padding:2px 6px; border-radius:3px; color:#8f8; }
 #info b { color:#ccc; }
-
-/* Update banner */
 #update-banner {
     display:none; width:800px; margin-bottom:12px; padding:10px 16px;
     background:#2a2a00; border:1px solid #aa0; border-radius:6px;
@@ -35,12 +48,12 @@ button:disabled { background:#333; color:#666; cursor:not-allowed; }
 #update-banner.show { display:flex; }
 #update-banner span { color:#ff0; font-size:13px; }
 #update-banner button { padding:6px 14px; font-size:12px; background:#aa0; }
-#update-banner button:hover { background:#cc0; }
 #version-bar {
     width:800px; display:flex; justify-content:space-between; align-items:center;
     margin-bottom:8px; font-size:12px; color:#666;
 }
 #version-bar button { padding:4px 10px; font-size:11px; background:#333; }
+#cheerpj-container { width:100%; height:100%; }
 </style>
 </head>
 <body>
@@ -65,12 +78,20 @@ if ('serviceWorker' in navigator) {
 
 <div id="game-container">
     <div id="loading">
-        <h2>Loading MiniCraft...</h2>
-        <p>Downloading CheerpJ runtime (~30 MB) and initializing the Java virtual machine.<br><b>First visit:</b> 20-40 seconds. <b>Second visit:</b> loads from browser cache in ~2 seconds.</p>
+        <h2 id="loading-title">Loading MiniCraft...</h2>
+        <p id="loading-desc">
+            Downloading CheerpJ JVM runtime (~30 MB) and launching the original MiniCraft.jar.<br>
+            <b>First visit:</b> 20-40 seconds. <b>After that:</b> ~2 seconds from cache.
+        </p>
+        <div id="spinner"></div>
         <div id="progress-bar"><div id="progress-fill"></div></div>
-        <p id="status-text">Initializing...</p>
+        <p id="status-text">Waiting for user...</p>
+        <div id="error-actions">
+            <button onclick="location.reload()">Retry</button>
+            <button onclick="downloadJar()">Download JAR</button>
+        </div>
     </div>
-    <div id="game" style="width:100%;height:100%;"></div>
+    <div id="cheerpj-container"></div>
 </div>
 
 <div id="controls">
@@ -91,13 +112,13 @@ if ('serviceWorker' in navigator) {
 
 <script src="https://cjrtnc.leaningtech.com/3.0/cj3loader.js"></script>
 <script>
-const baseUrl = location.origin + location.pathname.replace(/\/[^\/]*$/, '/') || location.href + '/';
 const loading = document.getElementById('loading');
+const loadingTitle = document.getElementById('loading-title');
+const loadingDesc = document.getElementById('loading-desc');
 const progressFill = document.getElementById('progress-fill');
 const statusText = document.getElementById('status-text');
 const btnLaunch = document.getElementById('btnLaunch');
-const updateBanner = document.getElementById('update-banner');
-const versionText = document.getElementById('version-text');
+const container = document.getElementById('cheerpj-container');
 let launched = false;
 
 function setProgress(pct, msg) {
@@ -105,31 +126,88 @@ function setProgress(pct, msg) {
     statusText.textContent = msg;
 }
 
+function showError(msg) {
+    loading.classList.add('error');
+    loadingTitle.textContent = 'Failed to load';
+    loadingDesc.innerHTML = msg + '<br>Try downloading the JAR and running it locally with <code>./run.sh</code>.';
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('progress-bar').style.display = 'none';
+    statusText.textContent = '';
+}
+
+// Poll until CheerpJ actually renders something in the container
+function waitForRender(timeoutMs = 90000) {
+    const start = Date.now();
+    return new Promise((resolve, reject) => {
+        const interval = setInterval(() => {
+            // CheerpJ creates a canvas or iframe inside the container
+            const hasContent = container.children.length > 0 || container.querySelector('canvas, iframe');
+            if (hasContent) {
+                clearInterval(interval);
+                resolve();
+                return;
+            }
+            if (Date.now() - start > timeoutMs) {
+                clearInterval(interval);
+                reject(new Error('Timeout waiting for game to render'));
+            }
+            // Show a heartbeat so users know it's not frozen
+            const elapsed = Math.floor((Date.now() - start) / 1000);
+            if (elapsed > 15) {
+                statusText.textContent = `Still loading... (${elapsed}s) — JVM is initializing`;
+            }
+        }, 500);
+    });
+}
+
 async function launchGame() {
     if (launched) return;
     launched = true;
     btnLaunch.disabled = true;
-    setProgress(10, 'Loading CheerpJ runtime...');
-    await cheerpjInit({
-        javaProperties: ['java.awt.headless=false', 'user.dir=/files'],
-        mountPoints: [
-            { path: '/files', url: baseUrl }
-        ]
-    });
-    setProgress(60, 'Runtime loaded. Starting MiniCraft.jar...');
-    await new Promise(r => setTimeout(r, 500));
-    setProgress(90, 'Launching game...');
-    cheerpjRunMain('MiniCraft', '/app/MiniCraft.jar');
-    setProgress(100, 'Running!');
-    await new Promise(r => setTimeout(r, 800));
-    loading.style.opacity = '0';
-    setTimeout(() => loading.style.display = 'none', 500);
+    setProgress(5, 'Fetching CheerpJ loader...');
+
+    try {
+        if (typeof cheerpjInit === 'undefined') {
+            throw new Error('CheerpJ loader not available. Check your internet connection.');
+        }
+
+        setProgress(15, 'Initializing CheerpJ runtime...');
+        await cheerpjInit({
+            javaProperties: ['java.awt.headless=false', 'user.dir=/files'],
+            mountPoints: [
+                { path: '/files', url: location.href.replace(/\/[^\/]*$/, '/') + '/' }
+            ]
+        });
+
+        setProgress(50, 'Runtime ready. Starting MiniCraft.jar...');
+        cheerpjRunMain('MiniCraft', '/app/MiniCraft.jar');
+
+        setProgress(70, 'Waiting for Swing to render...');
+        await waitForRender();
+
+        setProgress(100, 'MiniCraft is running!');
+        await new Promise(r => setTimeout(r, 400));
+        loading.classList.add('done');
+        setTimeout(() => {
+            loading.style.display = 'none';
+        }, 500);
+
+    } catch (e) {
+        console.error(e);
+        showError(e.message || 'Unknown error launching MiniCraft.');
+    }
 }
 
+// Enable launch button once CheerpJ script is loaded
 if (typeof cheerpjInit !== 'undefined') {
     btnLaunch.disabled = false;
+    setProgress(0, 'Ready to launch');
 } else {
-    window.addEventListener('load', () => { btnLaunch.disabled = false; });
+    setProgress(0, 'Loading CheerpJ script...');
+    window.addEventListener('load', () => {
+        btnLaunch.disabled = false;
+        setProgress(0, 'Ready to launch');
+    });
 }
 
 function toggleFullscreen() {
@@ -150,38 +228,33 @@ const LS_TIME = 'mc_web_check';
 async function checkUpdate(force = false) {
     const now = Date.now();
     const last = parseInt(localStorage.getItem(LS_TIME) || '0');
-    if (!force && now - last < 60000) return; // throttle to 1 min
+    if (!force && now - last < 60000) return;
 
-    versionText.textContent = 'Local: v6.4.2 | Checking GitHub...';
+    document.getElementById('version-text').textContent = 'Local: v6.4.2 | Checking GitHub...';
     try {
         const resp = await fetch(GITHUB_API, { cache: 'no-store' });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
         const remoteSha = data.sha;
         const localSha = localStorage.getItem(LS_SHA);
-
         localStorage.setItem(LS_TIME, String(now));
         localStorage.setItem(LS_SHA, remoteSha);
-
+        const banner = document.getElementById('update-banner');
         if (localSha && localSha !== remoteSha) {
-            versionText.textContent = 'Local: v6.4.2 | Remote: NEW (' + remoteSha.slice(0,7) + ')';
-            updateBanner.classList.add('show');
+            document.getElementById('version-text').textContent = 'Local: v6.4.2 | Remote: NEW (' + remoteSha.slice(0,7) + ')';
+            banner.classList.add('show');
         } else {
-            versionText.textContent = 'Local: v6.4.2 | Up to date (' + remoteSha.slice(0,7) + ')';
-            updateBanner.classList.remove('show');
+            document.getElementById('version-text').textContent = 'Local: v6.4.2 | Up to date (' + remoteSha.slice(0,7) + ')';
+            banner.classList.remove('show');
         }
     } catch (e) {
-        versionText.textContent = 'Local: v6.4.2 | Check failed (' + e.message + ')';
+        document.getElementById('version-text').textContent = 'Local: v6.4.2 | Check failed';
     }
 }
 
 function applyUpdate() {
-    // Force refresh bypassing all caches
-    if ('caches' in window) {
-        caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
-    }
-    navigator.serviceWorker?.getRegistration()?.then(reg => reg?.unregister())
-        .then(() => location.reload(true));
+    if ('caches' in window) caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
+    navigator.serviceWorker?.getRegistration()?.then(reg => reg?.unregister()).then(() => location.reload(true));
 }
 
 function clearCache() {
@@ -193,10 +266,8 @@ function clearCache() {
     }
 }
 
-// Check on load
 window.addEventListener('load', () => {
     checkUpdate(false);
-    // Also recheck every 5 minutes
     setInterval(() => checkUpdate(false), 300000);
 });
 </script>
