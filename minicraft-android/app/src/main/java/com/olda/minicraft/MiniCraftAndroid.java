@@ -147,7 +147,9 @@ public class MiniCraftAndroid {
     private double camSmoothX = 0, camSmoothY = 0;
     private long sessionStart = 0;
     private boolean threeDMode = false;
+    private boolean vrMode = false;
     private double playerDir = 0;
+    private double playerPitch = 0;
 
     // ==================== NETWORKING ====================
     private boolean isHost = false;
@@ -277,8 +279,8 @@ public class MiniCraftAndroid {
         if (threeDMode) {
             if (moveUp) { dx += Math.cos(playerDir) * speed; dy += Math.sin(playerDir) * speed; }
             if (moveDown) { dx -= Math.cos(playerDir) * speed; dy -= Math.sin(playerDir) * speed; }
-            if (moveLeft) playerDir -= 0.04;
-            if (moveRight) playerDir += 0.04;
+            if (moveLeft) playerDir -= 0.025;
+            if (moveRight) playerDir += 0.025;
         } else {
             if (moveLeft) dx -= speed;
             if (moveRight) dx += speed;
@@ -685,13 +687,15 @@ public class MiniCraftAndroid {
         int skyR = (int) (150 * (1 - night) + 10 * night);
         int skyG = (int) (200 * (1 - night) + 20 * night);
         int skyB = (int) (255 * (1 - night) + 40 * night);
-        paint.setColor(0xFF000000 | (skyR << 16) | (skyG << 8) | skyB);
-        c.drawRect(0, 0, w, h / 2, paint);
         int floorR = (int) (60 * (1 - night) + 10 * night);
         int floorG = (int) (100 * (1 - night) + 10 * night);
         int floorB = (int) (60 * (1 - night) + 10 * night);
+        int horizon = h / 2 + (int) (playerPitch * h * 0.5);
+        if (horizon < 0) horizon = 0; if (horizon > h) horizon = h;
+        paint.setColor(0xFF000000 | (skyR << 16) | (skyG << 8) | skyB);
+        c.drawRect(0, 0, w, horizon, paint);
         paint.setColor(0xFF000000 | (floorR << 16) | (floorG << 8) | floorB);
-        c.drawRect(0, h / 2, w, h, paint);
+        c.drawRect(0, horizon, w, h - horizon, paint);
         double dirX = Math.cos(playerDir), dirY = Math.sin(playerDir);
         double planeX = -Math.sin(playerDir) * 0.66, planeY = Math.cos(playerDir) * 0.66;
         double pTileX = px / TILE, pTileY = py / TILE;
@@ -723,8 +727,8 @@ public class MiniCraftAndroid {
             else perpWallDist = (mapY - pTileY + (1.0 - stepY) / 2.0) / rayDirY;
             if (perpWallDist <= 0) perpWallDist = 0.01;
             int lineHeight = (int) (h / perpWallDist);
-            int drawStart = -lineHeight / 2 + h / 2; if (drawStart < 0) drawStart = 0;
-            int drawEnd = lineHeight / 2 + h / 2; if (drawEnd >= h) drawEnd = h - 1;
+            int drawStart = -lineHeight / 2 + horizon; if (drawStart < 0) drawStart = 0;
+            int drawEnd = lineHeight / 2 + horizon; if (drawEnd >= h) drawEnd = h - 1;
             double fog = Math.min(1.0, perpWallDist / (W * 0.4));
             int shade = (int) (fog * 140);
             if (side == 1) shade += 30;

@@ -1,3 +1,4 @@
+//sha:3bbe3cda
 //sha:f3fbf677
 //sha:c8c9fbbe
 //sha:ef94d81d
@@ -171,8 +172,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private int bobFrame=0;
     private double camSmoothX=0, camSmoothY=0;
     private double playerDir=0; // 3D mode: facing angle in radians (0=right/+X)
-    private java.awt.Robot robot;
-    private boolean robotOk=false;
+    private double playerPitch=0; // vertical look angle (-0.6 to +0.6)
+    private boolean vrMode=false;
+    private int lastMx=-1,lastMy=-1;
+    private java.awt.Cursor blankCursor;
     private boolean walking=false;
     private double playerVy=0;
     private long worldTime=12000;
@@ -667,7 +670,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         try{GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(Font.createFont(Font.TRUETYPE_FONT,new File(System.getProperty("user.dir")+"/PixelPurl.ttf")));}catch(Exception e){}
         refreshWorldList();
         loadSettings();
-        try{robot=new java.awt.Robot();robotOk=true;}catch(Exception e){robotOk=false;}
+        try{java.awt.image.BufferedImage bi=new java.awt.image.BufferedImage(1,1,java.awt.image.BufferedImage.TYPE_INT_ARGB);blankCursor=java.awt.Toolkit.getDefaultToolkit().createCustomCursor(bi,new java.awt.Point(0,0),"blank");}catch(Exception e){blankCursor=null;}
         timer=new javax.swing.Timer(16,this);timer.start();
         new Thread(()->checkUpdate()).start();
         new Thread(()->{
@@ -1104,8 +1107,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             if(keys[KeyEvent.VK_S]||keys[KeyEvent.VK_DOWN]){dx-=Math.cos(playerDir)*speed;dy-=Math.sin(playerDir)*speed;}
             if(keys[KeyEvent.VK_A]){dx+=Math.cos(playerDir-Math.PI/2)*speed;dy+=Math.sin(playerDir-Math.PI/2)*speed;}
             if(keys[KeyEvent.VK_D]){dx+=Math.cos(playerDir+Math.PI/2)*speed;dy+=Math.sin(playerDir+Math.PI/2)*speed;}
-            if(keys[KeyEvent.VK_LEFT])playerDir-=0.04;
-            if(keys[KeyEvent.VK_RIGHT])playerDir+=0.04;
+            if(keys[KeyEvent.VK_LEFT])playerDir-=0.025;
+            if(keys[KeyEvent.VK_RIGHT])playerDir+=0.025;
         }else{
             if(keys[KeyEvent.VK_A]||keys[KeyEvent.VK_LEFT])dx-=speed;
             if(keys[KeyEvent.VK_D]||keys[KeyEvent.VK_RIGHT])dx+=speed;
@@ -1632,23 +1635,21 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
 
     // ==================== 3D RAYCASTING MODE ====================
-    private void render3D(Graphics2D g2){
-        int w=getWidth(),h=getHeight();
+    private void render3DViewport(Graphics2D g2,int vx,int vy,int vw,int vh,double dir,double pitch){
         double night=Math.abs(worldTime-12000)/12000.0;
-        // Sky with day/night
         int skyR=(int)(150*(1-night)+10*night),skyG=(int)(200*(1-night)+20*night),skyB=(int)(255*(1-night)+40*night);
-        g2.setColor(new Color(skyR,skyG,skyB));
-        g2.fillRect(0,0,w,h/2);
-        // Floor with day/night
         int floorR=(int)(60*(1-night)+10*night),floorG=(int)(100*(1-night)+10*night),floorB=(int)(60*(1-night)+10*night);
+        int horizon=vh/2+(int)(pitch*vh*0.5);
+        if(horizon<0)horizon=0;if(horizon>vh)horizon=vh;
+        g2.setColor(new Color(skyR,skyG,skyB));
+        g2.fillRect(vx,vy,vw,horizon);
         g2.setColor(new Color(floorR,floorG,floorB));
-        g2.fillRect(0,h/2,w,h/2);
-        // Raycast walls
-        double dirX=Math.cos(playerDir),dirY=Math.sin(playerDir);
-        double planeX=-Math.sin(playerDir)*0.66,planeY=Math.cos(playerDir)*0.66;
+        g2.fillRect(vx,vy+horizon,vw,vh-horizon);
+        double dirX=Math.cos(dir),dirY=Math.sin(dir);
+        double planeX=-Math.sin(dir)*0.66,planeY=Math.cos(dir)*0.66;
         double pTileX=px/TILE,pTileY=py/TILE;
-        for(int x=0;x<w;x++){
-            double cameraX=2.0*x/w-1.0;
+        for(int x=0;x<vw;x++){
+            double cameraX=2.0*x/vw-1.0;
             double rayDirX=dirX+planeX*cameraX;
             double rayDirY=dirY+planeY*cameraX;
             int mapX=(int)pTileX,mapY=(int)pTileY;
@@ -1674,9 +1675,9 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             if(side==0)perpWallDist=(mapX-pTileX+(1.0-stepX)/2.0)/rayDirX;
             else perpWallDist=(mapY-pTileY+(1.0-stepY)/2.0)/rayDirY;
             if(perpWallDist<=0)perpWallDist=0.01;
-            int lineHeight=(int)(h/perpWallDist);
-            int drawStart=-lineHeight/2+h/2;if(drawStart<0)drawStart=0;
-            int drawEnd=lineHeight/2+h/2;if(drawEnd>=h)drawEnd=h-1;
+            int lineHeight=(int)(vh/perpWallDist);
+            int drawStart=-lineHeight/2+horizon;if(drawStart<vy)drawStart=vy;
+            int drawEnd=lineHeight/2+horizon;if(drawEnd>=vy+vh)drawEnd=vy+vh-1;
             double fog=Math.min(1.0,perpWallDist/(W*0.4));
             int shade=(int)(fog*140);
             if(side==1)shade+=30;
@@ -1689,30 +1690,43 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 wallX-=(int)wallX;
                 int texX=(int)(wallX*texW);
                 if((side==0&&rayDirX>0)||(side==1&&rayDirY<0))texX=texW-texX-1;
-                g2.drawImage(t,x,drawStart,x+1,drawEnd+1,texX,0,texX+1,texH,null);
-                if(shade>0){g2.setColor(new Color(0,0,0,Math.min(255,shade)));g2.drawLine(x,drawStart,x,drawEnd);}
+                g2.drawImage(t,vx+x,drawStart,vx+x+1,drawEnd+1,texX,0,texX+1,texH,null);
+                if(shade>0){g2.setColor(new Color(0,0,0,Math.min(255,shade)));g2.drawLine(vx+x,drawStart,vx+x,drawEnd);}
             }else{
                 Color c=FB[Math.min(block,FB.length-1)];
                 int r=Math.max(0,c.getRed()-shade),g=Math.max(0,c.getGreen()-shade),b=Math.max(0,c.getBlue()-shade);
                 g2.setColor(new Color(r,g,b));
-                g2.fillRect(x,drawStart,1,drawEnd-drawStart+1);
+                g2.fillRect(vx+x,drawStart,1,drawEnd-drawStart+1);
             }
         }
-        // Mini-map overlay
+    }
+    private void render3D(Graphics2D g2){
+        int w=getWidth(),h=getHeight();
+        if(vrMode){
+            int ew=w/2;
+            render3DViewport(g2,0,0,ew,h,playerDir-0.035,playerPitch);
+            render3DViewport(g2,ew,0,ew,h,playerDir+0.035,playerPitch);
+            g2.setColor(Color.BLACK);
+            g2.drawLine(ew,0,ew,h);
+        }else{
+            render3DViewport(g2,0,0,w,h,playerDir,playerPitch);
+        }
+        // Mini-map overlay (once)
+        int mmX=w-130,mmY=10;
         g2.setColor(new Color(0,0,0,150));
-        g2.fillRect(w-130,10,120,120);
+        g2.fillRect(mmX,mmY,120,120);
         int ms=2;
         for(int mx2=0;mx2<W;mx2++)for(int my2=0;my2<H;my2++){
             if(world[mx2][my2]>0){
                 Color mc=FB[Math.min(world[mx2][my2],FB.length-1)];
                 g2.setColor(mc);
-                g2.fillRect(w-130+mx2*ms,10+my2*ms,ms,ms);
+                g2.fillRect(mmX+mx2*ms,mmY+my2*ms,ms,ms);
             }
         }
         g2.setColor(Color.RED);
-        g2.fillRect(w-130+(int)(px/TILE)*ms,10+(int)(py/TILE)*ms,ms,ms);
+        g2.fillRect(mmX+(int)(px/TILE)*ms,mmY+(int)(py/TILE)*ms,ms,ms);
         g2.setColor(Color.YELLOW);
-        int mpx=w-130+(int)(px/TILE)*ms+1,mpy=10+(int)(py/TILE)*ms+1;
+        int mpx=mmX+(int)(px/TILE)*ms+1,mpy=mmY+(int)(py/TILE)*ms+1;
         g2.drawLine(mpx,mpy,(int)(mpx+Math.cos(playerDir)*8),(int)(mpy+Math.sin(playerDir)*8));
     }
 
@@ -1805,7 +1819,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             if(e.getKeyCode()==KeyEvent.VK_F6){rtxWater=!rtxWater;return;}
             if(e.getKeyCode()==KeyEvent.VK_F7){physicsLevel=(physicsLevel+1)%3;physicsOn=physicsLevel>0;return;}
             if(e.getKeyCode()==KeyEvent.VK_F8){shaderMode=(shaderMode+1)%3;return;}
-            if(e.getKeyCode()==KeyEvent.VK_F9){threeDMode=!threeDMode;addChat("3D","Mode: "+(threeDMode?"ON":"OFF"));return;}
+            if(e.getKeyCode()==KeyEvent.VK_F9){threeDMode=!threeDMode;if(threeDMode&&blankCursor!=null)setCursor(blankCursor);else setCursor(java.awt.Cursor.getDefaultCursor());lastMx=-1;lastMy=-1;addChat("3D","Mode: "+(threeDMode?"ON":"OFF"));return;}
+            if(e.getKeyCode()==KeyEvent.VK_F10){vrMode=!vrMode;addChat("VR","Mode: "+(vrMode?"ON (SBS)":"OFF"));return;}
             if(e.getKeyCode()==KeyEvent.VK_M){toggleMusic();return;}
             if(e.getKeyCode()==KeyEvent.VK_F11&&(screen==Screen.PLAY||screen==Screen.SETTINGS)){
                 toggleFullscreen();
@@ -1899,9 +1914,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     @Override public void mouseMoved(MouseEvent e){mx=e.getX();my=e.getY();menuHover=-1;
         if(threeDMode&&screen==Screen.PLAY){
-            int cx=getWidth()/2;
-            playerDir+=(mx-cx)*0.002;
-            if(robotOk){try{robot.mouseMove(cx,my);}catch(Exception ex){robotOk=false;}}
+            if(lastMx>=0){playerDir+=(mx-lastMx)*0.003;playerPitch+=(my-lastMy)*0.003;playerPitch=Math.max(-0.6,Math.min(0.6,playerPitch));}
+            lastMx=mx;lastMy=my;
         }
         int w=getWidth()/2;
         if(screen==Screen.MENU){if(inBtn(mx,my,w-100,140,200,36))menuHover=7;else if(inBtn(mx,my,w-100,186,200,40))menuHover=0;else if(inBtn(mx,my,w-100,236,200,40))menuHover=1;else if(inBtn(mx,my,w-100,286,200,40))menuHover=2;else if(inBtn(mx,my,w-100,336,200,40))menuHover=3;else if(inBtn(mx,my,w-100,386,200,40))menuHover=80;else if(inBtn(mx,my,w-100,436,200,40))menuHover=4;else if(inBtn(mx,my,w-100,486,95,32))menuHover=5;else if(inBtn(mx,my,w+5,486,95,32))menuHover=6;}
@@ -2052,9 +2066,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     @Override public void mouseExited(MouseEvent e){mouseIn=false;breakX=-1;breakY=-1;breakTimer=0;}
     @Override public void mouseDragged(MouseEvent e){mx=e.getX();my=e.getY();
         if(threeDMode&&screen==Screen.PLAY){
-            int cx=getWidth()/2;
-            playerDir+=(mx-cx)*0.002;
-            if(robotOk){try{robot.mouseMove(cx,my);}catch(Exception ex){robotOk=false;}}
+            if(lastMx>=0){playerDir+=(mx-lastMx)*0.003;playerPitch+=(my-lastMy)*0.003;playerPitch=Math.max(-0.6,Math.min(0.6,playerPitch));}
+            lastMx=mx;lastMy=my;
         }
     }
     @Override public void mouseClicked(MouseEvent e){}
