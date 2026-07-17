@@ -1,3 +1,4 @@
+//sha:f3fbf677
 //sha:c8c9fbbe
 //sha:ef94d81d
 //sha:8eeefdea
@@ -1101,8 +1102,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(threeDMode){
             if(keys[KeyEvent.VK_W]||keys[KeyEvent.VK_UP]){dx+=Math.cos(playerDir)*speed;dy+=Math.sin(playerDir)*speed;}
             if(keys[KeyEvent.VK_S]||keys[KeyEvent.VK_DOWN]){dx-=Math.cos(playerDir)*speed;dy-=Math.sin(playerDir)*speed;}
-            if(keys[KeyEvent.VK_A]||keys[KeyEvent.VK_LEFT]){dx+=Math.cos(playerDir-Math.PI/2)*speed;dy+=Math.sin(playerDir-Math.PI/2)*speed;}
-            if(keys[KeyEvent.VK_D]||keys[KeyEvent.VK_RIGHT]){dx+=Math.cos(playerDir+Math.PI/2)*speed;dy+=Math.sin(playerDir+Math.PI/2)*speed;}
+            if(keys[KeyEvent.VK_A]){dx+=Math.cos(playerDir-Math.PI/2)*speed;dy+=Math.sin(playerDir-Math.PI/2)*speed;}
+            if(keys[KeyEvent.VK_D]){dx+=Math.cos(playerDir+Math.PI/2)*speed;dy+=Math.sin(playerDir+Math.PI/2)*speed;}
+            if(keys[KeyEvent.VK_LEFT])playerDir-=0.04;
+            if(keys[KeyEvent.VK_RIGHT])playerDir+=0.04;
         }else{
             if(keys[KeyEvent.VK_A]||keys[KeyEvent.VK_LEFT])dx-=speed;
             if(keys[KeyEvent.VK_D]||keys[KeyEvent.VK_RIGHT])dx+=speed;

@@ -277,8 +277,8 @@ public class MiniCraftAndroid {
         if (threeDMode) {
             if (moveUp) { dx += Math.cos(playerDir) * speed; dy += Math.sin(playerDir) * speed; }
             if (moveDown) { dx -= Math.cos(playerDir) * speed; dy -= Math.sin(playerDir) * speed; }
-            if (moveLeft) { dx += Math.cos(playerDir - Math.PI / 2) * speed; dy += Math.sin(playerDir - Math.PI / 2) * speed; }
-            if (moveRight) { dx += Math.cos(playerDir + Math.PI / 2) * speed; dy += Math.sin(playerDir + Math.PI / 2) * speed; }
+            if (moveLeft) playerDir -= 0.04;
+            if (moveRight) playerDir += 0.04;
         } else {
             if (moveLeft) dx -= speed;
             if (moveRight) dx += speed;
