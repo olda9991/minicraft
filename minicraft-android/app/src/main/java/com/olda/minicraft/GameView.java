@@ -74,9 +74,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Run
 
     @Override
     public boolean onTouchEvent(MotionEvent e) {
-        // Touch in world area = break at that position
         float y = e.getY();
-        if (y < getHeight() - 180) { // Not in controls
+        if (y < getHeight() - 180) {
             game.handleTouch(e.getX(), e.getY(), e.getActionMasked());
         }
         return true;

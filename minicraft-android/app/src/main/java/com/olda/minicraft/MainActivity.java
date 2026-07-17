@@ -1,16 +1,19 @@
 package com.olda.minicraft;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 
 /**
  * MiniCraft Android MainActivity
- * Uses MiniCraftAndroid - direct port from desktop MiniCraft.java
+ * Cross-platform multiplayer with Windows/Linux desktop
  */
 public class MainActivity extends Activity {
 
@@ -36,22 +39,21 @@ public class MainActivity extends Activity {
     }
 
     private void setupControls(View overlay) {
-        // D-Pad
+        // Movement
         setHoldListener(overlay.findViewById(R.id.btnLeft), () -> game.setMoveLeft(true), () -> game.setMoveLeft(false));
         setHoldListener(overlay.findViewById(R.id.btnRight), () -> game.setMoveRight(true), () -> game.setMoveRight(false));
         setHoldListener(overlay.findViewById(R.id.btnUp), () -> game.setMoveUp(true), () -> game.setMoveUp(false));
         setHoldListener(overlay.findViewById(R.id.btnDown), () -> game.setMoveDown(true), () -> game.setMoveDown(false));
         setHoldListener(overlay.findViewById(R.id.btnJump), () -> game.setJump(true), () -> game.setJump(false));
 
-        // Break - hold to break at crosshair
+        // Break
         setHoldListener(overlay.findViewById(R.id.btnBreak), () -> {
-            // Break uses crosshair position
             game.handleTouch(gameView.getWidth()/2f, gameView.getHeight()/2f, MotionEvent.ACTION_DOWN);
         }, () -> {
             game.handleTouch(-1, -1, MotionEvent.ACTION_UP);
         });
 
-        // Place - tap to place at crosshair
+        // Place
         overlay.findViewById(R.id.btnPlace).setOnTouchListener((v, e) -> {
             if (e.getAction() == MotionEvent.ACTION_DOWN) {
                 game.setPlace(true);
@@ -59,14 +61,50 @@ public class MainActivity extends Activity {
             return true;
         });
 
-        // Mode toggle
+        // Mode
         overlay.findViewById(R.id.btnMode).setOnClickListener(v -> game.toggleMode());
-
-        // Noclip toggle (long press mode button)
         overlay.findViewById(R.id.btnMode).setOnLongClickListener(v -> {
             game.toggleNoclip();
             return true;
         });
+
+        // Host server
+        overlay.findViewById(R.id.btnHost).setOnClickListener(v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Host Server");
+            final EditText input = new EditText(this);
+            input.setInputType(InputType.TYPE_CLASS_NUMBER);
+            input.setText("25565");
+            builder.setView(input);
+            builder.setPositiveButton("Host", (dialog, which) -> {
+                int port = Integer.parseInt(input.getText().toString());
+                game.startServer(port);
+            });
+            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+            builder.show();
+        });
+
+        // Join server
+        overlay.findViewById(R.id.btnJoin).setOnClickListener(v -> {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Join Server");
+            View dialogView = getLayoutInflater().inflate(R.layout.dialog_join, null);
+            final EditText ipInput = dialogView.findViewById(R.id.inputIP);
+            final EditText portInput = dialogView.findViewById(R.id.inputPort);
+            ipInput.setText("192.168.1.");
+            portInput.setText("25565");
+            builder.setView(dialogView);
+            builder.setPositiveButton("Join", (dialog, which) -> {
+                String ip = ipInput.getText().toString();
+                int port = Integer.parseInt(portInput.getText().toString());
+                game.connectToServer(ip, port);
+            });
+            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+            builder.show();
+        });
+
+        // Stop network
+        overlay.findViewById(R.id.btnStop).setOnClickListener(v -> game.stopNetworking());
     }
 
     private void setHoldListener(View btn, Runnable onPress, Runnable onRelease) {

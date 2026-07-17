@@ -4,8 +4,12 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.MotionEvent;
 
+import java.io.*;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -142,6 +146,16 @@ public class MiniCraftAndroid {
     private int blocksBroken = 0, blocksPlaced = 0;
     private double camSmoothX = 0, camSmoothY = 0;
     private long sessionStart = 0;
+
+    // ==================== NETWORKING ====================
+    private boolean isHost = false;
+    private int serverPort = 25565;
+    private String serverIP = "localhost";
+    private int clientPort = 0;
+    private MiniServer server = null;
+    private MiniClient client = null;
+    private ArrayList<RemotePlayer> remotePlayers = new ArrayList<>();
+    private int posTime = 0;
 
     // Android specific
     private int screenW, screenH;
@@ -446,6 +460,14 @@ public class MiniCraftAndroid {
                 }
             }
         }
+
+        // Network position sync
+        posTime++;
+        if (posTime % 10 == 0) {
+            if (client != null && client.isConnected()) {
+                client.send("P " + (int) px + " " + (int) py);
+            }
+        }
     }
 
     private void die() {
@@ -567,6 +589,29 @@ public class MiniCraftAndroid {
         c.drawRect(pxOff - 4, pyOff - 26 + bob, pxOff - 2, pyOff - 24 + bob, paint);
         c.drawRect(pxOff + 2, pyOff - 26 + bob, pxOff + 4, pyOff - 24 + bob, paint);
 
+        // Remote Players
+        synchronized (remotePlayers) {
+            for (RemotePlayer rp : remotePlayers) {
+                rp.x += (rp.targetX - rp.x) * 0.25;
+                rp.y += (rp.targetY - rp.y) * 0.25;
+                int rpx = (int) rp.x - camX;
+                int rpy = (int) rp.y - camY;
+                if (rpx > -20 && rpx < screenW + 20 && rpy > -40 && rpy < screenH + 20) {
+                    paint.setColor(0xFFFF5555);
+                    c.drawRect(rpx - 8, rpy - 20, rpx + 8, rpy, paint);
+                    paint.setColor(0xFFFFCC99);
+                    c.drawRect(rpx - 6, rpy - 28, rpx + 6, rpy - 20, paint);
+                    // Name tag
+                    textPaint.setColor(0xDD000000);
+                    int nw = (int) textPaint.measureText(rp.name);
+                    c.drawRect(rpx - nw/2 - 2, rpy - 40, rpx + nw/2 + 2, rpy - 26, textPaint);
+                    textPaint.setColor(0xFFFFFFFF);
+                    textPaint.setTextSize(12);
+                    c.drawText(rp.name, rpx - nw/2, rpy - 28, textPaint);
+                }
+            }
+        }
+
         // Particles
         for (Particle p : particles) {
             paint.setColor(COLORS[Math.min(p.block, COLORS.length - 1)]);
@@ -589,15 +634,23 @@ public class MiniCraftAndroid {
         drawHotbar(c);
 
         // Debug
+        int netH = isHost || isConnected() ? 125 : 105;
         textPaint.setColor(0xDD000000);
-        c.drawRect(4, 4, 220, 105, textPaint);
+        c.drawRect(4, 4, 240, netH, textPaint);
         textPaint.setColor(0xFFFFFFFF);
         textPaint.setTextSize(20);
-        c.drawText("MiniCraft v6.3.1 Mobile", 8, 26, textPaint);
+        c.drawText("MiniCraft v6.3.2 Mobile", 8, 26, textPaint);
         textPaint.setTextSize(16);
         c.drawText("X:" + (int) (px / TILE) + " Y:" + (int) (py / TILE) + " " + (survival ? "SURVIVAL" : "CREATIVE"), 8, 48, textPaint);
         c.drawText("HP:" + health + (survival ? " Hunger:" + hunger : ""), 8, 68, textPaint);
         c.drawText("Blocks: " + blocksBroken + "/" + blocksPlaced, 8, 88, textPaint);
+        if (isHost) {
+            textPaint.setColor(0xFF55FF55);
+            c.drawText("HOST Port:" + serverPort + " P:" + (server != null ? server.getPlayerCount() : 1), 8, 108, textPaint);
+        } else if (isConnected()) {
+            textPaint.setColor(0xFF55FFFF);
+            c.drawText("CLIENT " + serverIP + ":" + serverPort + " R:" + remotePlayers.size(), 8, 108, textPaint);
+        }
 
         // Block name at crosshair
         int ctx = (int) ((cx + camX) / TILE);
@@ -687,4 +740,380 @@ public class MiniCraftAndroid {
     public void setSlot(int slot) { if (slot >= 1 && slot < BLOCK_COUNT) selBlock = slot; }
     public void toggleMode() { survival = !survival; }
     public void toggleNoclip() { noclip = !noclip; }
+
+    // ==================== NETWORK METHODS ====================
+    public void startServer(int port) {
+        stopNetworking();
+        serverPort = port;
+        server = new MiniServer(port);
+        isHost = true;
+        server.start();
+    }
+
+    public void connectToServer(String ip, int port) {
+        stopNetworking();
+        serverIP = ip;
+        serverPort = port;
+        clientPort = port;
+        client = new MiniClient(ip, port);
+        if (client.connect()) {
+            // Wait for world sync
+        }
+    }
+
+    public void stopNetworking() {
+        if (server != null) { server.stopServer(); server = null; isHost = false; }
+        if (client != null) { client.disconnect(); client = null; }
+        remotePlayers.clear();
+    }
+
+    public boolean isConnected() {
+        return client != null && client.isConnected();
+    }
+
+    public boolean isServerRunning() {
+        return server != null && server.isRunning();
+    }
+
+    private void syncBlock(int x, int y, int block) {
+        if (isHost && server != null) server.broadcast("B " + x + " " + y + " " + block);
+        if (client != null && client.isConnected()) client.send("B " + x + " " + y + " " + block);
+    }
+
+    private void sendPosition() {
+        if (client != null && client.isConnected()) {
+            client.send("P " + (int)px + " " + (int)py);
+        }
+    }
+
+    // ==================== REMOTE PLAYER ====================
+    class RemotePlayer {
+        int id;
+        double x, y, targetX, targetY;
+        String name;
+        RemotePlayer(int i, String n, double sx, double sy) {
+            id = i; name = n; x = targetX = sx; y = targetY = sy;
+        }
+    }
+
+    // ==================== MINI SERVER ====================
+    class MiniServer extends Thread {
+        private ServerSocket ss;
+        private boolean running = false;
+        private ArrayList<ClientHandler> clients = new ArrayList<>();
+        private int nextId = 1;
+
+        MiniServer(int port) {
+            try {
+                ss = new ServerSocket(port);
+                System.out.println("[Server] listening on port " + port);
+            } catch (Exception e) {
+                System.err.println("[Server] FAILED on port " + port + ": " + e.getMessage());
+            }
+        }
+
+        public void run() {
+            running = true;
+            while (running) {
+                try {
+                    ClientHandler ch = new ClientHandler(ss.accept());
+                    ch.start();
+                    synchronized (clients) { clients.add(ch); }
+                } catch (Exception e) {
+                    if (running) {
+                        try { Thread.sleep(100); } catch (Exception ex) {}
+                    }
+                    break;
+                }
+            }
+        }
+
+        void broadcast(String msg, int skipId) {
+            ArrayList<ClientHandler> snapshot;
+            synchronized (clients) { snapshot = new ArrayList<>(clients); }
+            for (ClientHandler ch : snapshot) {
+                if (ch.name != null && ch.id != skipId) {
+                    try { ch.send(msg); } catch (Exception e) {}
+                }
+            }
+        }
+
+        void broadcast(String msg) {
+            ArrayList<ClientHandler> snapshot;
+            synchronized (clients) { snapshot = new ArrayList<>(clients); }
+            for (ClientHandler ch : snapshot) {
+                if (ch.name != null) {
+                    try { ch.send(msg); } catch (Exception e) {}
+                }
+            }
+        }
+
+        int getPlayerCount() { return clients.size() + 1; }
+        boolean isRunning() { return ss != null && running; }
+
+        void stopServer() {
+            running = false;
+            try { if (ss != null) ss.close(); } catch (Exception e) {}
+            synchronized (clients) {
+                for (ClientHandler ch : clients) ch.interrupt();
+                clients.clear();
+            }
+        }
+
+        void removeClient(ClientHandler ch) {
+            synchronized (clients) { clients.remove(ch); }
+            broadcast("L " + ch.id + " " + ch.name);
+            synchronized (remotePlayers) { 
+                remotePlayers.removeIf(rp -> rp.id == ch.id); 
+            }
+            System.out.println("[Server] -Player id:" + ch.id + " " + ch.name);
+        }
+
+        class ClientHandler extends Thread {
+            Socket s;
+            PrintWriter out;
+            BufferedReader in;
+            String name = "";
+            int x, y, id;
+
+            ClientHandler(Socket s) { this.s = s; }
+
+            public void run() {
+                try {
+                    out = new PrintWriter(s.getOutputStream(), true);
+                    in = new BufferedReader(new InputStreamReader(s.getInputStream()));
+                    String line;
+                    while ((line = in.readLine()) != null) {
+                        String[] p = line.split(" ", 4);
+                        if (p[0].equals("J")) {
+                            id = nextId++;
+                            name = p.length > 1 ? p[1] : "Player";
+                            // Deduplicate name
+                            ArrayList<ClientHandler> snap;
+                            synchronized (clients) { snap = new ArrayList<>(clients); }
+                            int cnt = 0;
+                            for (ClientHandler ch : snap) if (ch != this && ch.name != null && ch.name.equals(name)) cnt++;
+                            if (cnt > 0) {
+                                String base = name.replaceAll("\\d+$", "");
+                                int n = 2;
+                                name = base + n;
+                                while (true) {
+                                    boolean taken = false;
+                                    for (ClientHandler ch : snap) if (ch != this && ch.name != null && ch.name.equals(name)) { taken = true; break; }
+                                    if (!taken) break;
+                                    n++; name = base + n;
+                                }
+                            }
+                            out.println("N " + id + " " + name);
+                            
+                            // Spawn position
+                            int plrIdx = 0;
+                            for (ClientHandler ch : snap) if (ch != this && ch.name != null) plrIdx++;
+                            double spx = px + (plrIdx % 3 * 48) - 48;
+                            double spy = py - (plrIdx * (plrIdx % 3 == 0 ? 64 : 32));
+                            int gx = (int)(spx / TILE);
+                            if (gx >= 0 && gx < W) {
+                                int gy2 = getGround(gx);
+                                spy = gy2 * TILE - 14;
+                            } else { spx = px; }
+                            
+                            synchronized (remotePlayers) {
+                                remotePlayers.add(new RemotePlayer(id, name, spx, spy));
+                            }
+                            
+                            // Send world
+                            out.println("W " + W + " " + H);
+                            StringBuilder batch = new StringBuilder();
+                            for (int wx = 0; wx < W; wx++) {
+                                for (int wy = 0; wy < H; wy++) {
+                                    batch.append("D ").append(wx).append(" ").append(wy).append(" ").append(world[wx][wy]).append("\n");
+                                    if (batch.length() > 5000) {
+                                        out.print(batch.toString());
+                                        out.flush();
+                                        batch.setLength(0);
+                                    }
+                                }
+                            }
+                            if (batch.length() > 0) { out.print(batch.toString()); out.flush(); }
+                            out.println("WD");
+                            out.flush();
+                            out.println("S " + (int)spx + " " + (int)spy);
+                            out.println("J 0 " + playerName + " " + (int)px + " " + (int)py);
+                            for (ClientHandler ch : clients) {
+                                if (ch != this && ch.name != null) {
+                                    out.println("J " + ch.id + " " + ch.name + " " + ch.x + " " + ch.y);
+                                }
+                            }
+                            broadcast("J " + id + " " + name + " " + (int)spx + " " + (int)spy, id);
+                        }
+                        else if (p[0].equals("P") && p.length >= 3) {
+                            x = (int)Double.parseDouble(p[1]);
+                            y = (int)Double.parseDouble(p[2]);
+                            synchronized (remotePlayers) {
+                                for (RemotePlayer rp : remotePlayers) {
+                                    if (rp.id == id) { rp.targetX = Double.parseDouble(p[1]); rp.targetY = Double.parseDouble(p[2]); break; }
+                                }
+                            }
+                            broadcast("P " + id + " " + p[1] + " " + p[2], id);
+                        }
+                        else if (p[0].equals("B") && p.length >= 4) {
+                            final int bx = Integer.parseInt(p[1]), by = Integer.parseInt(p[2]), bl = Integer.parseInt(p[3]);
+                            if (bx >= 0 && bx < W && by >= 0 && by < H) world[bx][by] = bl;
+                            broadcast("B " + bx + " " + by + " " + bl, id);
+                        }
+                    }
+                } catch (Exception e) {} finally {
+                    try { s.close(); } catch (Exception e) {}
+                    if (name != null) removeClient(this);
+                }
+            }
+
+            void send(String m) {
+                try {
+                    if (out != null) {
+                        out.println(m);
+                        if (out.checkError()) {
+                            out = null;
+                            try { s.close(); } catch (Exception e2) {}
+                            removeClient(this);
+                        }
+                    }
+                } catch (Exception e) {
+                    out = null;
+                    try { s.close(); } catch (Exception e2) {}
+                    removeClient(this);
+                }
+            }
+        }
+    }
+
+    // ==================== MINI CLIENT ====================
+    class MiniClient extends Thread {
+        private Socket s;
+        private PrintWriter out;
+        private BufferedReader in;
+        private boolean connected = false, running = false;
+        private String host;
+        private int port;
+        private int[][] tempWorld = null;
+        private boolean worldReady = false;
+        private Handler uiHandler;
+
+        MiniClient(String h, int p) {
+            host = h; port = p;
+            uiHandler = new Handler(Looper.getMainLooper());
+        }
+
+        boolean connect() {
+            try {
+                s = new Socket();
+                s.connect(new InetSocketAddress(host, port), 4000);
+                s.setSoTimeout(4000);
+                out = new PrintWriter(s.getOutputStream(), true);
+                in = new BufferedReader(new InputStreamReader(s.getInputStream()));
+                connected = true;
+                running = true;
+                start();
+                out.println("J " + playerName);
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        public void run() {
+            try {
+                String line;
+                while ((line = in.readLine()) != null) {
+                    String[] p = line.split(" ", 4);
+                    if (p[0].equals("W") && p.length >= 3) {
+                        int w = Integer.parseInt(p[1]), h2 = Integer.parseInt(p[2]);
+                        tempWorld = new int[w][h2];
+                        worldReady = false;
+                    }
+                    else if (p[0].equals("D") && p.length >= 4 && tempWorld != null) {
+                        int x = Integer.parseInt(p[1]), y = Integer.parseInt(p[2]), bl = Integer.parseInt(p[3]);
+                        if (x >= 0 && x < tempWorld.length && y >= 0 && y < tempWorld[0].length) tempWorld[x][y] = bl;
+                    }
+                    else if (p[0].equals("S") && p.length >= 3) {
+                        final double sx = Double.parseDouble(p[1]), sy = Double.parseDouble(p[2]);
+                        uiHandler.post(() -> { px = sx; py = sy; });
+                    }
+                    else if (p[0].equals("WD") && tempWorld != null) {
+                        final int[][] tw = tempWorld;
+                        tempWorld = null;
+                        worldReady = true;
+                        uiHandler.post(() -> { world = tw; });
+                    }
+                    else if (p[0].equals("P") && p.length >= 4) {
+                        final int pid = Integer.parseInt(p[1]);
+                        final double sx = Double.parseDouble(p[2]), sy = Double.parseDouble(p[3]);
+                        uiHandler.post(() -> {
+                            synchronized (remotePlayers) {
+                                for (RemotePlayer rp : remotePlayers) if (rp.id == pid) { rp.targetX = sx; rp.targetY = sy; return; }
+                                remotePlayers.add(new RemotePlayer(pid, "?", sx, sy));
+                            }
+                        });
+                    }
+                    else if (p[0].equals("J") && p.length >= 5) {
+                        final int jid = Integer.parseInt(p[1]);
+                        final String jname = p[2];
+                        final double jx = Double.parseDouble(p[3]), jy = Double.parseDouble(p[4]);
+                        uiHandler.post(() -> {
+                            synchronized (remotePlayers) {
+                                for (RemotePlayer rp : remotePlayers) if (rp.id == jid) { rp.name = jname; rp.targetX = jx; rp.targetY = jy; return; }
+                                remotePlayers.add(new RemotePlayer(jid, jname, jx, jy));
+                            }
+                        });
+                    }
+                    else if (p[0].equals("L") && p.length >= 2) {
+                        final int lid = Integer.parseInt(p[1]);
+                        uiHandler.post(() -> {
+                            synchronized (remotePlayers) { remotePlayers.removeIf(rp -> rp.id == lid); }
+                        });
+                    }
+                    else if (p[0].equals("B") && p.length >= 4) {
+                        final int bx = Integer.parseInt(p[1]), by = Integer.parseInt(p[2]), bl = Integer.parseInt(p[3]);
+                        uiHandler.post(() -> { if (world != null && bx >= 0 && bx < world.length && by >= 0 && by < world[0].length) world[bx][by] = bl; });
+                    }
+                    else if (p[0].equals("N") && p.length >= 3) {
+                        if (p.length == 3) { playerName = p[2]; }
+                        else if (p.length >= 4) {
+                            final int nid = Integer.parseInt(p[1]);
+                            final String newN = p[3];
+                            uiHandler.post(() -> {
+                                synchronized (remotePlayers) {
+                                    for (RemotePlayer rp : remotePlayers) if (rp.id == nid) { rp.name = newN; break; }
+                                }
+                            });
+                        }
+                    }
+                }
+            } catch (Exception e) {} finally {
+                connected = false;
+                try { if (s != null) s.close(); } catch (Exception ex) {}
+            }
+        }
+
+        void send(String m) {
+            try {
+                if (out != null) {
+                    out.println(m);
+                    if (out.checkError()) throw new Exception("broken");
+                }
+            } catch (Exception e) {
+                out = null;
+                connected = false;
+            }
+        }
+
+        void disconnect() {
+            running = false;
+            try { if (s != null) s.close(); } catch (Exception e) {}
+            connected = false;
+            out = null;
+        }
+
+        boolean isConnected() { return connected; }
+    }
 }
