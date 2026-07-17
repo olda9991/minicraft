@@ -1,3 +1,4 @@
+//sha:8eeefdea
 //sha:dbae507a
 //sha:48c38495
 //sha:3de0e629
@@ -1743,6 +1744,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
         if(screen==Screen.PLAY&&e.getKeyCode()==KeyEvent.VK_E){craftingOpen=!craftingOpen;screen=craftingOpen?Screen.CRAFTING:Screen.PLAY;return;}
         if(screen==Screen.PLAY&&e.getKeyCode()==KeyEvent.VK_F){survival=!survival;return;}
+        if(screen==Screen.PLAY&&e.getKeyCode()==KeyEvent.VK_V){if(voiceChat!=null){voiceChat.shutdown();voiceChat=null;addChat("Voice","stopped");}else{int vp=(serverPort>0?serverPort:clientPort>0?clientPort:0);voiceChat=new VoiceChatThread(vp);voiceChat.start();addChat("Voice","started on port "+(vp+1000));}return;}
         if(screen==Screen.PLAY&&e.getKeyCode()==KeyEvent.VK_ESCAPE){screen=Screen.PAUSE;return;}
         if(screen==Screen.PAUSE&&e.getKeyCode()==KeyEvent.VK_ESCAPE){screen=Screen.PLAY;return;}
         if(screen==Screen.DEATH&&e.getKeyCode()==KeyEvent.VK_ENTER){px=W/2.0*TILE;py=getGround(W/2)*TILE-playerH/2;health=20;hunger=20;dead=false;fallDist=0;playerVy=0;screen=Screen.PLAY;}

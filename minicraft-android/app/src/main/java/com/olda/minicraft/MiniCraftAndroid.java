@@ -1116,4 +1116,96 @@ public class MiniCraftAndroid {
 
         boolean isConnected() { return connected; }
     }
+
+    // ==================== VOICE CHAT ====================
+    private VoiceChatThread voiceChat;
+
+    public void toggleVoice() {
+        if (voiceChat != null) {
+            voiceChat.shutdown();
+            voiceChat = null;
+        } else {
+            int vp = (serverPort > 0 ? serverPort : clientPort > 0 ? clientPort : 25565);
+            voiceChat = new VoiceChatThread(vp);
+            voiceChat.start();
+        }
+    }
+
+    class VoiceChatThread extends Thread {
+        private boolean voiceRunning = false;
+        private android.media.AudioRecord mic;
+        private android.media.AudioTrack speaker;
+        private java.net.DatagramSocket voiceSocket;
+        private ArrayList<java.net.InetAddress> voicePeers = new ArrayList<>();
+        private int voicePort = 0;
+        private int sampleRate = 8000;
+
+        VoiceChatThread(int basePort) {
+            voicePort = basePort + 1000;
+            setDaemon(true);
+        }
+
+        public void run() {
+            try {
+                int minBuf = android.media.AudioRecord.getMinBufferSize(sampleRate, android.media.AudioFormat.CHANNEL_IN_MONO, android.media.AudioFormat.ENCODING_PCM_16BIT);
+                mic = new android.media.AudioRecord(android.media.MediaRecorder.AudioSource.MIC, sampleRate, android.media.AudioFormat.CHANNEL_IN_MONO, android.media.AudioFormat.ENCODING_PCM_16BIT, minBuf);
+                mic.startRecording();
+
+                int minBufOut = android.media.AudioTrack.getMinBufferSize(sampleRate, android.media.AudioFormat.CHANNEL_OUT_MONO, android.media.AudioFormat.ENCODING_PCM_16BIT);
+                speaker = new android.media.AudioTrack(android.media.AudioManager.STREAM_VOICE_CALL, sampleRate, android.media.AudioFormat.CHANNEL_OUT_MONO, android.media.AudioFormat.ENCODING_PCM_16BIT, minBufOut, android.media.AudioTrack.MODE_STREAM);
+                speaker.play();
+
+                voiceSocket = new java.net.DatagramSocket(voicePort);
+                voiceSocket.setSoTimeout(500);
+                voiceRunning = true;
+                System.out.println("[Voice] Android initialized on port " + voicePort);
+
+                byte[] buf = new byte[512];
+                while (voiceRunning) {
+                    try {
+                        java.net.DatagramPacket pkt = new java.net.DatagramPacket(buf, buf.length);
+                        voiceSocket.receive(pkt);
+                        if (speaker != null && speaker.getState() == android.media.AudioTrack.STATE_INITIALIZED) {
+                            speaker.write(pkt.getData(), pkt.getOffset(), pkt.getLength());
+                        }
+                    } catch (java.net.SocketTimeoutException e) {}
+
+                    if (mic != null) {
+                        int len = mic.read(buf, 0, Math.min(buf.length, minBuf));
+                        if (len > 0) {
+                            for (java.net.InetAddress peer : voicePeers) {
+                                try {
+                                    java.net.DatagramPacket out = new java.net.DatagramPacket(buf, len, peer, voicePort);
+                                    voiceSocket.send(out);
+                                } catch (Exception ex) {}
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println("[Voice] Error: " + e.getMessage());
+            }
+        }
+
+        void addPeer(String ip) {
+            try {
+                java.net.InetAddress addr = java.net.InetAddress.getByName(ip);
+                if (!voicePeers.contains(addr)) voicePeers.add(addr);
+            } catch (Exception e) {}
+        }
+
+        void removePeer(String ip) {
+            try {
+                java.net.InetAddress addr = java.net.InetAddress.getByName(ip);
+                voicePeers.remove(addr);
+            } catch (Exception e) {}
+        }
+
+        void shutdown() {
+            voiceRunning = false;
+            try { mic.stop(); mic.release(); } catch (Exception e) {}
+            try { speaker.stop(); speaker.release(); } catch (Exception e) {}
+            try { voiceSocket.close(); } catch (Exception e) {}
+        }
+    }
 }

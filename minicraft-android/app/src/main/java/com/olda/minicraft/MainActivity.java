@@ -105,6 +105,9 @@ public class MainActivity extends Activity {
 
         // Stop network
         overlay.findViewById(R.id.btnStop).setOnClickListener(v -> game.stopNetworking());
+
+        // Voice chat toggle
+        overlay.findViewById(R.id.btnVoice).setOnClickListener(v -> game.toggleVoice());
     }
 
     private void setHoldListener(View btn, Runnable onPress, Runnable onRelease) {
