@@ -8,18 +8,18 @@ import android.view.SurfaceView;
 
 /**
  * MiniCraft Android - Game SurfaceView
- * Handles render thread + touch input
+ * Renders MiniCraftAndroid game engine at 60fps
  */
 public class GameView extends SurfaceView implements SurfaceHolder.Callback, Runnable {
 
     private Thread gameThread;
     private boolean running = false;
-    private MiniCraftGame game;
+    private MiniCraftAndroid game;
 
     public GameView(Context context) {
         super(context);
         getHolder().addCallback(this);
-        game = new MiniCraftGame(context);
+        game = new MiniCraftAndroid(context);
         setFocusable(true);
     }
 
@@ -32,18 +32,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Run
     }
 
     @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        // Handle resize if needed
-    }
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         running = false;
-        try {
-            gameThread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        try { gameThread.join(); } catch (InterruptedException e) { e.printStackTrace(); }
     }
 
     @Override
@@ -74,22 +68,19 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback, Run
                 if (c != null) getHolder().unlockCanvasAndPost(c);
             }
 
-            try {
-                Thread.sleep(2);
-            } catch (InterruptedException e) {
-                break;
-            }
+            try { Thread.sleep(2); } catch (InterruptedException e) { break; }
         }
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent e) {
-        // Forward touch to game for world interactions
-        game.onTouch(e, e.getActionMasked());
+        // Touch in world area = break at that position
+        float y = e.getY();
+        if (y < getHeight() - 180) { // Not in controls
+            game.handleTouch(e.getX(), e.getY(), e.getActionMasked());
+        }
         return true;
     }
 
-    public MiniCraftGame getGame() {
-        return game;
-    }
+    public MiniCraftAndroid getGame() { return game; }
 }
