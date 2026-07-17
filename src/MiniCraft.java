@@ -77,7 +77,7 @@ import javax.sound.sampled.*;
 
 public class MiniCraft extends JPanel implements ActionListener, KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
     private static final int TILE = 32, W = 128, H = 64, VW = 25, VH = 18;
-    private static final String VERSION = "6.2.1";
+    private static final String VERSION = "6.3.0";
     private static final String GITHUB_API = "https://api.github.com/repos/olda9991/minicraft/commits/main";
     private static final String GITHUB_RAW = "https://raw.githubusercontent.com/olda9991/minicraft/main/src/MiniCraft.java";
     private static final String DATA_DIR = System.getProperty("user.dir") + "/worlds/";
@@ -99,18 +99,34 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private static final int NETHERRACK=41,SOUL_SAND=42,GLOWSTONE=43,OBSIDIAN=44,CRYING_OBSIDIAN=45;
     private static final int SMOOTH_STONE=46,POLISHED_ANDESITE=47,POLISHED_DIORITE=48,POLISHED_GRANITE=49;
     private static final int PRISMARINE=50,DARK_PRISMARINE=51,SEA_LANTERN=52,END_STONE=53,PURPUR=54,MAGMA=55,SLIME=56,TNT=57,FURNACE=58,CRAFTING_TABLE=59;
-    private static final int BLOCK_COUNT=90,STICK=80;
+    private static final int BLOCK_COUNT=150,STICK=80;
     private static final int RAW_BEEF=60,COOKED_BEEF=61,RAW_PORK=62,COOKED_PORK=63,WOOL=64;
     private static final int IRON_INGOT=65,GOLD_INGOT=66,DIAMOND_GEM=67,BED=68,EXP_ORB=69;
     private static final int SWORD=70,PICKAXE=71,AXE=72,SHOVEL=73,FURNACE_ITEM=74,BOW=75,ARROW_ITEM=76,CHEST=77,SPIDER_EYE=78,BONE=79;
-    private static final int FLINT_STEEL=81,ROD=82,RAW_FISH=83,COOKED_FISH=84,SADDLE=85,LEATHER_ITEM=86,TORCH_ITEM=87,TOTEM=88,ELYTRA=89;
-    private static final String[] BNAME={"Air","Grass","Dirt","Stone","Cobblestone","Bedrock","Sand","Gravel","Oak Log","Spruce Log","Birch Log","Jungle Log","Acacia Log","Dark Oak Log","Oak Planks","Spruce Planks","Birch Planks","Jungle Planks","Acacia Planks","Dark Oak Planks","Oak Leaves","Spruce Leaves","Birch Leaves","Jungle Leaves","Acacia Leaves","Dark Oak Leaves","Water","Lava","Ice","Bricks","Stone Bricks","Mossy Stone Bricks","Cracked Stone Bricks","Coal Ore","Iron Ore","Gold Ore","Diamond Ore","Emerald Ore","Redstone Ore","Lapis Ore","Copper Ore","Netherrack","Soul Sand","Glowstone","Obsidian","Crying Obsidian","Smooth Stone","Polished Andesite","Polished Diorite","Polished Granite","Prismarine","Dark Prismarine","Sea Lantern","End Stone","Purpur Block","Magma","Slime Block","TNT","Furnace","Crafting Table","Raw Beef","Cooked Beef","Raw Pork","Cooked Pork","Wool","Iron Ingot","Gold Ingot","Diamond","Bed","XP Orb","Sword","Pickaxe","Axe","Shovel","Furnace Item","Bow","Arrow","Chest","Spider Eye","Bone","Stick","FlintSteel","FishRod","RawFish","CookFish","Saddle","Leather","Torch","Totem","Elytra"};
-    private static final String[] TF={"air","grass","dirt","stone","cobblestone","bedrock","sand","gravel","oak_log","spruce_log","birch_log","jungle_log","acacia_log","dark_oak_log","oak_planks","spruce_planks","birch_planks","jungle_planks","acacia_planks","dark_oak_planks","oak_leaves","spruce_leaves","birch_leaves","jungle_leaves","acacia_leaves","dark_oak_leaves","water","snow","ice","bricks","stone_bricks","mossy_stone_bricks","cracked_stone_bricks","coal_ore","iron_ore","gold_ore","diamond_ore","emerald_ore","redstone_ore","lapis_ore","copper_ore","netherrack","soul_sand","glowstone","obsidian","crying_obsidian","smooth_stone","polished_andesite","polished_diorite","polished_granite","prismarine","dark_prismarine","sea_lantern","end_stone","purpur_block","magma","slime_block","tnt_side","furnace_front","crafting_table_front","beef","cbeef","pork","cpork","wool","iron_ingot","gold_ingot","diamond","bed","xp","sword","pickaxe","axe","shovel","furnace","bow","arrow","chest","eye","bone","stick","flint","fishrod","rawfish","cookfish","saddle","leather","torch","totem","elytra"};
-    private static final Color[] FB={new Color(0,0,0,0),new Color(100,180,60),new Color(140,100,60),new Color(120,120,120),new Color(100,100,100),new Color(30,30,30),new Color(230,210,160),new Color(140,130,120),new Color(100,80,50),new Color(80,60,40),new Color(180,160,100),new Color(120,100,70),new Color(160,120,60),new Color(60,40,20),new Color(160,130,80),new Color(140,110,70),new Color(180,150,100),new Color(160,130,90),new Color(180,140,80),new Color(100,70,40),new Color(50,140,50),new Color(40,120,40),new Color(60,150,60),new Color(50,130,50),new Color(60,140,50),new Color(40,110,30),new Color(80,80,200),new Color(255,120,20),new Color(160,200,220),new Color(180,120,80),new Color(160,160,160),new Color(140,140,120),new Color(130,130,130),new Color(60,60,60),new Color(180,140,160),new Color(220,180,40),new Color(80,200,220),new Color(60,180,60),new Color(200,80,80),new Color(60,80,180),new Color(160,120,80),new Color(100,40,40),new Color(80,60,40),new Color(200,180,80),new Color(30,20,50),new Color(80,30,60),new Color(180,180,180),new Color(140,140,150),new Color(160,160,170),new Color(160,140,120),new Color(80,160,160),new Color(60,120,120),new Color(200,200,160),new Color(220,200,160),new Color(160,80,120),new Color(200,80,40),new Color(80,200,80),new Color(180,60,40),new Color(120,120,120),new Color(140,100,60),new Color(200,60,60),new Color(180,100,60),new Color(255,150,150),new Color(200,150,150),new Color(220,220,220),new Color(180,180,180),new Color(255,220,40),new Color(180,240,200),new Color(200,100,100),new Color(80,255,80),new Color(180,180,180),new Color(200,200,200),new Color(180,180,180),new Color(200,200,200),new Color(200,200,200),new Color(180,120,60),new Color(200,180,140),new Color(160,100,40),new Color(140,50,50),new Color(220,220,200),new Color(180,160,120),new Color(100,100,100),new Color(80,120,160),new Color(100,160,180),new Color(200,150,100),new Color(80,140,80),new Color(180,120,60),new Color(255,200,40),new Color(200,200,100),new Color(200,180,160)};
+    private static final int FLINT_STEEL=81,ROD=82,RAW_FISH=83,COOKED_FISH=84,SADDLE=85,LEATHER_ITEM=86,TORCH_ITEM=87,TOTEM=88,ELYTRA=89,FIRE=90,SOUL_FIRE=91,STRAW_BED=92,CUSHION=93,SHELF_MUSHROOM=94,SULFUR_CUBE=95,NETHERITE_BLOCK=96,ANCIENT_DEBRIS=97,BLACKSTONE=98,GILDED_BLACKSTONE=99,BASALT=100,POLISHED_BASALT=101,CRIMSON_STEM=102,CRIMSON_PLANKS=103,WARPED_STEM=104,WARPED_PLANKS=105,SHROOMLIGHT=106,LODESTONE=107,RESPAWN_ANCHOR=108,SOUL_SOIL=109,TARGET=110,HONEY_BLOCK=111,DEEPSLATE=112,DEEPSLATE_DIAMOND_ORE=113,AMETHYST_BLOCK=114,BUDDING_AMETHYST=115,SCULK=116,MOSS_BLOCK=117,AZALEA_LEAVES=118,FLOWERING_AZALEA=119,ROOTED_DIRT=120,MUD=121,MUD_BRICKS=122,MANGROVE_LOG=123,MANGROVE_LEAVES=124,MANGROVE_PLANKS=125,CHERRY_LOG=126,CHERRY_LEAVES=127,CHERRY_PLANKS=128,BAMBOO_BLOCK=129,BAMBOO_PLANKS=130,BAMBOO_MOSAIC=131,COPPER_BLOCK=132,EXPOSED_COPPER=133,WEATHERED_COPPER=134,OXIDIZED_COPPER=135,CUT_COPPER=136,WAXED_COPPER=137,RAW_IRON_BLOCK=138,RAW_GOLD_BLOCK=139,RAW_COPPER_BLOCK=140,LANTERN=141,SOUL_LANTERN=142,CAMPFIRE=143,SOUL_CAMPFIRE=144,CHAIN=145,SMITHING_TABLE=146,BARREL=147,SMOKER=148,BLAST_FURNACE=149;
+    private static final String[] BNAME={"Air","Grass","Dirt","Stone","Cobblestone","Bedrock","Sand","Gravel","Oak Log","Spruce Log","Birch Log","Jungle Log","Acacia Log","Dark Oak Log","Oak Planks","Spruce Planks","Birch Planks","Jungle Planks","Acacia Planks","Dark Oak Planks","Oak Leaves","Spruce Leaves","Birch Leaves","Jungle Leaves","Acacia Leaves","Dark Oak Leaves","Water","Lava","Ice","Bricks","Stone Bricks","Mossy Stone Bricks","Cracked Stone Bricks","Coal Ore","Iron Ore","Gold Ore","Diamond Ore","Emerald Ore","Redstone Ore","Lapis Ore","Copper Ore","Netherrack","Soul Sand","Glowstone","Obsidian","Crying Obsidian","Smooth Stone","Polished Andesite","Polished Diorite","Polished Granite","Prismarine","Dark Prismarine","Sea Lantern","End Stone","Purpur Block","Magma","Slime Block","TNT","Furnace","Crafting Table","Raw Beef","Cooked Beef","Raw Pork","Cooked Pork","Wool","Iron Ingot","Gold Ingot","Diamond","Bed","XP Orb","Sword","Pickaxe","Axe","Shovel","Furnace Item","Bow","Arrow","Chest","Spider Eye","Bone","Stick","FlintSteel","FishRod","RawFish","CookFish","Saddle","Leather","Torch","Totem","Elytra","Fire","Soul Fire","Straw Bed","Cushion","Shelf Mushroom","Sulfur Cube","Netherite Block","Ancient Debris","Blackstone","Gilded Blackstone","Basalt","Polished Basalt","Crimson Stem","Crimson Planks","Warped Stem","Warped Planks","Shroomlight","Lodestone","Respawn Anchor","Soul Soil","Target","Honey Block","Deepslate","Deepslate Diamond Ore","Amethyst Block","Budding Amethyst","Sculk","Moss Block","Azalea Leaves","Flowering Azalea","Rooted Dirt","Mud","Mud Bricks","Mangrove Log","Mangrove Leaves","Mangrove Planks","Cherry Log","Cherry Leaves","Cherry Planks","Bamboo Block","Bamboo Planks","Bamboo Mosaic","Copper Block","Exposed Copper","Weathered Copper","Oxidized Copper","Cut Copper","Waxed Copper","Raw Iron Block","Raw Gold Block","Raw Copper Block","Lantern","Soul Lantern","Campfire","Soul Campfire","Chain","Smithing Table","Barrel","Smoker","Blast Furnace"};
+    private static final String[] TF={"air","grass","dirt","stone","cobblestone","bedrock","sand","gravel","oak_log","spruce_log","birch_log","jungle_log","acacia_log","dark_oak_log","oak_planks","spruce_planks","birch_planks","jungle_planks","acacia_planks","dark_oak_planks","oak_leaves","spruce_leaves","birch_leaves","jungle_leaves","acacia_leaves","dark_oak_leaves","water","snow","ice","bricks","stone_bricks","mossy_stone_bricks","cracked_stone_bricks","coal_ore","iron_ore","gold_ore","diamond_ore","emerald_ore","redstone_ore","lapis_ore","copper_ore","netherrack","soul_sand","glowstone","obsidian","crying_obsidian","smooth_stone","polished_andesite","polished_diorite","polished_granite","prismarine","dark_prismarine","sea_lantern","end_stone","purpur_block","magma","slime_block","tnt_side","furnace_front","crafting_table_front","beef","cbeef","pork","cpork","wool","iron_ingot","gold_ingot","diamond","bed","xp","sword","pickaxe","axe","shovel","furnace","bow","arrow","chest","eye","bone","stick","flint","fishrod","rawfish","cookfish","saddle","leather","torch","totem","elytra","fire","soul_fire","straw_bed","cushion","shelf_mushroom","sulfur_cube","netherite_block","ancient_debris","blackstone","gilded_blackstone","basalt","polished_basalt","crimson_stem","crimson_planks","warped_stem","warped_planks","shroomlight","lodestone","respawn_anchor","soul_soil","target","honey_block","deepslate","deepslate_diamond_ore","amethyst_block","budding_amethyst","sculk","moss_block","azalea_leaves","flowering_azalea","rooted_dirt","mud","mud_bricks","mangrove_log","mangrove_leaves","mangrove_planks","cherry_log","cherry_leaves","cherry_planks","bamboo_block","bamboo_planks","bamboo_mosaic","copper_block","exposed_copper","weathered_copper","oxidized_copper","cut_copper","waxed_copper","raw_iron_block","raw_gold_block","raw_copper_block","lantern","soul_lantern","campfire","soul_campfire","chain","smithing_table","barrel","smoker","blast_furnace"};
+    private static final Color[] FB={new Color(0,0,0,0),new Color(100,180,60),new Color(140,100,60),new Color(120,120,120),new Color(100,100,100),new Color(30,30,30),new Color(230,210,160),new Color(140,130,120),new Color(100,80,50),new Color(80,60,40),new Color(180,160,100),new Color(120,100,70),new Color(160,120,60),new Color(60,40,20),new Color(160,130,80),new Color(140,110,70),new Color(180,150,100),new Color(160,130,90),new Color(180,140,80),new Color(100,70,40),new Color(50,140,50),new Color(40,120,40),new Color(60,150,60),new Color(50,130,50),new Color(60,140,50),new Color(40,110,30),new Color(80,80,200),new Color(255,120,20),new Color(160,200,220),new Color(180,120,80),new Color(160,160,160),new Color(140,140,120),new Color(130,130,130),new Color(60,60,60),new Color(180,140,160),new Color(220,180,40),new Color(80,200,220),new Color(60,180,60),new Color(200,80,80),new Color(60,80,180),new Color(160,120,80),new Color(100,40,40),new Color(80,60,40),new Color(200,180,80),new Color(30,20,50),new Color(80,30,60),new Color(180,180,180),new Color(140,140,150),new Color(160,160,170),new Color(160,140,120),new Color(80,160,160),new Color(60,120,120),new Color(200,200,160),new Color(220,200,160),new Color(160,80,120),new Color(200,80,40),new Color(80,200,80),new Color(180,60,40),new Color(120,120,120),new Color(140,100,60),new Color(200,60,60),new Color(180,100,60),new Color(255,150,150),new Color(200,150,150),new Color(220,220,220),new Color(180,180,180),new Color(255,220,40),new Color(180,240,200),new Color(200,100,100),new Color(80,255,80),new Color(180,180,180),new Color(200,200,200),new Color(180,180,180),new Color(200,200,200),new Color(200,200,200),new Color(180,120,60),new Color(200,180,140),new Color(160,100,40),new Color(140,50,50),new Color(220,220,200),new Color(180,160,120),new Color(100,100,100),new Color(80,120,160),new Color(100,160,180),new Color(200,150,100),new Color(80,140,80),new Color(180,120,60),new Color(255,200,40),new Color(200,200,100),new Color(200,180,160),new Color(255,140,0),new Color(0,180,255),new Color(200,180,80),new Color(240,200,200),new Color(180,120,60),new Color(200,200,50),new Color(50,50,50),new Color(80,60,40),new Color(40,40,40),new Color(60,50,30),new Color(80,80,90),new Color(100,100,110),new Color(120,40,40),new Color(160,60,60),new Color(40,120,120),new Color(60,160,160),new Color(255,200,100),new Color(160,160,170),new Color(60,40,100),new Color(60,50,40),new Color(200,160,120),new Color(255,200,50),new Color(80,80,90),new Color(60,60,80),new Color(180,140,220),new Color(160,120,200),new Color(20,40,30),new Color(80,140,60),new Color(80,160,80),new Color(200,100,200),new Color(140,120,80),new Color(100,80,60),new Color(140,100,60),new Color(120,80,50),new Color(60,140,80),new Color(100,160,120),new Color(200,150,160),new Color(255,180,200),new Color(255,200,220),new Color(200,220,100),new Color(220,240,120),new Color(240,250,140),new Color(180,120,80),new Color(160,140,120),new Color(140,130,100),new Color(120,120,90),new Color(140,120,100),new Color(160,150,130),new Color(140,130,110),new Color(180,160,140),new Color(200,180,160),new Color(160,130,100),new Color(100,100,100),new Color(0,160,200),new Color(0,120,160),new Color(255,140,0),new Color(0,200,255),new Color(160,160,170),new Color(100,100,100),new Color(100,100,100)};
     private static final int[] BT = new int[BLOCK_COUNT];
-    static { for(int i=0;i<BLOCK_COUNT;i++){if(i==BEDROCK)BT[i]=99999;else if(i==WATER)BT[i]=1;else if(i>=COAL_ORE&&i<=COPPER_ORE)BT[i]=20;else if(i==OBSIDIAN||i==CRYING_OBSIDIAN)BT[i]=120;else BT[i]=Math.max(3,i*2%15+2);} }
+    static { for(int i=0;i<BLOCK_COUNT;i++){
+        if(i==BEDROCK)BT[i]=99999;
+        else if(i==WATER||i==FIRE||i==SOUL_FIRE)BT[i]=1;
+        else if(i>=COAL_ORE&&i<=COPPER_ORE)BT[i]=20;
+        else if(i==DEEPSLATE_DIAMOND_ORE)BT[i]=25;
+        else if(i==OBSIDIAN||i==CRYING_OBSIDIAN||i==NETHERITE_BLOCK||i==ANCIENT_DEBRIS)BT[i]=120;
+        else if(i==DEEPSLATE||i==BLACKSTONE||i==BASALT||i==LODESTONE)BT[i]=35;
+        else if(i==AMETHYST_BLOCK||i==BUDDING_AMETHYST)BT[i]=15;
+        else if(i==SCULK)BT[i]=8;
+        else if(i==TARGET)BT[i]=10;
+        else if(i==HONEY_BLOCK)BT[i]=5;
+        else if(i==COPPER_BLOCK||i==EXPOSED_COPPER||i==WEATHERED_COPPER||i==OXIDIZED_COPPER||i==CUT_COPPER||i==WAXED_COPPER)BT[i]=18;
+        else if(i==RAW_IRON_BLOCK||i==RAW_GOLD_BLOCK||i==RAW_COPPER_BLOCK)BT[i]=25;
+        else if(i==CAMPFIRE||i==SOUL_CAMPFIRE||i==LANTERN||i==SOUL_LANTERN||i==CHAIN)BT[i]=8;
+        else BT[i]=Math.max(3,i*2%15+2);
+    } }
 
     private int[][] world;
+    private int[][] bgWorld;
     private double px,py;
     private String worldName="", playerName="Steve";
     private long worldSeed=0;
@@ -142,6 +158,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private long sessionStart=0;
     private int blocksBroken=0,blocksPlaced=0;
     private boolean nameEditing=false;
+    private boolean bgEdit=false;
     private boolean updateAvailable=false;
     private String updateVersion="";
     private int fps=0, fpsCount=0;
@@ -250,9 +267,76 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private ArrayList<RemotePlayer> remotePlayers=new ArrayList<>();
     private boolean isHost=false;
     private int serverPort=25565;
+    private int clientPort=0;
     private String serverIP="localhost";
     private Process webProcess, boreProcess;
-    private DiscordRPC discordRPC; 
+    private DiscordRPC discordRPC;
+
+    // ==================== VOICE CHAT ====================
+    class VoiceChatThread extends Thread{
+        private boolean voiceRunning=false;
+        private javax.sound.sampled.TargetDataLine micLine;
+        private javax.sound.sampled.SourceDataLine speakerLine;
+        private java.net.DatagramSocket voiceSocket;
+        private java.util.ArrayList<java.net.InetAddress> voicePeers=new java.util.ArrayList<>();
+        private int voicePort=0;
+        private int sampleRate=8000;
+        VoiceChatThread(int basePort){
+            voicePort=basePort+1000;
+            setDaemon(true);
+        }
+        public void run(){
+            try{
+                javax.sound.sampled.AudioFormat fmt=new javax.sound.sampled.AudioFormat(sampleRate,16,1,true,true);
+                micLine=javax.sound.sampled.AudioSystem.getTargetDataLine(fmt);
+                micLine.open(fmt,1024);
+                micLine.start();
+                speakerLine=javax.sound.sampled.AudioSystem.getSourceDataLine(fmt);
+                speakerLine.open(fmt,1024);
+                speakerLine.start();
+                voiceSocket=new java.net.DatagramSocket(voicePort);
+                voiceSocket.setSoTimeout(500);
+                voiceRunning=true;
+                System.out.println("[Voice] Initialized on port "+voicePort);
+                byte[] buf=new byte[512];
+                while(voiceRunning){
+                    try{
+                        java.net.DatagramPacket pkt=new java.net.DatagramPacket(buf,buf.length);
+                        voiceSocket.receive(pkt);
+                        if(speakerLine!=null&&speakerLine.isOpen())speakerLine.write(pkt.getData(),pkt.getOffset(),pkt.getLength());
+                    }catch(java.net.SocketTimeoutException e){}
+                    if(micLine!=null&&micLine.available()>0){
+                        int len=micLine.read(buf,0,Math.min(buf.length,micLine.available()));
+                        for(java.net.InetAddress peer:voicePeers){
+                            try{
+                                java.net.DatagramPacket out=new java.net.DatagramPacket(buf,len,peer,voicePort);
+                                voiceSocket.send(out);
+                            }catch(Exception ex){}
+                        }
+                    }
+                }
+            }catch(Exception e){System.out.println("[Voice] Error: "+e.getMessage());}
+        }
+        void addPeer(String ip){
+            try{
+                java.net.InetAddress addr=java.net.InetAddress.getByName(ip);
+                if(!voicePeers.contains(addr))voicePeers.add(addr);
+            }catch(Exception e){}
+        }
+        void removePeer(String ip){
+            try{
+                java.net.InetAddress addr=java.net.InetAddress.getByName(ip);
+                voicePeers.remove(addr);
+            }catch(Exception e){}
+        }
+        void shutdown(){
+            voiceRunning=false;
+            try{micLine.close();}catch(Exception e){}
+            try{speakerLine.close();}catch(Exception e){}
+            try{voiceSocket.close();}catch(Exception e){}
+        }
+    }
+    private VoiceChatThread voiceChat;
 
     class DiscordRPC extends Thread{
         private Process bridgeProcess;
@@ -848,7 +932,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
 
     private void genWorld(long seed){
-        world=new int[W][H];Random r=new Random(seed);
+        world=new int[W][H];bgWorld=new int[W][H];Random r=new Random(seed);
         if(superflat){
             for(int x=0;x<W;x++)for(int y=0;y<H;y++)world[x][y]=0;
             for(int x=0;x<W;x++){world[x][H-1]=BEDROCK;world[x][H-2]=DIRT;world[x][H-3]=DIRT;world[x][H-4]=GRASS;}
@@ -889,7 +973,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 int th=4+r.nextInt(5);
                 boolean wide=th>6;
                 // Trunk
-                for(int ty=s-1;ty>s-th-1&&ty>=0;ty--)world[x][ty]=lg;
+                for(int ty=s-1;ty>s-th-1&&ty>=0;ty--){world[x][ty]=lg;if(bgWorld!=null&&r.nextInt(3)==0){int sx=x+(r.nextBoolean()?1:-1);if(sx>=0&&sx<W&&bgWorld[sx][ty]==0)bgWorld[sx][ty]=SHELF_MUSHROOM;}}
                 if(wide&&x+1<W)for(int ty=s-1;ty>s-th/2-1&&ty>=0;ty--)world[x+1][ty]=lg;
                 // Leaves - rounded canopy
                 int crownY=s-th/2;
@@ -960,6 +1044,15 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
 
     private int getHeight(int x){for(int y=0;y<H;y++)if(world[x][y]>0)return y;return H-1;}
+    private boolean isFlammable(int b){
+        return b==OAK_LOG||b==SPRUCE_LOG||b==BIRCH_LOG||b==JUNGLE_LOG||b==ACACIA_LOG||b==DARK_OAK_LOG
+            ||b==OAK_PLANKS||b==SPRUCE_PLANKS||b==BIRCH_PLANKS||b==JUNGLE_PLANKS||b==ACACIA_PLANKS||b==DARK_OAK_PLANKS
+            ||b==OAK_LEAVES||b==SPRUCE_LEAVES||b==BIRCH_LEAVES||b==JUNGLE_LEAVES||b==ACACIA_LEAVES||b==DARK_OAK_LEAVES
+            ||b==WOOL||b==STRAW_BED||b==CUSHION||b==MANGROVE_LOG||b==MANGROVE_PLANKS||b==MANGROVE_LEAVES
+            ||b==CHERRY_LOG||b==CHERRY_PLANKS||b==CHERRY_LEAVES||b==BAMBOO_BLOCK||b==BAMBOO_PLANKS||b==BAMBOO_MOSAIC
+            ||b==CRIMSON_STEM||b==CRIMSON_PLANKS||b==WARPED_STEM||b==WARPED_PLANKS
+            ||b==SHELF_MUSHROOM||b==AZALEA_LEAVES||b==FLOWERING_AZALEA;
+    }
     private boolean isSolid(int x,int y){if(x<0||x>=W||y<0||y>=H)return true;return world[x][y]>0&&world[x][y]!=WATER&&world[x][y]!=LAVA;}
     private boolean isIn(int x,int y){return x>=0&&x<W&&y>=0&&y<H;}
 
@@ -968,7 +1061,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             d.writeUTF(name);d.writeUTF(playerName);d.writeLong(worldSeed);
             d.writeInt((int)px);d.writeInt((int)py);d.writeInt(health);d.writeInt(hunger);d.writeInt(survival?1:0);
             for(int i=0;i<inv.length;i++){d.writeInt(inv[i]);d.writeInt(invCount[i]);}
-            for(int x=0;x<W;x++)for(int y=0;y<H;y++)d.writeInt(world[x][y]);
+            for(int x=0;x<W;x++)for(int y=0;y<H;y++){d.writeInt(world[x][y]);d.writeInt(bgWorld[x][y]);}
             d.close();worldName=name;
         }catch(Exception e){e.printStackTrace();}
     }
@@ -978,7 +1071,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             worldName=d.readUTF();playerName=d.readUTF();worldSeed=d.readLong();
             px=d.readInt();py=d.readInt();health=d.readInt();hunger=d.readInt();survival=d.readInt()==1;
             for(int i=0;i<inv.length;i++){inv[i]=d.readInt();invCount[i]=d.readInt();}
-            world=new int[W][H];for(int x=0;x<W;x++)for(int y=0;y<H;y++)world[x][y]=d.readInt();
+            world=new int[W][H];bgWorld=new int[W][H];for(int x=0;x<W;x++)for(int y=0;y<H;y++){world[x][y]=d.readInt();bgWorld[x][y]=d.readInt();}
             d.close();dead=false;fallDist=0;craftingOpen=false;screen=Screen.PLAY;return true;
         }catch(Exception e){return false;}
     }
@@ -1002,6 +1095,32 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(keys[KeyEvent.VK_D]||keys[KeyEvent.VK_RIGHT])dx+=speed;
         if(keys[KeyEvent.VK_S]||keys[KeyEvent.VK_DOWN]){if(!survival||noclip)dy+=speed;else speed*=0.5;}
         if((keys[KeyEvent.VK_W]||keys[KeyEvent.VK_UP]||keys[KeyEvent.VK_SPACE])){if(!survival||noclip)dy-=speed;else if(playerVy==0){boolean jg=false;for(int gx=-playerW/2;gx<=playerW/2;gx+=8){int fx=(int)((px+gx)/TILE),fy=(int)((py+playerH/2+2)/TILE);if(isSolid(fx,fy)){jg=true;break;}}if(jg)playerVy=-8;}}
+        // Fire spread & damage
+        if(rand.nextInt(5)==0){
+            for(int fx=0;fx<W;fx++){
+                for(int fy=0;fy<H;fy++){
+                    if(world[fx][fy]==FIRE||world[fx][fy]==SOUL_FIRE){
+                        if(Math.abs(px-(fx*TILE+TILE/2))<20&&Math.abs(py-(fy*TILE+TILE/2))<20){
+                            if(survival){health-=1;if(health<=0){dead=true;deathDrop();screen=Screen.DEATH;}}}
+                        if(rand.nextInt(8)==0){
+                            int nx=fx+rand.nextInt(3)-1;
+                            int ny=fy+rand.nextInt(3)-1;
+                            if(isIn(nx,ny)&&world[nx][ny]==AIR){
+                                int below=ny+1<H?world[nx][ny+1]:0;
+                                if(below>0&&below!=BEDROCK&&below!=WATER){
+                                    boolean soul=world[fx][fy]==SOUL_FIRE||(below==SOUL_SAND||below==SOUL_SOIL);
+                                    world[nx][ny]=soul?SOUL_FIRE:FIRE;
+                                    syncBlock(nx,ny,world[nx][ny]);
+                                }
+                            }
+                        }
+                        if(rand.nextInt(60)==0||world[fx][Math.max(0,fy-1)]==WATER){
+                            world[fx][fy]=AIR;syncBlock(fx,fy,0);
+                        }
+                    }
+                }
+            }
+        }
         boolean moving=dx!=0||dy!=0;walking=moving;
         if(keys[KeyEvent.VK_SHIFT]&&moving&&!ultraFps&&Math.random()<0.3)particles.add(new Particle(px-playerW/2-Math.random()*playerW,py+playerH/2,COBBLESTONE));
         if(moving){walkSoundTimer++;if(walkSoundTimer>20){walkSoundTimer=0;playSFX("grass");}}
@@ -1121,8 +1240,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             case "survival":survival=true;addChat("Mode","survival");break;
             case "give":if(parts.length>1){try{int b=Integer.parseInt(parts[1]),c=parts.length>2?Integer.parseInt(parts[2]):1;addToInv(b,c);addChat("Give",""+c+"x "+BNAME[Math.min(b,BLOCK_COUNT-1)]);}catch(Exception e){addChat("Give","usage: /give <id> [count]");}}break;
             case "kill":health=0;dead=true;deathDrop();screen=Screen.DEATH;break;
-            case "help":addChat("Cmds","time day/night, tp x y, heal, creative, survival, give id, kill, nether, rpc, rpcviz, rpcdebug");break;
+            case "help":addChat("Cmds","time day/night, tp x y, heal, creative, survival, give id, kill, nether, rpc, rpcviz, rpcdebug, voice, bg");break;
             case "rpcdebug":if(discordRPC!=null){addChat("RPC-State",discordRPC.lastState);addChat("RPC-Secret",discordRPC.currentSecret.isEmpty()?"(none)":discordRPC.currentSecret);addChat("RPC-JSON",discordRPC.currentJson);}else{addChat("RPC","Not running. Use /rpc to start.");}break;
+            case "voice":if(voiceChat!=null){voiceChat.shutdown();voiceChat=null;addChat("Voice","stopped");}else{int vp=(serverPort>0?serverPort:clientPort>0?clientPort:0);voiceChat=new VoiceChatThread(vp);voiceChat.start();addChat("Voice","started on port "+(vp+1000));}break;
+            case "bg":bgEdit=!bgEdit;addChat("BG","background edit mode: "+bgEdit);break;
             case "rpc":if(discordRPC!=null){discordRPC.stopRPC();discordRPC=null;addChat("RPC","stopped");}else{discordRPC=new DiscordRPC();discordRPC.setDaemon(true);discordRPC.start();addChat("RPC","started");}break;
             case "rpcviz":SwingUtilities.invokeLater(()->new RPCVisualizer().setVisible(true));break;
             case "nether":inNether=!inNether;genWorld(worldSeed);addChat("Nether",inNether?"Entered!":"Overworld!");break;
@@ -1369,6 +1490,20 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
         int fov=gameFov;if(keys[KeyEvent.VK_SHIFT]&&walking&&!ultraFps)fov+=3;
         int sx=camX/TILE,sy=camY/TILE,ex=Math.min(W,sx+fov+2),ey=Math.min(H,sy+fov*18/25+2);
+        // Background blocks (depth layer)
+        if(bgWorld!=null){
+            int bgOffX=(int)(camX*0.5),bgOffY=(int)(camY*0.3);
+            int bsx=Math.max(0,(bgOffX)/TILE-1),bex=Math.min(W,bsx+VW+3);
+            int bsy=Math.max(0,(bgOffY)/TILE-1),bey=Math.min(H,bsy+VH+3);
+            for(int x=bsx;x<bex;x++)for(int y=bsy;y<bey;y++){
+                if(bgWorld[x][y]>0){
+                    int alpha=90;
+                    Color base=FB[Math.min(bgWorld[x][y],FB.length-1)];
+                    g2.setColor(new Color(base.getRed(),base.getGreen(),base.getBlue(),alpha));
+                    g2.fillRect(x*TILE-bgOffX,y*TILE-bgOffY,TILE,TILE);
+                }
+            }
+        }
         for(int x=sx;x<ex;x++)for(int y=sy;y<ey;y++)if(world[x][y]>0){g2.drawImage(tex[Math.min(world[x][y],BLOCK_COUNT-1)],x*TILE-camX,y*TILE-camY,null);if(rtxWater&&world[x][y]==WATER){g2.setColor(new Color(60,120,255,40));g2.fillRect(x*TILE-camX-2,y*TILE-camY-2,TILE+4,TILE+4);g2.setColor(new Color(100,180,255,20+Math.abs(bobFrame%40-20)));g2.fillRect(x*TILE-camX,y*TILE-camY,TILE,TILE);}if(world[x][y]==TORCH_ITEM){g2.setColor(new Color(255,200,50,40));g2.fillOval(x*TILE-camX-16,y*TILE-camY-16,64,64);g2.setColor(new Color(255,240,100,20));g2.fillOval(x*TILE-camX-24,y*TILE-camY-24,80,80);}}
         int pxOff=(int)(px-camX),pyOff=(int)(py-camY);
         int bob=(int)(Math.sin(frame*0.3)*2);
@@ -1632,7 +1767,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         screen=Screen.CONNECTING;lastMsg="";
         new Thread(()->{
             try{
-                serverIP=ip;serverPort=port;
+                serverIP=ip;serverPort=port;clientPort=port;
                 client=new MiniClient(ip,port);
                 if(client.connect()){
                     new Thread(()->{try{Thread.sleep(8000);SwingUtilities.invokeLater(()->{if(screen==Screen.CONNECTING){screen=Screen.CONNECT;lastMsg="Timeout! Server not responding.";}});}catch(Exception e){}}).start();}
@@ -1765,6 +1900,17 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 for(Mob m:mobs){if(Math.abs((mx+camX)-m.x)<24&&Math.abs((my+camY)-m.y)<24){int critDmg=dmg;boolean onG=false;int fx=(int)((px+14)/TILE),fy=(int)((py+TILE-4)/TILE);if(isSolid(fx,fy))onG=true;if(!onG){critDmg*=2;for(int i=0;i<5;i++)particles.add(new Particle(m.x,m.y-20,GOLD_ORE));}m.health-=critDmg;m.hurtT=10;dmgNums.add(new DmgNum(m.x,m.y-20,critDmg));m.x+=(m.x>px?8:-8);if(m.health<=0){if(m.type==6){drops.add(new DropItem(m.x,m.y,DIAMOND_GEM));drops.add(new DropItem(m.x-10,m.y,DIAMOND_GEM));for(int i=0;i<10;i++)drops.add(new DropItem(m.x+Math.random()*40-20,m.y+Math.random()*20-10,EXP_ORB));achieve("BOSS DEFEATED!");}else{drops.add(new DropItem(m.x,m.y,m.type==0?RAW_BEEF:m.type==1?RAW_PORK:m.type==3?WOOL:m.type==4?COOKED_BEEF:COOKED_BEEF));drops.add(new DropItem(m.x-10,m.y-10,EXP_ORB));}mobs.remove(m);kills++;if(kills==1)achieve("First Blood!");if(kills==10)achieve("Monster Hunter!");if(kills==50)achieve("Slayer!");}hitMob=true;break;}}
                 if(!hitMob){if(survival&&world[tx][ty]>0){breakX=tx;breakY=ty;breakTimer=0;int spd=1;if(selBlock==PICKAXE)spd=4;if(selBlock==AXE)spd=4;if(selBlock==SHOVEL)spd=4;breakTime=Math.max(1,BT[Math.min(world[tx][ty],BT.length-1)]/spd);}else if(!survival){world[tx][ty]=0;syncBlock(tx,ty,0);}}
             }
+            else if(e.getButton()==MouseEvent.BUTTON3&&selBlock==FLINT_STEEL){
+                int ftx=(mx+camX)/TILE,fty=(my+camY)/TILE;
+                if(isIn(ftx,fty)&&world[ftx][fty]==AIR){
+                    int fbelow=fty+1<H?world[ftx][fty+1]:0;
+                    if(fbelow>0&&fbelow!=BEDROCK&&fbelow!=WATER){
+                        boolean soul=fbelow==SOUL_SAND||fbelow==SOUL_SOIL;
+                        world[ftx][fty]=soul?SOUL_FIRE:FIRE;
+                        syncBlock(ftx,fty,world[ftx][fty]);playSound("flint");return;
+                    }
+                }
+            }
             else if(e.getButton()==MouseEvent.BUTTON3&&selBlock>=0&&(!survival||getInvCount(selBlock)>0)){
                 if(survival&&world[tx][ty]==TNT&&selBlock==FLINT_STEEL){tntList.add(new PrimedTnt(tx*TILE+TILE/2,ty*TILE+TILE/2));world[tx][ty]=0;return;}
                 if(survival&&selBlock==TORCH_ITEM){world[tx][ty]=selBlock;takeFromInv(selBlock,1);return;}
@@ -1778,7 +1924,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 if(survival&&selBlock==IRON_INGOT){takeFromInv(IRON_INGOT,1);armor=Math.max(armor,2);return;}
                 if(survival&&selBlock==DIAMOND_GEM){takeFromInv(DIAMOND_GEM,1);armor=Math.max(armor,3);return;}
                 if(survival&&world[tx][ty]==CHEST){for(int i=0;i<8;i++)if(inv[i]>0){addToInv(inv[i],invCount[i]);inv[i]=0;invCount[i]=0;}addChat("Chest","Opened!");}
-                else if(selBlock<=CRAFTING_TABLE){world[tx][ty]=selBlock;if(survival)takeFromInv(selBlock,1);syncBlock(tx,ty,selBlock);blocksPlaced++;for(int i=0;i<4;i++)particles.add(new Particle(tx*TILE+TILE/2,ty*TILE+TILE/2,selBlock));playSFX("place");}
+                else if(selBlock<=CRAFTING_TABLE){
+                    if(bgEdit&&bgWorld!=null){bgWorld[tx][ty]=selBlock;if(survival)takeFromInv(selBlock,1);}
+                    else{world[tx][ty]=selBlock;if(survival)takeFromInv(selBlock,1);syncBlock(tx,ty,selBlock);blocksPlaced++;for(int i=0;i<4;i++)particles.add(new Particle(tx*TILE+TILE/2,ty*TILE+TILE/2,selBlock));playSFX("place");}
+                }
             }
         }
     }
