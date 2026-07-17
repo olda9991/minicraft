@@ -19,7 +19,13 @@ if command -v fyi &>/dev/null; then
 fi
 
 # Crazy Error handler - shows Windows-style error on crash
-CRAZY_ERROR="$(dirname "$0")/crazy-error.sh"
+CRAZY_SH="$(dirname "$0")/crazy-error.sh"
+CRAZY_PY="$(dirname "$0")/crazy-error.py"
+if [ -f "$CRAZY_PY" ] && python3 -c "import sys" 2>/dev/null; then
+    CRAZY_ERROR="$CRAZY_PY"
+else
+    CRAZY_ERROR="$CRAZY_SH"
+fi
 
 # Prefer JAR, fallback to compiled classes, auto-compile if needed
 if [ -f MiniCraft.jar ]; then
