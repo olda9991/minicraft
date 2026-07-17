@@ -146,6 +146,8 @@ public class MiniCraftAndroid {
     private int blocksBroken = 0, blocksPlaced = 0;
     private double camSmoothX = 0, camSmoothY = 0;
     private long sessionStart = 0;
+    private boolean threeDMode = false;
+    private double playerDir = 0;
 
     // ==================== NETWORKING ====================
     private boolean isHost = false;
@@ -272,9 +274,16 @@ public class MiniCraftAndroid {
         if (moveDown && survival) speed *= 0.5;
         double dx = 0, dy = 0;
 
-        if (moveLeft) dx -= speed;
-        if (moveRight) dx += speed;
-        if ((moveUp || btnJump)) {
+        if (threeDMode) {
+            if (moveUp) { dx += Math.cos(playerDir) * speed; dy += Math.sin(playerDir) * speed; }
+            if (moveDown) { dx -= Math.cos(playerDir) * speed; dy -= Math.sin(playerDir) * speed; }
+            if (moveLeft) { dx += Math.cos(playerDir - Math.PI / 2) * speed; dy += Math.sin(playerDir - Math.PI / 2) * speed; }
+            if (moveRight) { dx += Math.cos(playerDir + Math.PI / 2) * speed; dy += Math.sin(playerDir + Math.PI / 2) * speed; }
+        } else {
+            if (moveLeft) dx -= speed;
+            if (moveRight) dx += speed;
+        }
+        if ((moveUp || btnJump) && !threeDMode) {
             if (!survival) dy -= speed;
             else if (playerVy == 0) {
                 boolean jg = false;
@@ -529,6 +538,10 @@ public class MiniCraftAndroid {
 
     // ==================== RENDER (matching desktop style) ====================
     public void render(Canvas c) {
+        if (threeDMode) {
+            render3D(c);
+            return;
+        }
         // Sky
         c.drawColor(0xFF87CEEB);
 
@@ -666,6 +679,76 @@ public class MiniCraftAndroid {
         }
     }
 
+    private void render3D(Canvas c) {
+        int w = screenW, h = screenH;
+        paint.setColor(0xFF87CEEB);
+        c.drawRect(0, 0, w, h / 2, paint);
+        paint.setColor(0xFF3C643C);
+        c.drawRect(0, h / 2, w, h, paint);
+        double dirX = Math.cos(playerDir), dirY = Math.sin(playerDir);
+        double planeX = -Math.sin(playerDir) * 0.66, planeY = Math.cos(playerDir) * 0.66;
+        double pTileX = px / TILE, pTileY = py / TILE;
+        for (int x = 0; x < w; x += 2) {
+            double cameraX = 2.0 * x / w - 1.0;
+            double rayDirX = dirX + planeX * cameraX;
+            double rayDirY = dirY + planeY * cameraX;
+            int mapX = (int) pTileX, mapY = (int) pTileY;
+            double sideDistX, sideDistY;
+            double deltaDistX = Math.abs(1.0 / rayDirX);
+            double deltaDistY = Math.abs(1.0 / rayDirY);
+            double perpWallDist;
+            int stepX, stepY, hit = 0, side = 0;
+            if (rayDirX < 0) { stepX = -1; sideDistX = (pTileX - mapX) * deltaDistX; }
+            else { stepX = 1; sideDistX = (mapX + 1.0 - pTileX) * deltaDistX; }
+            if (rayDirY < 0) { stepY = -1; sideDistY = (pTileY - mapY) * deltaDistY; }
+            else { stepY = 1; sideDistY = (mapY + 1.0 - pTileY) * deltaDistY; }
+            for (int i = 0; i < W + H && hit == 0; i++) {
+                if (sideDistX < sideDistY) { sideDistX += deltaDistX; mapX += stepX; side = 0; }
+                else { sideDistY += deltaDistY; mapY += stepY; side = 1; }
+                if (mapX < 0 || mapX >= W || mapY < 0 || mapY >= H || world[mapX][mapY] > 0) hit = 1;
+            }
+            if (hit == 0) continue;
+            if (mapX < 0) mapX = 0; if (mapX >= W) mapX = W - 1;
+            if (mapY < 0) mapY = 0; if (mapY >= H) mapY = H - 1;
+            int block = world[mapX][mapY];
+            if (block <= 0) continue;
+            if (side == 0) perpWallDist = (mapX - pTileX + (1 - stepX) / 2) / rayDirX;
+            else perpWallDist = (mapY - pTileY + (1 - stepY) / 2) / rayDirY;
+            if (perpWallDist <= 0) perpWallDist = 0.01;
+            int lineHeight = (int) (h / perpWallDist);
+            int drawStart = -lineHeight / 2 + h / 2; if (drawStart < 0) drawStart = 0;
+            int drawEnd = lineHeight / 2 + h / 2; if (drawEnd >= h) drawEnd = h - 1;
+            int col = COLORS[Math.min(block, COLORS.length - 1)];
+            if (side == 1) col = darken(col, 40);
+            paint.setColor(col);
+            c.drawRect(x, drawStart, x + 2, drawEnd + 1, paint);
+        }
+        // Mini-map
+        paint.setColor(0xAA000000);
+        c.drawRect(w - 130, 10, w - 10, 130, paint);
+        int ms = 2;
+        for (int mx2 = 0; mx2 < W; mx2++) {
+            for (int my2 = 0; my2 < H; my2++) {
+                if (world[mx2][my2] > 0) {
+                    paint.setColor(COLORS[Math.min(world[mx2][my2], COLORS.length - 1)]);
+                    c.drawRect(w - 130 + mx2 * ms, 10 + my2 * ms, w - 130 + mx2 * ms + ms, 10 + my2 * ms + ms, paint);
+                }
+            }
+        }
+        paint.setColor(0xFFFF0000);
+        c.drawRect(w - 130 + (int) (px / TILE) * ms, 10 + (int) (py / TILE) * ms, w - 130 + (int) (px / TILE) * ms + ms, 10 + (int) (py / TILE) * ms + ms, paint);
+        paint.setColor(0xFFFFFF00);
+        int mpx = w - 130 + (int) (px / TILE) * ms + 1, mpy = 10 + (int) (py / TILE) * ms + 1;
+        c.drawLine(mpx, mpy, (int) (mpx + Math.cos(playerDir) * 8), (int) (mpy + Math.sin(playerDir) * 8), paint);
+    }
+
+    private int darken(int color, int amt) {
+        int r = Math.max(0, ((color >> 16) & 0xFF) - amt);
+        int g = Math.max(0, ((color >> 8) & 0xFF) - amt);
+        int b = Math.max(0, (color & 0xFF) - amt);
+        return 0xFF000000 | (r << 16) | (g << 8) | b;
+    }
+
     private void drawHotbar(Canvas c) {
         int hs = 52, slots = Math.min(9, BLOCK_COUNT);
         int startX = screenW / 2 - slots * hs / 2;
@@ -740,6 +823,8 @@ public class MiniCraftAndroid {
     public void setSlot(int slot) { if (slot >= 1 && slot < BLOCK_COUNT) selBlock = slot; }
     public void toggleMode() { survival = !survival; }
     public void toggleNoclip() { noclip = !noclip; }
+    public void toggle3D() { threeDMode = !threeDMode; }
+    public boolean is3D() { return threeDMode; }
 
     // ==================== NETWORK METHODS ====================
     public void startServer(int port) {

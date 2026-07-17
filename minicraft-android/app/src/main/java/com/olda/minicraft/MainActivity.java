@@ -70,6 +70,13 @@ public class MainActivity extends Activity {
             return true;
         });
 
+        // 3D toggle
+        Button btn3D = overlay.findViewById(R.id.btn3D);
+        btn3D.setOnClickListener(v -> {
+            game.toggle3D();
+            btn3D.setText(game.is3D() ? "3D" : "2D");
+        });
+
         // Host server
         overlay.findViewById(R.id.btnHost).setOnClickListener(v -> {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
