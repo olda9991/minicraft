@@ -393,9 +393,15 @@ public class MiniCraftAndroid {
 
         // Block breaking (touch)
         if (btnBreakMode && touchX >= 0) {
-            int tx = (int) ((touchX + camX) / TILE);
-            int ty = (int) ((touchY + camY) / TILE);
-            if (isIn(tx, ty) && world[tx][ty] > 0) {
+            int tx = -1, ty = -1;
+            if (threeDMode) {
+                int[] hit = raycastTarget();
+                if (hit != null) { tx = hit[0]; ty = hit[1]; }
+            } else {
+                tx = (int) ((touchX + camX) / TILE);
+                ty = (int) ((touchY + camY) / TILE);
+            }
+            if (tx >= 0 && isIn(tx, ty) && world[tx][ty] > 0) {
                 if (breakX != tx || breakY != ty) {
                     breakX = tx;
                     breakY = ty;
@@ -423,9 +429,22 @@ public class MiniCraftAndroid {
 
         // Block placing
         if (btnPlace && touchX >= 0) {
-            int tx = (int) ((touchX + camX) / TILE);
-            int ty = (int) ((touchY + camY) / TILE);
-            if (isIn(tx, ty) && selBlock >= 0) {
+            int tx = -1, ty = -1;
+            if (threeDMode) {
+                int[] hit = raycastTarget();
+                if (hit != null) {
+                    // place in front of the hit block
+                    double rdx = Math.cos(playerDir);
+                    double rdy = Math.sin(playerDir);
+                    tx = hit[0] - (int)Math.round(rdx);
+                    ty = hit[1] - (int)Math.round(rdy);
+                    if (!isIn(tx, ty)) { tx = -1; ty = -1; }
+                }
+            } else {
+                tx = (int) ((touchX + camX) / TILE);
+                ty = (int) ((touchY + camY) / TILE);
+            }
+            if (tx >= 0 && isIn(tx, ty) && selBlock >= 0) {
                 if (survival && getInvCount(selBlock) > 0 && world[tx][ty] == AIR) {
                     if (selBlock <= CRAFTING_TABLE) {
                         world[tx][ty] = selBlock;
@@ -529,6 +548,19 @@ public class MiniCraftAndroid {
         return 0;
     }
 
+    private int[] raycastTarget() {
+        double rdx = Math.cos(playerDir);
+        double rdy = Math.sin(playerDir);
+        double rpx = px, rpy = py;
+        for (int step = 0; step < 24; step++) {
+            rpx += rdx * TILE / 2;
+            rpy += rdy * TILE / 2;
+            int ix = (int) (rpx / TILE), iy = (int) (rpy / TILE);
+            if (!isIn(ix, iy)) break;
+            if (world[ix][iy] > 0) return new int[]{ix, iy};
+        }
+        return null;
+    }
     private boolean isSolid(int x, int y) {
         if (x < 0 || x >= W || y < 0 || y >= H) return true;
         return world[x][y] > 0 && world[x][y] != WATER && world[x][y] != LAVA;
