@@ -1,3 +1,4 @@
+//sha:c8c9fbbe
 //sha:ef94d81d
 //sha:8eeefdea
 //sha:dbae507a
@@ -169,6 +170,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private int bobFrame=0;
     private double camSmoothX=0, camSmoothY=0;
     private double playerDir=0; // 3D mode: facing angle in radians (0=right/+X)
+    private java.awt.Robot robot;
+    private boolean robotOk=false;
     private boolean walking=false;
     private double playerVy=0;
     private long worldTime=12000;
@@ -663,6 +666,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         try{GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(Font.createFont(Font.TRUETYPE_FONT,new File(System.getProperty("user.dir")+"/PixelPurl.ttf")));}catch(Exception e){}
         refreshWorldList();
         loadSettings();
+        try{robot=new java.awt.Robot();robotOk=true;}catch(Exception e){robotOk=false;}
         timer=new javax.swing.Timer(16,this);timer.start();
         new Thread(()->checkUpdate()).start();
         new Thread(()->{
@@ -1519,6 +1523,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }else{
             for(int x=sx;x<ex;x++)for(int y=sy;y<ey;y++)if(world[x][y]>0){g2.drawImage(tex[Math.min(world[x][y],BLOCK_COUNT-1)],x*TILE-camX,y*TILE-camY,null);if(rtxWater&&world[x][y]==WATER){g2.setColor(new Color(60,120,255,40));g2.fillRect(x*TILE-camX-2,y*TILE-camY-2,TILE+4,TILE+4);g2.setColor(new Color(100,180,255,20+Math.abs(bobFrame%40-20)));g2.fillRect(x*TILE-camX,y*TILE-camY,TILE,TILE);}if(world[x][y]==TORCH_ITEM){g2.setColor(new Color(255,200,50,40));g2.fillOval(x*TILE-camX-16,y*TILE-camY-16,64,64);g2.setColor(new Color(255,240,100,20));g2.fillOval(x*TILE-camX-24,y*TILE-camY-24,80,80);}}
         }
+        if(!threeDMode){
         int pxOff=(int)(px-camX),pyOff=(int)(py-camY);
         int bob=(int)(Math.sin(frame*0.3)*2);
         g2.drawImage(steveImg[0],pxOff-playerW/2,pyOff-playerH/2+bob,null);
@@ -1584,6 +1589,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 }
             }
             g2.setColor(new Color(0,0,0,80));g2.fillRect(bx,by,(int)(TILE*pct),3);
+        }
         }
         drawHUD(g2);
         if(shaderMode>0&&!ultraFps){
@@ -1875,7 +1881,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(threeDMode&&screen==Screen.PLAY){
             int cx=getWidth()/2;
             playerDir+=(mx-cx)*0.002;
-            try{java.awt.Robot r=new java.awt.Robot();r.mouseMove(cx,my);}catch(Exception ex){}
+            if(robotOk){try{robot.mouseMove(cx,my);}catch(Exception ex){robotOk=false;}}
         }
         int w=getWidth()/2;
         if(screen==Screen.MENU){if(inBtn(mx,my,w-100,140,200,36))menuHover=7;else if(inBtn(mx,my,w-100,186,200,40))menuHover=0;else if(inBtn(mx,my,w-100,236,200,40))menuHover=1;else if(inBtn(mx,my,w-100,286,200,40))menuHover=2;else if(inBtn(mx,my,w-100,336,200,40))menuHover=3;else if(inBtn(mx,my,w-100,386,200,40))menuHover=80;else if(inBtn(mx,my,w-100,436,200,40))menuHover=4;else if(inBtn(mx,my,w-100,486,95,32))menuHover=5;else if(inBtn(mx,my,w+5,486,95,32))menuHover=6;}
@@ -2024,7 +2030,13 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     @Override public void mouseReleased(MouseEvent e){breakX=-1;breakY=-1;breakTimer=0;}
     @Override public void mouseEntered(MouseEvent e){mouseIn=true;}
     @Override public void mouseExited(MouseEvent e){mouseIn=false;breakX=-1;breakY=-1;breakTimer=0;}
-    @Override public void mouseDragged(MouseEvent e){mx=e.getX();my=e.getY();}
+    @Override public void mouseDragged(MouseEvent e){mx=e.getX();my=e.getY();
+        if(threeDMode&&screen==Screen.PLAY){
+            int cx=getWidth()/2;
+            playerDir+=(mx-cx)*0.002;
+            if(robotOk){try{robot.mouseMove(cx,my);}catch(Exception ex){robotOk=false;}}
+        }
+    }
     @Override public void mouseClicked(MouseEvent e){}
 
     @Override public void mouseWheelMoved(MouseWheelEvent e){

@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Random;
 
 /**
- * MiniCraft Android v6.3.1
+ * MiniCraft Android v6.4.2
  * Ported from /var/home/olda/minicraft/src/MiniCraft.java
  * All game logic, world gen, physics, and block IDs match desktop exactly.
  */
@@ -540,10 +540,9 @@ public class MiniCraftAndroid {
     public void render(Canvas c) {
         if (threeDMode) {
             render3D(c);
-            return;
-        }
-        // Sky
-        c.drawColor(0xFF87CEEB);
+        } else {
+            // Sky
+            c.drawColor(0xFF87CEEB);
 
         int sx = Math.max(0, camX / TILE - 1);
         int sy = Math.max(0, camY / TILE - 1);
@@ -636,6 +635,7 @@ public class MiniCraftAndroid {
             paint.setColor(COLORS[Math.min(d.block, COLORS.length - 1)]);
             c.drawRect((int) d.x - camX - 6, (int) d.y - camY - 6, (int) d.x - camX + 6, (int) d.y - camY + 6, paint);
         }
+        }
 
         // Crosshair
         int cx = screenW / 2, cy = screenH / 2;
@@ -652,7 +652,7 @@ public class MiniCraftAndroid {
         c.drawRect(4, 4, 240, netH, textPaint);
         textPaint.setColor(0xFFFFFFFF);
         textPaint.setTextSize(20);
-        c.drawText("MiniCraft v6.3.2 Mobile", 8, 26, textPaint);
+        c.drawText("MiniCraft v6.4.2 Mobile", 8, 26, textPaint);
         textPaint.setTextSize(16);
         c.drawText("X:" + (int) (px / TILE) + " Y:" + (int) (py / TILE) + " " + (survival ? "SURVIVAL" : "CREATIVE"), 8, 48, textPaint);
         c.drawText("HP:" + health + (survival ? " Hunger:" + hunger : ""), 8, 68, textPaint);
