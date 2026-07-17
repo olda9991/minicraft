@@ -687,6 +687,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             try{loadMods();}catch(Exception e){System.out.println("[Auto] Mods error: "+e.getMessage());}
         }).start();
     }
+    private void updateCursor(){
+        if(threeDMode&&screen==Screen.PLAY&&blankCursor!=null)setCursor(blankCursor);
+        else setCursor(java.awt.Cursor.getDefaultCursor());
+    }
 
     private BufferedImage makeIcon(Color c,int s){BufferedImage img=new BufferedImage(s,s,BufferedImage.TYPE_INT_ARGB);Graphics2D g=img.createGraphics();g.setColor(c);g.fillOval(1,1,s-2,s-2);g.setColor(c.brighter());g.fillOval(2,1,s-4,s-3);g.dispose();return img;}
     private BufferedImage makeSteve(){
@@ -1329,6 +1333,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     @Override
     protected void paintComponent(Graphics g){super.paintComponent(g);Graphics2D g2=(Graphics2D)g;g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,RenderingHints.VALUE_ANTIALIAS_OFF);
+        updateCursor();
         switch(screen){case MENU:drawMenu(g2);break;case WORLD_LIST:drawWorldList(g2);break;case CREATE_WORLD:drawCreateWorld(g2);break;case MULTIPLAYER:drawMultiplayer(g2);break;case CONNECT:drawConnect(g2);break;case HOST:drawHost(g2);break;case SETTINGS:drawSettings(g2);break;case CONNECTING:drawConnecting(g2);break;case PAUSE:drawPause(g2);break;case HELP:drawHelp(g2);break;case DEATH:drawDeath(g2);break;case CRAFTING:drawCrafting(g2);break;case PLAY:drawGame(g2);break;}
     }
 
@@ -1819,7 +1824,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             if(e.getKeyCode()==KeyEvent.VK_F6){rtxWater=!rtxWater;return;}
             if(e.getKeyCode()==KeyEvent.VK_F7){physicsLevel=(physicsLevel+1)%3;physicsOn=physicsLevel>0;return;}
             if(e.getKeyCode()==KeyEvent.VK_F8){shaderMode=(shaderMode+1)%3;return;}
-            if(e.getKeyCode()==KeyEvent.VK_F9){threeDMode=!threeDMode;if(threeDMode&&blankCursor!=null)setCursor(blankCursor);else setCursor(java.awt.Cursor.getDefaultCursor());lastMx=-1;lastMy=-1;addChat("3D","Mode: "+(threeDMode?"ON":"OFF"));return;}
+            if(e.getKeyCode()==KeyEvent.VK_F9){threeDMode=!threeDMode;updateCursor();lastMx=-1;lastMy=-1;addChat("3D","Mode: "+(threeDMode?"ON":"OFF"));return;}
             if(e.getKeyCode()==KeyEvent.VK_F10){vrMode=!vrMode;addChat("VR","Mode: "+(vrMode?"ON (SBS)":"OFF"));return;}
             if(e.getKeyCode()==KeyEvent.VK_M){toggleMusic();return;}
             if(e.getKeyCode()==KeyEvent.VK_F11&&(screen==Screen.PLAY||screen==Screen.SETTINGS)){
@@ -1916,7 +1921,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(threeDMode&&screen==Screen.PLAY){
             if(lastMx>=0){playerDir+=(mx-lastMx)*0.003;playerPitch+=(my-lastMy)*0.003;playerPitch=Math.max(-0.6,Math.min(0.6,playerPitch));}
             lastMx=mx;lastMy=my;
-        }
+        }else{
         int w=getWidth()/2;
         if(screen==Screen.MENU){if(inBtn(mx,my,w-100,140,200,36))menuHover=7;else if(inBtn(mx,my,w-100,186,200,40))menuHover=0;else if(inBtn(mx,my,w-100,236,200,40))menuHover=1;else if(inBtn(mx,my,w-100,286,200,40))menuHover=2;else if(inBtn(mx,my,w-100,336,200,40))menuHover=3;else if(inBtn(mx,my,w-100,386,200,40))menuHover=80;else if(inBtn(mx,my,w-100,436,200,40))menuHover=4;else if(inBtn(mx,my,w-100,486,95,32))menuHover=5;else if(inBtn(mx,my,w+5,486,95,32))menuHover=6;}
         if(screen==Screen.WORLD_LIST){int yy=Math.max(worldList.isEmpty()?130:100+worldList.size()*42+10,350);if(inBtn(mx,my,w-120,yy,240,36))menuHover=10;else if(selectedWorld>=0&&inBtn(mx,my,w-120,yy+46,240,36))menuHover=11;else if(selectedWorld>=0&&inBtn(mx,my,w-60,yy+92,120,36))menuHover=12;else if(inBtn(mx,my,w-60,yy+138,120,36))menuHover=13;}
@@ -1934,6 +1939,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(screen==Screen.SETTINGS){if(inBtn(mx,my,w-60,getHeight()-80,120,36))menuHover=60;}
         if(screen==Screen.HOST){if(inBtn(mx,my,w-80,300,160,36))menuHover=50;else if(inBtn(mx,my,w-60,360,120,36))menuHover=51;}
         if(screen==Screen.PAUSE){int bw=getWidth()/2,cy=getHeight()/2;if(inBtn(mx,my,bw-100,cy-10,200,36))menuHover=70;else if(inBtn(mx,my,bw-100,cy+40,200,36))menuHover=71;else if(inBtn(mx,my,bw-100,cy+90,200,36))menuHover=73;else if(inBtn(mx,my,bw-100,cy+140,200,36))menuHover=72;}
+        }
     }
 
     @Override public void mousePressed(MouseEvent e){int wx=e.getX(),wy=e.getY(),w=getWidth()/2;
@@ -2023,14 +2029,37 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             for(int i=0;i<inv.length;i++){int ix=30+(i%8)*60,iy=220+(i/8)*60;if(wx>=ix&&wx<ix+50&&wy>=iy&&wy<iy+50&&inv[i]>0){selInv=i;return;}}
             return;
         }
-        if(screen==Screen.PLAY){int tx=(mx+camX)/TILE,ty=(my+camY)/TILE;if(!isIn(tx,ty))return;int pt=(int)(px/TILE),pyt=(int)(py/TILE);if(Math.abs(tx-pt)+Math.abs(ty-pyt)<2)return;
+        if(screen==Screen.PLAY){
+            int tx=-1,ty=-1;
+            if(threeDMode){
+                double rdx=Math.cos(playerDir);
+                double rdy=Math.sin(playerDir);
+                double rpx=px,rpy=py;
+                for(int step=0;step<24;step++){
+                    rpx+=rdx*TILE/2;
+                    rpy+=rdy*TILE/2;
+                    int ix=(int)(rpx/TILE),iy=(int)(rpy/TILE);
+                    if(!isIn(ix,iy))break;
+                    if(world[ix][iy]>0){tx=ix;ty=iy;break;}
+                }
+                if(tx<0)return;
+            }else{
+                tx=(mx+camX)/TILE;ty=(my+camY)/TILE;
+                if(!isIn(tx,ty))return;
+                int pt=(int)(px/TILE),pyt=(int)(py/TILE);
+                if(Math.abs(tx-pt)+Math.abs(ty-pyt)<2)return;
+            }
             if(e.getButton()==MouseEvent.BUTTON1){
-                boolean hitMob=false;int dmg=selBlock==SWORD?7:selBlock==AXE?5:selBlock==PICKAXE?4:3;
-                for(Mob m:mobs){if(Math.abs((mx+camX)-m.x)<24&&Math.abs((my+camY)-m.y)<24){int critDmg=dmg;boolean onG=false;int fx=(int)((px+14)/TILE),fy=(int)((py+TILE-4)/TILE);if(isSolid(fx,fy))onG=true;if(!onG){critDmg*=2;for(int i=0;i<5;i++)particles.add(new Particle(m.x,m.y-20,GOLD_ORE));}m.health-=critDmg;m.hurtT=10;dmgNums.add(new DmgNum(m.x,m.y-20,critDmg));m.x+=(m.x>px?8:-8);if(m.health<=0){if(m.type==6){drops.add(new DropItem(m.x,m.y,DIAMOND_GEM));drops.add(new DropItem(m.x-10,m.y,DIAMOND_GEM));for(int i=0;i<10;i++)drops.add(new DropItem(m.x+Math.random()*40-20,m.y+Math.random()*20-10,EXP_ORB));achieve("BOSS DEFEATED!");}else{drops.add(new DropItem(m.x,m.y,m.type==0?RAW_BEEF:m.type==1?RAW_PORK:m.type==3?WOOL:m.type==4?COOKED_BEEF:COOKED_BEEF));drops.add(new DropItem(m.x-10,m.y-10,EXP_ORB));}mobs.remove(m);kills++;if(kills==1)achieve("First Blood!");if(kills==10)achieve("Monster Hunter!");if(kills==50)achieve("Slayer!");}hitMob=true;break;}}
+                boolean hitMob=false;
+                if(!threeDMode){
+                    int dmg=selBlock==SWORD?7:selBlock==AXE?5:selBlock==PICKAXE?4:3;
+                    for(Mob m:mobs){if(Math.abs((mx+camX)-m.x)<24&&Math.abs((my+camY)-m.y)<24){int critDmg=dmg;boolean onG=false;int fx=(int)((px+14)/TILE),fy=(int)((py+TILE-4)/TILE);if(isSolid(fx,fy))onG=true;if(!onG){critDmg*=2;for(int i=0;i<5;i++)particles.add(new Particle(m.x,m.y-20,GOLD_ORE));}m.health-=critDmg;m.hurtT=10;dmgNums.add(new DmgNum(m.x,m.y-20,critDmg));m.x+=(m.x>px?8:-8);if(m.health<=0){if(m.type==6){drops.add(new DropItem(m.x,m.y,DIAMOND_GEM));drops.add(new DropItem(m.x-10,m.y,DIAMOND_GEM));for(int i=0;i<10;i++)drops.add(new DropItem(m.x+Math.random()*40-20,m.y+Math.random()*20-10,EXP_ORB));achieve("BOSS DEFEATED!");}else{drops.add(new DropItem(m.x,m.y,m.type==0?RAW_BEEF:m.type==1?RAW_PORK:m.type==3?WOOL:m.type==4?COOKED_BEEF:COOKED_BEEF));drops.add(new DropItem(m.x-10,m.y-10,EXP_ORB));}mobs.remove(m);kills++;if(kills==1)achieve("First Blood!");if(kills==10)achieve("Monster Hunter!");if(kills==50)achieve("Slayer!");}hitMob=true;break;}}
+                }
                 if(!hitMob){if(survival&&world[tx][ty]>0){breakX=tx;breakY=ty;breakTimer=0;int spd=1;if(selBlock==PICKAXE)spd=4;if(selBlock==AXE)spd=4;if(selBlock==SHOVEL)spd=4;breakTime=Math.max(1,BT[Math.min(world[tx][ty],BT.length-1)]/spd);}else if(!survival){world[tx][ty]=0;syncBlock(tx,ty,0);}}
             }
             else if(e.getButton()==MouseEvent.BUTTON3&&selBlock==FLINT_STEEL){
-                int ftx=(mx+camX)/TILE,fty=(my+camY)/TILE;
+                int ftx=tx,fty=ty;
+                if(!threeDMode){ftx=(mx+camX)/TILE;fty=(my+camY)/TILE;}
                 if(isIn(ftx,fty)&&world[ftx][fty]==AIR){
                     int fbelow=fty+1<H?world[ftx][fty+1]:0;
                     if(fbelow>0&&fbelow!=BEDROCK&&fbelow!=WATER){
@@ -2044,7 +2073,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 if(survival&&world[tx][ty]==TNT&&selBlock==FLINT_STEEL){tntList.add(new PrimedTnt(tx*TILE+TILE/2,ty*TILE+TILE/2));world[tx][ty]=0;return;}
                 if(survival&&selBlock==TORCH_ITEM){world[tx][ty]=selBlock;takeFromInv(selBlock,1);return;}
                 if(survival&&selBlock==ROD&&world[tx][ty]==WATER){addToInv(RAW_FISH,1);playSound("splash");return;}
-                if(survival&&selBlock==BOW&&getInvCount(ARROW_ITEM)>=1){takeFromInv(ARROW_ITEM,1);arrows.add(new Arrow(px,py,(mx+camX-px)*0.3,(my+camY-py)*0.3));playSound("bow");return;}
+                if(survival&&selBlock==BOW&&getInvCount(ARROW_ITEM)>=1){takeFromInv(ARROW_ITEM,1);double avx=Math.cos(playerDir)*8,avy=Math.sin(playerDir)*8;if(!threeDMode){avx=(mx+camX-px)*0.3;avy=(my+camY-py)*0.3;}arrows.add(new Arrow(px,py,avx,avy));playSound("bow");return;}
                 if(survival&&(selBlock==RAW_BEEF||selBlock==COOKED_BEEF||selBlock==RAW_PORK||selBlock==COOKED_PORK||selBlock==RAW_FISH||selBlock==COOKED_FISH)){hunger=Math.min(20,hunger+(selBlock==COOKED_BEEF||selBlock==COOKED_PORK||selBlock==COOKED_FISH?8:4));takeFromInv(selBlock,1);playSound("eat");return;}
                 if(survival&&selBlock==BED){worldTime=6000;addChat("Bed","Good morning!");return;}
                 if(survival&&selBlock==FURNACE_ITEM&&getInvCount(IRON_ORE)>=1&&getInvCount(COAL_ORE)>=1){takeFromInv(IRON_ORE,1);takeFromInv(COAL_ORE,1);addToInv(IRON_INGOT,1);return;}
@@ -2063,7 +2092,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     @Override public void mouseReleased(MouseEvent e){breakX=-1;breakY=-1;breakTimer=0;}
     @Override public void mouseEntered(MouseEvent e){mouseIn=true;}
-    @Override public void mouseExited(MouseEvent e){mouseIn=false;breakX=-1;breakY=-1;breakTimer=0;}
+    @Override public void mouseExited(MouseEvent e){mouseIn=false;if(!threeDMode){breakX=-1;breakY=-1;breakTimer=0;}}
     @Override public void mouseDragged(MouseEvent e){mx=e.getX();my=e.getY();
         if(threeDMode&&screen==Screen.PLAY){
             if(lastMx>=0){playerDir+=(mx-lastMx)*0.003;playerPitch+=(my-lastMy)*0.003;playerPitch=Math.max(-0.6,Math.min(0.6,playerPitch));}
