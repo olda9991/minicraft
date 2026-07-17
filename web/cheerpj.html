@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MiniCraft Web — Original JAR via CheerpJ</title>
+<style>
+body { margin:0; background:#1a1a1a; color:#ccc; font-family:sans-serif; display:flex; flex-direction:column; align-items:center; }
+#loader { margin-top:40px; text-align:center; }
+#loader h1 { color:#64c864; }
+#game { width:800px; height:576px; margin:20px auto; border:2px solid #444; }
+#status { font-family:monospace; font-size:12px; margin-top:8px; }
+</style>
+</head>
+<body>
+<div id="loader">
+<h1>MiniCraft Web</h1>
+<p>v6.4.2 — Running the <b>original</b> Java JAR in your browser via CheerpJ</p>
+<p id="status">Loading CheerpJ runtime...</p>
+</div>
+<div id="game"></div>
+
+<!-- CheerpJ runtime -->
+<script src="https://cjrtnc.leaningtech.com/3.0/cj3loader.js"></script>
+<script>
+(async function() {
+    const status = document.getElementById('status');
+    await cheerpjInit({
+        javaProperties: ["java.awt.headless=false"],
+        clipboardMode: "system",
+    });
+    status.textContent = "Loading MiniCraft.jar...";
+    cheerpjRunMain("MiniCraft", "/app/MiniCraft.jar");
+    status.textContent = "Running!";
+})();
+</script>
+</body>
+</html>
