@@ -136,12 +136,12 @@ function showError(msg) {
 }
 
 // Poll until CheerpJ actually renders something in the container
-function waitForRender(timeoutMs = 90000) {
+function waitForRender(timeoutMs = 180000) {
     const start = Date.now();
     return new Promise((resolve, reject) => {
         const interval = setInterval(() => {
-            // CheerpJ creates a canvas or iframe inside the container
-            const hasContent = container.children.length > 0 || container.querySelector('canvas, iframe');
+            // CheerpJ creates divs/canvas inside the container when container option is passed
+            const hasContent = container.children.length > 0;
             if (hasContent) {
                 clearInterval(interval);
                 resolve();
@@ -149,9 +149,8 @@ function waitForRender(timeoutMs = 90000) {
             }
             if (Date.now() - start > timeoutMs) {
                 clearInterval(interval);
-                reject(new Error('Timeout waiting for game to render'));
+                reject(new Error('Timeout: CheerpJ did not render within 3 minutes. Your connection may be too slow, or the JAR failed to start.'));
             }
-            // Show a heartbeat so users know it's not frozen
             const elapsed = Math.floor((Date.now() - start) / 1000);
             if (elapsed > 15) {
                 statusText.textContent = `Still loading... (${elapsed}s) — JVM is initializing`;
@@ -180,10 +179,10 @@ async function launchGame() {
         });
 
         setProgress(50, 'Runtime ready. Starting MiniCraft.jar...');
-        cheerpjRunMain('MiniCraft', '/app/MiniCraft.jar');
+        cheerpjRunMain('MiniCraft', '/app/MiniCraft.jar', { container: container });
 
         setProgress(70, 'Waiting for Swing to render...');
-        await waitForRender();
+        await waitForRender(180000); // 3 min timeout
 
         setProgress(100, 'MiniCraft is running!');
         await new Promise(r => setTimeout(r, 400));
