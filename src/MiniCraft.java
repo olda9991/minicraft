@@ -1634,17 +1634,20 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     // ==================== 3D RAYCASTING MODE ====================
     private void render3D(Graphics2D g2){
         int w=getWidth(),h=getHeight();
-        // Floor
-        g2.setColor(new Color(60,100,60));
-        g2.fillRect(0,h/2,w,h/2);
-        // Sky
-        g2.setColor(new Color(135,206,235));
+        double night=Math.abs(worldTime-12000)/12000.0;
+        // Sky with day/night
+        int skyR=(int)(150*(1-night)+10*night),skyG=(int)(200*(1-night)+20*night),skyB=(int)(255*(1-night)+40*night);
+        g2.setColor(new Color(skyR,skyG,skyB));
         g2.fillRect(0,0,w,h/2);
+        // Floor with day/night
+        int floorR=(int)(60*(1-night)+10*night),floorG=(int)(100*(1-night)+10*night),floorB=(int)(60*(1-night)+10*night);
+        g2.setColor(new Color(floorR,floorG,floorB));
+        g2.fillRect(0,h/2,w,h/2);
         // Raycast walls
         double dirX=Math.cos(playerDir),dirY=Math.sin(playerDir);
         double planeX=-Math.sin(playerDir)*0.66,planeY=Math.cos(playerDir)*0.66;
         double pTileX=px/TILE,pTileY=py/TILE;
-        for(int x=0;x<w;x+=2){
+        for(int x=0;x<w;x++){
             double cameraX=2.0*x/w-1.0;
             double rayDirX=dirX+planeX*cameraX;
             double rayDirY=dirY+planeY*cameraX;
@@ -1668,16 +1671,32 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             if(mapY<0)mapY=0;if(mapY>=H)mapY=H-1;
             int block=world[mapX][mapY];
             if(block<=0)continue;
-            if(side==0)perpWallDist=(mapX-pTileX+(1-stepX)/2)/rayDirX;
-            else perpWallDist=(mapY-pTileY+(1-stepY)/2)/rayDirY;
+            if(side==0)perpWallDist=(mapX-pTileX+(1.0-stepX)/2.0)/rayDirX;
+            else perpWallDist=(mapY-pTileY+(1.0-stepY)/2.0)/rayDirY;
             if(perpWallDist<=0)perpWallDist=0.01;
             int lineHeight=(int)(h/perpWallDist);
             int drawStart=-lineHeight/2+h/2;if(drawStart<0)drawStart=0;
             int drawEnd=lineHeight/2+h/2;if(drawEnd>=h)drawEnd=h-1;
-            Color c=FB[Math.min(block,FB.length-1)];
-            if(side==1)c=new Color(Math.max(0,c.getRed()-40),Math.max(0,c.getGreen()-40),Math.max(0,c.getBlue()-40));
-            g2.setColor(c);
-            g2.fillRect(x,drawStart,2,drawEnd-drawStart+1);
+            double fog=Math.min(1.0,perpWallDist/(W*0.4));
+            int shade=(int)(fog*140);
+            if(side==1)shade+=30;
+            BufferedImage t=tex[Math.min(block,BLOCK_COUNT-1)];
+            if(t!=null){
+                int texW=t.getWidth(),texH=t.getHeight();
+                double wallX;
+                if(side==0)wallX=pTileY+perpWallDist*rayDirY;
+                else wallX=pTileX+perpWallDist*rayDirX;
+                wallX-=(int)wallX;
+                int texX=(int)(wallX*texW);
+                if((side==0&&rayDirX>0)||(side==1&&rayDirY<0))texX=texW-texX-1;
+                g2.drawImage(t,x,drawStart,x+1,drawEnd+1,texX,0,texX+1,texH,null);
+                if(shade>0){g2.setColor(new Color(0,0,0,Math.min(255,shade)));g2.drawLine(x,drawStart,x,drawEnd);}
+            }else{
+                Color c=FB[Math.min(block,FB.length-1)];
+                int r=Math.max(0,c.getRed()-shade),g=Math.max(0,c.getGreen()-shade),b=Math.max(0,c.getBlue()-shade);
+                g2.setColor(new Color(r,g,b));
+                g2.fillRect(x,drawStart,1,drawEnd-drawStart+1);
+            }
         }
         // Mini-map overlay
         g2.setColor(new Color(0,0,0,150));
@@ -1690,10 +1709,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 g2.fillRect(w-130+mx2*ms,10+my2*ms,ms,ms);
             }
         }
-        // Player dot on mini-map
         g2.setColor(Color.RED);
         g2.fillRect(w-130+(int)(px/TILE)*ms,10+(int)(py/TILE)*ms,ms,ms);
-        // Direction line
         g2.setColor(Color.YELLOW);
         int mpx=w-130+(int)(px/TILE)*ms+1,mpy=10+(int)(py/TILE)*ms+1;
         g2.drawLine(mpx,mpy,(int)(mpx+Math.cos(playerDir)*8),(int)(mpy+Math.sin(playerDir)*8));

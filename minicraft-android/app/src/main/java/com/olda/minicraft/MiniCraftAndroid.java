@@ -681,9 +681,16 @@ public class MiniCraftAndroid {
 
     private void render3D(Canvas c) {
         int w = screenW, h = screenH;
-        paint.setColor(0xFF87CEEB);
+        double night = Math.abs(worldTime - 12000) / 12000.0;
+        int skyR = (int) (150 * (1 - night) + 10 * night);
+        int skyG = (int) (200 * (1 - night) + 20 * night);
+        int skyB = (int) (255 * (1 - night) + 40 * night);
+        paint.setColor(0xFF000000 | (skyR << 16) | (skyG << 8) | skyB);
         c.drawRect(0, 0, w, h / 2, paint);
-        paint.setColor(0xFF3C643C);
+        int floorR = (int) (60 * (1 - night) + 10 * night);
+        int floorG = (int) (100 * (1 - night) + 10 * night);
+        int floorB = (int) (60 * (1 - night) + 10 * night);
+        paint.setColor(0xFF000000 | (floorR << 16) | (floorG << 8) | floorB);
         c.drawRect(0, h / 2, w, h, paint);
         double dirX = Math.cos(playerDir), dirY = Math.sin(playerDir);
         double planeX = -Math.sin(playerDir) * 0.66, planeY = Math.cos(playerDir) * 0.66;
@@ -712,15 +719,20 @@ public class MiniCraftAndroid {
             if (mapY < 0) mapY = 0; if (mapY >= H) mapY = H - 1;
             int block = world[mapX][mapY];
             if (block <= 0) continue;
-            if (side == 0) perpWallDist = (mapX - pTileX + (1 - stepX) / 2) / rayDirX;
-            else perpWallDist = (mapY - pTileY + (1 - stepY) / 2) / rayDirY;
+            if (side == 0) perpWallDist = (mapX - pTileX + (1.0 - stepX) / 2.0) / rayDirX;
+            else perpWallDist = (mapY - pTileY + (1.0 - stepY) / 2.0) / rayDirY;
             if (perpWallDist <= 0) perpWallDist = 0.01;
             int lineHeight = (int) (h / perpWallDist);
             int drawStart = -lineHeight / 2 + h / 2; if (drawStart < 0) drawStart = 0;
             int drawEnd = lineHeight / 2 + h / 2; if (drawEnd >= h) drawEnd = h - 1;
+            double fog = Math.min(1.0, perpWallDist / (W * 0.4));
+            int shade = (int) (fog * 140);
+            if (side == 1) shade += 30;
             int col = COLORS[Math.min(block, COLORS.length - 1)];
-            if (side == 1) col = darken(col, 40);
-            paint.setColor(col);
+            int r = Math.max(0, ((col >> 16) & 0xFF) - shade);
+            int g = Math.max(0, ((col >> 8) & 0xFF) - shade);
+            int b = Math.max(0, (col & 0xFF) - shade);
+            paint.setColor(0xFF000000 | (r << 16) | (g << 8) | b);
             c.drawRect(x, drawStart, x + 2, drawEnd + 1, paint);
         }
         // Mini-map
