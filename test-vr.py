@@ -93,17 +93,23 @@ def process_sbs(img_path):
 
     return left, right
 
-def show_mpv_sbs_tip():
+def show_vr_viewer_tip():
     print("""
-[VR Test] To view MiniCraft SBS in real-time with mpv:
-    1. Launch MiniCraft, press F9 then F10
-    2. Record with: wf-recorder -f /tmp/mc_sbs.mp4
-    3. Play back with: mpv --video-stereo-mode=sbs2l /tmp/mc_sbs.mp4
+[VR Test] How to view MiniCraft SBS in real-time:
 
-Or use SteamVR / Bigscreen:
-    1. Enable F10 SBS mode in MiniCraft
-    2. Add MiniCraft as a non-Steam game
-    3. Launch via SteamVR Desktop Theater (SBS mode)
+    Option A - Bino 3D Player (installed):
+        1. Launch MiniCraft, press F9 then F10
+        2. Record: wf-recorder -f /tmp/mc_sbs.mp4
+        3. Play: flatpak run org.bino3d.bino /tmp/mc_sbs.mp4
+           In Bino, press V until it says "SBS" (side-by-side mode)
+
+    Option B - Anaglyph (red/cyan glasses):
+        Open vr-test-output/anaglyph.png in any image viewer
+
+    Option C - VR headset (SteamVR / Bigscreen / WiVRn):
+        1. Enable F10 SBS mode in MiniCraft
+        2. Use SteamVR Desktop View or WiVRn to mirror the window
+        3. Your headset should detect SBS automatically, or set it manually
 """)
 
 def main():
@@ -124,7 +130,7 @@ def main():
     process_sbs(ss)
 
     print(f"[VR Test] Output files in: {OUT_DIR}")
-    show_mpv_sbs_tip()
+    show_vr_viewer_tip()
 
 if __name__ == "__main__":
     main()
