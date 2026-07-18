@@ -1,7 +1,8 @@
 showFps=false
 showCoords=true
+showDebug=false
 noclip=true
-fullscreen=false
+fullscreen=true
 fov=50
 name=olda9991
 ultraFps=false
