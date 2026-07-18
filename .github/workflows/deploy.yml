@@ -27,8 +27,17 @@ jobs:
     - name: Copy index.html into deploy directory
       run: cp index.html target/generated/js/
 
+    # FIX: Explicitly copy your root asset folders into the deployment target folder
+    - name: Copy Minicraft Assets into deploy directory
+      run: |
+        if [ -d "textures" ]; then cp -r textures target/generated/js/; fi
+        if [ -d "sounds" ]; then cp -r sounds target/generated/js/; fi
+        if [ -d "music" ]; then cp -r music target/generated/js/; fi
+
     - name: Deploy Compiled Web App to GitHub Pages
       uses: JamesIves/github-pages-deploy-action@v4
       with:
         folder: target/generated/js
         branch: gh-pages
+
+
