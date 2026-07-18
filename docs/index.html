@@ -6,280 +6,174 @@
 <title>MiniCraft Web — v6.4.2</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-body { background:#111; color:#ddd; font-family:'Segoe UI',sans-serif; display:flex; flex-direction:column; align-items:center; padding:20px; }
+body { background:#111; color:#ddd; font-family:'Segoe UI',sans-serif; display:flex; flex-direction:column; align-items:center; padding:20px; min-height:100vh; }
 h1 { color:#64c864; margin-bottom:4px; }
 .subtitle { color:#888; font-size:14px; margin-bottom:20px; }
-#game-container {
-    width:800px; height:576px; background:#000; border:3px solid #444;
-    position:relative; overflow:hidden;
-}
 #loading {
-    position:absolute; inset:0; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; background:#1a1a1a; z-index:10;
-    transition:opacity 0.5s;
+    width:800px; padding:40px; background:#1a1a1a; border:2px solid #444; border-radius:8px;
+    display:flex; flex-direction:column; align-items:center; gap:16px;
 }
-#loading h2 { color:#64c864; margin-bottom:12px; }
-#loading p { color:#aaa; font-size:13px; max-width:500px; text-align:center; line-height:1.6; }
-#progress-bar { width:300px; height:6px; background:#333; border-radius:3px; margin:16px 0; overflow:hidden; }
-#progress-fill { width:0%; height:100%; background:#64c864; transition:width 0.3s; }
+#loading h2 { color:#64c864; }
+#loading p { color:#aaa; font-size:13px; text-align:center; max-width:600px; line-height:1.6; }
 #spinner {
-    width:40px; height:40px; border:3px solid #333; border-top-color:#64c864;
-    border-radius:50%; animation:spin 1s linear infinite; margin:12px 0;
+    width:48px; height:48px; border:4px solid #333; border-top-color:#64c864;
+    border-radius:50%; animation:spin 1s linear infinite;
 }
 @keyframes spin { to { transform:rotate(360deg); } }
-#status-text { font-family:monospace; font-size:12px; color:#888; margin-top:8px; }
-#loading.done { opacity:0; pointer-events:none; }
-#loading.error { background:#2a0a0a; }
-#loading.error h2 { color:#c86464; }
-#error-actions { display:none; gap:8px; margin-top:12px; }
-#loading.error #error-actions { display:flex; }
+#status { font-family:monospace; font-size:12px; color:#888; min-height:20px; }
+#error-box {
+    display:none; width:800px; padding:20px; background:#2a0a0a; border:2px solid #c86464;
+    border-radius:8px; margin-top:16px; flex-direction:column; gap:12px;
+}
+#error-box.show { display:flex; }
+#error-box h3 { color:#c86464; }
+#error-box p { color:#ddd; font-size:13px; }
+#error-box pre { background:#1a1a1a; padding:12px; border-radius:4px; font-size:11px; color:#aaa; overflow-x:auto; }
 #controls { margin-top:16px; display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
 button { padding:10px 18px; border:none; border-radius:6px; background:#3a5a3a; color:#fff; font-weight:bold; cursor:pointer; }
 button:hover { background:#4a7a4a; }
 button:disabled { background:#333; color:#666; cursor:not-allowed; }
 #info { margin-top:16px; max-width:800px; font-size:13px; line-height:1.6; color:#aaa; }
 #info code { background:#222; padding:2px 6px; border-radius:3px; color:#8f8; }
-#info b { color:#ccc; }
-#update-banner {
-    display:none; width:800px; margin-bottom:12px; padding:10px 16px;
-    background:#2a2a00; border:1px solid #aa0; border-radius:6px;
-    align-items:center; justify-content:space-between; gap:12px;
+#console-log {
+    width:800px; max-height:200px; overflow-y:auto; background:#0a0a0a;
+    border:1px solid #333; border-radius:4px; padding:10px; margin-top:12px;
+    font-family:monospace; font-size:11px; color:#888; display:none;
 }
-#update-banner.show { display:flex; }
-#update-banner span { color:#ff0; font-size:13px; }
-#update-banner button { padding:6px 14px; font-size:12px; background:#aa0; }
-#version-bar {
-    width:800px; display:flex; justify-content:space-between; align-items:center;
-    margin-bottom:8px; font-size:12px; color:#666;
-}
-#version-bar button { padding:4px 10px; font-size:11px; background:#333; }
-#cheerpj-container { width:100%; height:100%; }
+#console-log.show { display:block; }
+#console-log .err { color:#c86464; }
+#console-log .warn { color:#aa8; }
 </style>
 </head>
 <body>
-<script>
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').then(r => console.log('SW registered'));
-}
-</script>
 
 <h1>MiniCraft Web</h1>
 <p class="subtitle">v6.4.2 — Original Java JAR running in browser via CheerpJ</p>
 
-<div id="version-bar">
-    <span id="version-text">Local: v6.4.2 | Checking for updates...</span>
-    <button onclick="checkUpdate()">Check for Updates</button>
+<div id="loading">
+    <h2>Launching MiniCraft...</h2>
+    <p>
+        CheerpJ is downloading the JVM runtime (~30 MB) and executing the original MiniCraft.jar.<br>
+        This takes <b>20–60 seconds</b> on first visit. Files (textures, sounds, fonts) load from the same server.<br>
+        If it fails, use the desktop version — CheerpJ doesn't support all Java APIs perfectly.
+    </p>
+    <div id="spinner"></div>
+    <div id="status">Loading CheerpJ...</div>
 </div>
 
-<div id="update-banner">
-    <span>A new version of MiniCraft is available on GitHub!</span>
-    <button onclick="applyUpdate()">Reload to Update</button>
-</div>
-
-<div id="game-container">
-    <div id="loading">
-        <h2 id="loading-title">Loading MiniCraft...</h2>
-        <p id="loading-desc">
-            Downloading CheerpJ JVM runtime (~30 MB) and launching the original MiniCraft.jar.<br>
-            <b>First visit:</b> 20-40 seconds. <b>After that:</b> ~2 seconds from cache.
-        </p>
-        <div id="spinner"></div>
-        <div id="progress-bar"><div id="progress-fill"></div></div>
-        <p id="status-text">Waiting for user...</p>
-        <div id="error-actions">
-            <button onclick="location.reload()">Retry</button>
-            <button onclick="downloadJar()">Download JAR</button>
-        </div>
+<div id="error-box">
+    <h3>Failed to start</h3>
+    <p>CheerpJ could not run MiniCraft. Common causes:</p>
+    <ul style="margin-left:20px; color:#bbb; font-size:13px;">
+        <li>Your browser blocked the 30 MB JVM download</li>
+        <li>MiniCraft uses Java APIs that CheerpJ doesn't fully support (sound, fonts, threads)</li>
+        <li>A file failed to load from <code>/app/</code></li>
+    </ul>
+    <p><b>Use the desktop version instead:</b></p>
+    <div style="display:flex; gap:8px; margin-top:8px;">
+        <button onclick="downloadJar()">Download JAR</button>
+        <button onclick="location.reload()">Retry</button>
     </div>
-    <div id="cheerpj-container"></div>
+    <p style="font-size:12px; color:#888; margin-top:8px;">
+        Linux: <code>./run.sh</code> &nbsp;|&nbsp; Windows: <code>run.bat</code> or <code>java -jar MiniCraft.jar</code>
+    </p>
+    <pre id="error-details"></pre>
 </div>
 
-<div id="controls">
-    <button id="btnLaunch" onclick="launchGame()" disabled>Launch Game</button>
-    <button onclick="toggleFullscreen()">Fullscreen</button>
+<div id="controls" style="display:none;">
     <button onclick="downloadJar()">Download JAR</button>
-    <button onclick="clearCache()">Clear Cache</button>
+    <button onclick="toggleLog()">Show Debug Log</button>
 </div>
+
+<div id="console-log"></div>
 
 <div id="info">
     <p><b>How this works:</b> <a href="https://cheerpj.com/" target="_blank">CheerpJ</a> is a Java-to-JavaScript runtime that executes standard JAR files
     in the browser with <b>zero code changes</b>. The <code>MiniCraft.jar</code> here is the exact same JAR built from
     <code>src/MiniCraft.java</code> via <code>javac</code>.</p>
-    <p><b>Controls:</b> WASD to move, Space to jump, Click to break/place, 1-9 hotbar,
-    F for Survival/Creative, F9 for 3D mode, F10 for VR SBS, Esc for menu.</p>
     <p><b>Note:</b> Browser audio requires a user click first. For multiplayer / voice chat, use the desktop <code>./run.sh</code>.</p>
 </div>
 
 <script src="https://cjrtnc.leaningtech.com/3.0/cj3loader.js"></script>
 <script>
-const loading = document.getElementById('loading');
-const loadingTitle = document.getElementById('loading-title');
-const loadingDesc = document.getElementById('loading-desc');
-const progressFill = document.getElementById('progress-fill');
-const statusText = document.getElementById('status-text');
-const btnLaunch = document.getElementById('btnLaunch');
-const container = document.getElementById('cheerpj-container');
-let launched = false;
+const statusEl = document.getElementById('status');
+const loadingEl = document.getElementById('loading');
+const errorBox = document.getElementById('error-box');
+const errorDetails = document.getElementById('error-details');
+const consoleLog = document.getElementById('console-log');
+const controls = document.getElementById('controls');
 
-function setProgress(pct, msg) {
-    progressFill.style.width = pct + '%';
-    statusText.textContent = msg;
+function log(msg, type='info') {
+    const line = document.createElement('div');
+    line.className = type;
+    line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    consoleLog.appendChild(line);
+    consoleLog.scrollTop = consoleLog.scrollHeight;
+    console.log(msg);
 }
 
-function showError(msg) {
-    loading.classList.add('error');
-    loadingTitle.textContent = 'Failed to load';
-    loadingDesc.innerHTML = msg + '<br><b>Try the desktop version instead:</b><br>Linux: <code>./run.sh</code> &nbsp;|&nbsp; Windows: <code>run.bat</code> &nbsp;|&nbsp; Download: <button onclick="downloadJar()" style="padding:2px 8px;margin-left:4px;">MiniCraft.jar</button>';
-    document.getElementById('spinner').style.display = 'none';
-    document.getElementById('progress-bar').style.display = 'none';
-    statusText.textContent = '';
+function showError(msg, detail='') {
+    loadingEl.style.display = 'none';
+    errorBox.classList.add('show');
+    controls.style.display = 'flex';
+    errorDetails.textContent = detail;
+    log('ERROR: ' + msg, 'err');
 }
 
-// Poll until CheerpJ actually renders something (it appends canvas to body)
-function waitForRender(timeoutMs = 120000) {
-    const start = Date.now();
-    return new Promise((resolve, reject) => {
-        const interval = setInterval(() => {
-            // CheerpJ creates canvas/iframe/div elements somewhere in the document
-            const hasContent = document.querySelector('canvas, iframe, .cj3app, [class*="cheerpj"]');
-            if (hasContent) {
-                clearInterval(interval);
-                resolve();
-                return;
-            }
-            if (Date.now() - start > timeoutMs) {
-                clearInterval(interval);
-                reject(new Error('Timeout: CheerpJ did not render within 2 minutes. Connection too slow, or CheerpJ cannot run this JAR.'));
-            }
-            const elapsed = Math.floor((Date.now() - start) / 1000);
-            if (elapsed > 15) {
-                statusText.textContent = `Still loading... (${elapsed}s) — JVM is initializing`;
-            }
-        }, 500);
-    });
+function toggleLog() {
+    consoleLog.classList.toggle('show');
 }
 
-async function launchGame() {
-    if (launched) return;
-    launched = true;
-    btnLaunch.disabled = true;
-    setProgress(5, 'Fetching CheerpJ loader...');
-
-    try {
-        if (typeof cheerpjInit === 'undefined') {
-            throw new Error('CheerpJ loader not available. Check your internet connection.');
-        }
-
-        setProgress(15, 'Initializing CheerpJ runtime...');
-        await cheerpjInit({
-            javaProperties: ['java.awt.headless=false', 'user.dir=/files'],
-            mountPoints: [
-                { path: '/files', url: location.href.replace(/\/[^\/]*$/, '/') + '/' }
-            ]
-        });
-
-        setProgress(50, 'Runtime ready. Starting MiniCraft.jar...');
-        cheerpjRunMain('MiniCraft', '/app/MiniCraft.jar');
-
-        setProgress(70, 'Waiting for Swing to render...');
-        await waitForRender(120000); // 2 min timeout
-
-        // Move CheerpJ canvas into our container so it's positioned properly
-        const cjCanvas = document.querySelector('canvas, iframe, .cj3app, [class*="cheerpj"]');
-        if (cjCanvas && cjCanvas.parentElement !== container) {
-            cjCanvas.style.width = '100%';
-            cjCanvas.style.height = '100%';
-            cjCanvas.style.position = 'absolute';
-            cjCanvas.style.top = '0';
-            cjCanvas.style.left = '0';
-            container.appendChild(cjCanvas);
-        }
-
-        setProgress(100, 'MiniCraft is running!');
-        await new Promise(r => setTimeout(r, 400));
-        loading.classList.add('done');
-        setTimeout(() => {
-            loading.style.display = 'none';
-        }, 500);
-
-    } catch (e) {
-        console.error(e);
-        showError(e.message || 'Unknown error launching MiniCraft.');
-    }
-}
-
-// Enable launch button once CheerpJ script is loaded
-if (typeof cheerpjInit !== 'undefined') {
-    btnLaunch.disabled = false;
-    setProgress(0, 'Ready to launch');
-} else {
-    setProgress(0, 'Loading CheerpJ script...');
-    window.addEventListener('load', () => {
-        btnLaunch.disabled = false;
-        setProgress(0, 'Ready to launch');
-    });
-}
-
-function toggleFullscreen() {
-    const c = document.getElementById('game-container');
-    if (!document.fullscreenElement) c.requestFullscreen();
-    else document.exitFullscreen();
-}
 function downloadJar() {
     const a = document.createElement('a');
-    a.href = 'MiniCraft.jar'; a.download = 'MiniCraft.jar'; a.click();
+    a.href = 'MiniCraft.jar';
+    a.download = 'MiniCraft.jar';
+    a.click();
 }
 
-// ==================== UPDATE CHECKER ====================
-const GITHUB_API = 'https://api.github.com/repos/olda9991/minicraft/commits/main';
-const LS_SHA = 'mc_web_sha';
-const LS_TIME = 'mc_web_check';
-
-async function checkUpdate(force = false) {
-    const now = Date.now();
-    const last = parseInt(localStorage.getItem(LS_TIME) || '0');
-    if (!force && now - last < 60000) return;
-
-    document.getElementById('version-text').textContent = 'Local: v6.4.2 | Checking GitHub...';
+(async function main() {
     try {
-        const resp = await fetch(GITHUB_API, { cache: 'no-store' });
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const data = await resp.json();
-        const remoteSha = data.sha;
-        const localSha = localStorage.getItem(LS_SHA);
-        localStorage.setItem(LS_TIME, String(now));
-        localStorage.setItem(LS_SHA, remoteSha);
-        const banner = document.getElementById('update-banner');
-        if (localSha && localSha !== remoteSha) {
-            document.getElementById('version-text').textContent = 'Local: v6.4.2 | Remote: NEW (' + remoteSha.slice(0,7) + ')';
-            banner.classList.add('show');
+        statusEl.textContent = 'Initializing CheerpJ runtime...';
+        log('Calling cheerpjInit...');
+
+        await cheerpjInit({
+            version: 17,
+            status: 'splash',
+            enableDebug: true,
+            javaProperties: [
+                'user.dir=/app',
+                'java.awt.headless=false'
+            ],
+            beepCallback: () => { log('Beep!'); }
+        });
+
+        log('cheerpjInit done. Starting MiniCraft.jar...');
+        statusEl.textContent = 'Starting MiniCraft.jar...';
+
+        // Run the JAR and capture exit code
+        const exitCode = await cheerpjRunMain('MiniCraft', '/app/MiniCraft.jar');
+
+        log(`MiniCraft exited with code: ${exitCode}`);
+
+        if (exitCode !== 0) {
+            showError(
+                `MiniCraft crashed (exit code ${exitCode}).`,
+                'The Java program exited with a non-zero status. This usually means an uncaught exception during startup.'
+            );
         } else {
-            document.getElementById('version-text').textContent = 'Local: v6.4.2 | Up to date (' + remoteSha.slice(0,7) + ')';
-            banner.classList.remove('show');
+            // If exit code is 0 but window might still be running
+            statusEl.textContent = 'MiniCraft is running!';
+            controls.style.display = 'flex';
         }
+
     } catch (e) {
-        document.getElementById('version-text').textContent = 'Local: v6.4.2 | Check failed';
+        log('Exception: ' + e.message, 'err');
+        showError(
+            e.message || 'Unknown error launching MiniCraft.',
+            e.stack || ''
+        );
     }
-}
-
-function applyUpdate() {
-    if ('caches' in window) caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))));
-    navigator.serviceWorker?.getRegistration()?.then(reg => reg?.unregister()).then(() => location.reload(true));
-}
-
-function clearCache() {
-    if ('caches' in window) {
-        caches.keys().then(names => Promise.all(names.map(n => caches.delete(n))))
-            .then(() => alert('Cache cleared. Reload the page.'));
-    } else {
-        alert('No cache API available.');
-    }
-}
-
-window.addEventListener('load', () => {
-    checkUpdate(false);
-    setInterval(() => checkUpdate(false), 300000);
-});
+})();
 </script>
 </body>
 </html>
