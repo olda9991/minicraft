@@ -1,4 +1,4 @@
-//sha:37a21736
+//sha:7ab82e91
 //sha:3bbe3cda
 //sha:f3fbf677
 //sha:c8c9fbbe
@@ -82,8 +82,7 @@ import java.util.ArrayList;
 import javax.sound.sampled.*;
 
 public class MiniCraft extends JPanel implements ActionListener, KeyListener, MouseListener, MouseMotionListener, MouseWheelListener {
-//------------------ts is how big world is-------------
-    private static final int TILE = 32, W = 256, H = 64, VW = 25, VH = 18;
+    private static final int TILE = 32, W = 128, H = 64, VW = 25, VH = 18;
     private static final String VERSION = "6.4.2";
     private static final String GITHUB_API = "https://api.github.com/repos/olda9991/minicraft/commits/main";
     private static final String GITHUB_RAW = "https://raw.githubusercontent.com/olda9991/minicraft/main/src/MiniCraft.java";
@@ -947,7 +946,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             }
         }catch(Exception e){}
     }
-//---------------world---------------
+
     private void genWorld(long seed){
         world=new int[W][H];bgWorld=new int[W][H];Random r=new Random(seed);
         if(superflat){
