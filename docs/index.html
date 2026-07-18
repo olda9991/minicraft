@@ -28,21 +28,11 @@ h1 { color:#64c864; margin-bottom:4px; }
 #error-box.show { display:flex; }
 #error-box h3 { color:#c86464; }
 #error-box p { color:#ddd; font-size:13px; }
-#error-box pre { background:#1a1a1a; padding:12px; border-radius:4px; font-size:11px; color:#aaa; overflow-x:auto; }
-#controls { margin-top:16px; display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+#error-box pre { background:#1a1a1a; padding:12px; border-radius:4px; font-size:11px; color:#aaa; overflow-x:auto; white-space:pre-wrap; }
 button { padding:10px 18px; border:none; border-radius:6px; background:#3a5a3a; color:#fff; font-weight:bold; cursor:pointer; }
 button:hover { background:#4a7a4a; }
-button:disabled { background:#333; color:#666; cursor:not-allowed; }
 #info { margin-top:16px; max-width:800px; font-size:13px; line-height:1.6; color:#aaa; }
 #info code { background:#222; padding:2px 6px; border-radius:3px; color:#8f8; }
-#console-log {
-    width:800px; max-height:200px; overflow-y:auto; background:#0a0a0a;
-    border:1px solid #333; border-radius:4px; padding:10px; margin-top:12px;
-    font-family:monospace; font-size:11px; color:#888; display:none;
-}
-#console-log.show { display:block; }
-#console-log .err { color:#c86464; }
-#console-log .warn { color:#aa8; }
 </style>
 </head>
 <body>
@@ -53,45 +43,29 @@ button:disabled { background:#333; color:#666; cursor:not-allowed; }
 <div id="loading">
     <h2>Launching MiniCraft...</h2>
     <p>
-        CheerpJ is downloading the JVM runtime (~30 MB) and executing the original MiniCraft.jar.<br>
-        This takes <b>20–60 seconds</b> on first visit. Files (textures, sounds, fonts) load from the same server.<br>
-        If it fails, use the desktop version — CheerpJ doesn't support all Java APIs perfectly.
+        CheerpJ downloads a JVM runtime (~30 MB) then executes MiniCraft.jar in your browser.<br>
+        <b>20–60 seconds</b> on first visit. Uses same JAR as desktop — zero code changes.
     </p>
     <div id="spinner"></div>
-    <div id="status">Loading CheerpJ...</div>
+    <div id="status">Loading...</div>
 </div>
 
 <div id="error-box">
-    <h3>Failed to start</h3>
-    <p>CheerpJ could not run MiniCraft. Common causes:</p>
-    <ul style="margin-left:20px; color:#bbb; font-size:13px;">
-        <li>Your browser blocked the 30 MB JVM download</li>
-        <li>MiniCraft uses Java APIs that CheerpJ doesn't fully support (sound, fonts, threads)</li>
-        <li>A file failed to load from <code>/app/</code></li>
-    </ul>
-    <p><b>Use the desktop version instead:</b></p>
+    <h3>CheerpJ failed to start</h3>
+    <p id="error-msg"></p>
+    <pre id="error-trace"></pre>
     <div style="display:flex; gap:8px; margin-top:8px;">
-        <button onclick="downloadJar()">Download JAR</button>
         <button onclick="location.reload()">Retry</button>
+        <button onclick="downloadJar()">Download JAR</button>
     </div>
-    <p style="font-size:12px; color:#888; margin-top:8px;">
-        Linux: <code>./run.sh</code> &nbsp;|&nbsp; Windows: <code>run.bat</code> or <code>java -jar MiniCraft.jar</code>
+    <p style="font-size:12px; color:#888;">
+        Desktop: <code>./run.sh</code> (Linux) &nbsp;|&nbsp; <code>java -jar MiniCraft.jar</code> (any OS)
     </p>
-    <pre id="error-details"></pre>
 </div>
-
-<div id="controls" style="display:none;">
-    <button onclick="downloadJar()">Download JAR</button>
-    <button onclick="toggleLog()">Show Debug Log</button>
-</div>
-
-<div id="console-log"></div>
 
 <div id="info">
-    <p><b>How this works:</b> <a href="https://cheerpj.com/" target="_blank">CheerpJ</a> is a Java-to-JavaScript runtime that executes standard JAR files
-    in the browser with <b>zero code changes</b>. The <code>MiniCraft.jar</code> here is the exact same JAR built from
-    <code>src/MiniCraft.java</code> via <code>javac</code>.</p>
-    <p><b>Note:</b> Browser audio requires a user click first. For multiplayer / voice chat, use the desktop <code>./run.sh</code>.</p>
+    <p><b>How this works:</b> <a href="https://cheerpj.com/" target="_blank">CheerpJ</a> interprets Java bytecode in JavaScript.
+    The <code>MiniCraft.jar</code> is the exact same file from the desktop build.</p>
 </div>
 
 <script src="https://cjrtnc.leaningtech.com/3.0/cj3loader.js"></script>
@@ -99,29 +73,14 @@ button:disabled { background:#333; color:#666; cursor:not-allowed; }
 const statusEl = document.getElementById('status');
 const loadingEl = document.getElementById('loading');
 const errorBox = document.getElementById('error-box');
-const errorDetails = document.getElementById('error-details');
-const consoleLog = document.getElementById('console-log');
-const controls = document.getElementById('controls');
+const errorMsg = document.getElementById('error-msg');
+const errorTrace = document.getElementById('error-trace');
 
-function log(msg, type='info') {
-    const line = document.createElement('div');
-    line.className = type;
-    line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-    consoleLog.appendChild(line);
-    consoleLog.scrollTop = consoleLog.scrollHeight;
-    console.log(msg);
-}
-
-function showError(msg, detail='') {
+function showError(msg, trace='') {
     loadingEl.style.display = 'none';
     errorBox.classList.add('show');
-    controls.style.display = 'flex';
-    errorDetails.textContent = detail;
-    log('ERROR: ' + msg, 'err');
-}
-
-function toggleLog() {
-    consoleLog.classList.toggle('show');
+    errorMsg.textContent = msg;
+    errorTrace.textContent = trace;
 }
 
 function downloadJar() {
@@ -133,45 +92,28 @@ function downloadJar() {
 
 (async function main() {
     try {
-        statusEl.textContent = 'Initializing CheerpJ runtime...';
-        log('Calling cheerpjInit...');
+        statusEl.textContent = 'Initializing CheerpJ...';
 
+        // Minimal init — only javaProperties for file paths
         await cheerpjInit({
-            version: 17,
-            status: 'splash',
-            enableDebug: true,
-            javaProperties: [
-                'user.dir=/app',
-                'java.awt.headless=false'
-            ],
-            beepCallback: () => { log('Beep!'); }
+            javaProperties: ['user.dir=/app']
         });
 
-        log('cheerpjInit done. Starting MiniCraft.jar...');
         statusEl.textContent = 'Starting MiniCraft.jar...';
-
-        // Run the JAR and capture exit code
         const exitCode = await cheerpjRunMain('MiniCraft', '/app/MiniCraft.jar');
 
-        log(`MiniCraft exited with code: ${exitCode}`);
-
         if (exitCode !== 0) {
-            showError(
-                `MiniCraft crashed (exit code ${exitCode}).`,
-                'The Java program exited with a non-zero status. This usually means an uncaught exception during startup.'
-            );
+            showError('MiniCraft exited with code ' + exitCode + '. The JAR crashed during startup.');
         } else {
-            // If exit code is 0 but window might still be running
-            statusEl.textContent = 'MiniCraft is running!';
-            controls.style.display = 'flex';
+            statusEl.textContent = 'Running! If no window appeared, check the browser console (F12).';
         }
-
     } catch (e) {
-        log('Exception: ' + e.message, 'err');
-        showError(
-            e.message || 'Unknown error launching MiniCraft.',
-            e.stack || ''
-        );
+        console.error('Launch failed:', e);
+        let msg = e.message || String(e) || 'No error message';
+        let trace = '';
+        if (e.stack) trace = e.stack;
+        else if (typeof e === 'object') trace = JSON.stringify(e, null, 2);
+        showError(msg, trace);
     }
 })();
 </script>
