@@ -1,0 +1,31 @@
+name: Compile TeaVM Java 21 to GitHub Pages
+
+on:
+  push:
+    branches: [ "main" ] # Runs every time you push code to main
+
+permissions:
+  contents: write # Allows writing the compiled JS to your repository
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Java 21 JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
+    - name: Build with Maven and Transpile via TeaVM
+      run: mvn clean package
+
+    - name: Deploy Compiled Static Files to GitHub Pages
+      uses: JamesIves/github-pages-deploy-action@v4
+      with:
+        folder: target/generated/js # The folder where TeaVM puts classes.js
+        branch: gh-pages # Deploys directly to the web hosting branch
