@@ -129,19 +129,19 @@ function setProgress(pct, msg) {
 function showError(msg) {
     loading.classList.add('error');
     loadingTitle.textContent = 'Failed to load';
-    loadingDesc.innerHTML = msg + '<br>Try downloading the JAR and running it locally with <code>./run.sh</code>.';
+    loadingDesc.innerHTML = msg + '<br><b>Try the desktop version instead:</b><br>Linux: <code>./run.sh</code> &nbsp;|&nbsp; Windows: <code>run.bat</code> &nbsp;|&nbsp; Download: <button onclick="downloadJar()" style="padding:2px 8px;margin-left:4px;">MiniCraft.jar</button>';
     document.getElementById('spinner').style.display = 'none';
     document.getElementById('progress-bar').style.display = 'none';
     statusText.textContent = '';
 }
 
-// Poll until CheerpJ actually renders something in the container
-function waitForRender(timeoutMs = 180000) {
+// Poll until CheerpJ actually renders something (it appends canvas to body)
+function waitForRender(timeoutMs = 120000) {
     const start = Date.now();
     return new Promise((resolve, reject) => {
         const interval = setInterval(() => {
-            // CheerpJ creates divs/canvas inside the container when container option is passed
-            const hasContent = container.children.length > 0;
+            // CheerpJ creates canvas/iframe/div elements somewhere in the document
+            const hasContent = document.querySelector('canvas, iframe, .cj3app, [class*="cheerpj"]');
             if (hasContent) {
                 clearInterval(interval);
                 resolve();
@@ -149,7 +149,7 @@ function waitForRender(timeoutMs = 180000) {
             }
             if (Date.now() - start > timeoutMs) {
                 clearInterval(interval);
-                reject(new Error('Timeout: CheerpJ did not render within 3 minutes. Your connection may be too slow, or the JAR failed to start.'));
+                reject(new Error('Timeout: CheerpJ did not render within 2 minutes. Connection too slow, or CheerpJ cannot run this JAR.'));
             }
             const elapsed = Math.floor((Date.now() - start) / 1000);
             if (elapsed > 15) {
@@ -179,10 +179,21 @@ async function launchGame() {
         });
 
         setProgress(50, 'Runtime ready. Starting MiniCraft.jar...');
-        cheerpjRunMain('MiniCraft', '/app/MiniCraft.jar', { container: container });
+        cheerpjRunMain('MiniCraft', '/app/MiniCraft.jar');
 
         setProgress(70, 'Waiting for Swing to render...');
-        await waitForRender(180000); // 3 min timeout
+        await waitForRender(120000); // 2 min timeout
+
+        // Move CheerpJ canvas into our container so it's positioned properly
+        const cjCanvas = document.querySelector('canvas, iframe, .cj3app, [class*="cheerpj"]');
+        if (cjCanvas && cjCanvas.parentElement !== container) {
+            cjCanvas.style.width = '100%';
+            cjCanvas.style.height = '100%';
+            cjCanvas.style.position = 'absolute';
+            cjCanvas.style.top = '0';
+            cjCanvas.style.left = '0';
+            container.appendChild(cjCanvas);
+        }
 
         setProgress(100, 'MiniCraft is running!');
         await new Promise(r => setTimeout(r, 400));
