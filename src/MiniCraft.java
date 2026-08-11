@@ -131,6 +131,25 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         else BT[i]=Math.max(3,i*2%15+2);
     } }
 
+    private static boolean isCheerpJ(){try{return System.getProperty("java.vm.name","").contains("CheerpJ")||Class.forName("com.leaningtech.cheerpj.CheerpJ")!=null;}catch(Exception e){return false;}}
+
+    // Load image from disk, or from JAR/classpath resource if running in browser/CheerpJ
+    private BufferedImage loadImg(String filePath,String resourcePath){
+        try{return javax.imageio.ImageIO.read(new File(filePath));}
+        catch(Exception e){
+            try{java.io.InputStream is=getClass().getResourceAsStream(resourcePath);if(is!=null)return javax.imageio.ImageIO.read(is);}
+            catch(Exception e2){}
+        }
+        return null;
+    }
+    private void loadFontRes(String filePath,String resourcePath){
+        try{GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(Font.createFont(Font.TRUETYPE_FONT,new File(filePath)));}
+        catch(Exception e){
+            try{java.io.InputStream is=getClass().getResourceAsStream(resourcePath);if(is!=null)GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(Font.createFont(Font.TRUETYPE_FONT,is));}
+            catch(Exception e2){}
+        }
+    }
+
     private int[][] world;
     private int[][] bgWorld;
     private double px,py;
@@ -648,8 +667,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         addKeyListener(this);addMouseListener(this);addMouseMotionListener(this);addMouseWheelListener(this);
         loadTex();
         steveImg=new BufferedImage[1];
-        try{steveImg[0]=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/steve.png"));playerW=steveImg[0].getWidth();playerH=steveImg[0].getHeight();}catch(Exception ex){
-        steveImg[0]=makeSteve();}
+        steveImg[0]=loadImg(System.getProperty("user.dir")+"/steve.png","/steve.png");
+        if(steveImg[0]!=null){playerW=steveImg[0].getWidth();playerH=steveImg[0].getHeight();}else{steveImg[0]=makeSteve();}
         heartImg=new BufferedImage[1];heartImg[0]=makeIcon(new Color(200,0,0),9);
         hungerImg=new BufferedImage[1];hungerImg[0]=makeIcon(new Color(180,120,40),9);
         try{
@@ -662,31 +681,51 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 for(int i=0;i<n;i++)logoFrames[i]=reader.read(i);
                 reader.dispose();iis.close();
             }
-        }catch(Exception e){
-            try{logoImg=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/MINICRAFT.png"));}catch(Exception e2){logoImg=null;}
+        }catch(Exception e){}
+        if(logoFrames==null){
+            try{
+                java.io.InputStream is=getClass().getResourceAsStream("/MINICRAFT.gif");
+                if(is!=null){
+                    java.io.ByteArrayOutputStream baos=new java.io.ByteArrayOutputStream();
+                    byte[] buf=new byte[4096];int rn;
+                    while((rn=is.read(buf))>0)baos.write(buf,0,rn);
+                    java.io.ByteArrayInputStream bais=new java.io.ByteArrayInputStream(baos.toByteArray());
+                    javax.imageio.stream.ImageInputStream iis=javax.imageio.ImageIO.createImageInputStream(bais);
+                    javax.imageio.ImageReader reader=javax.imageio.ImageIO.getImageReadersByFormatName("gif").next();
+                    reader.setInput(iis);int n=reader.getNumImages(true);
+                    logoFrames=new BufferedImage[n];
+                    for(int i=0;i<n;i++)logoFrames[i]=reader.read(i);
+                    reader.dispose();iis.close();
+                }
+            }catch(Exception e){}
         }
-        try{discIcon=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/discord.png"));}catch(Exception e){discIcon=null;}
-        try{ghIcon=javax.imageio.ImageIO.read(new File(System.getProperty("user.dir")+"/github.png"));}catch(Exception e){ghIcon=null;}
-        new File(DATA_DIR).mkdirs();
-        try{GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(Font.createFont(Font.TRUETYPE_FONT,new File(System.getProperty("user.dir")+"/PixelPurl.ttf")));}catch(Exception e){}
+        if(logoFrames==null){
+            logoImg=loadImg(System.getProperty("user.dir")+"/MINICRAFT.png","/MINICRAFT.png");
+        }
+        discIcon=loadImg(System.getProperty("user.dir")+"/discord.png","/discord.png");
+        ghIcon=loadImg(System.getProperty("user.dir")+"/github.png","/github.png");
+        if(!isCheerpJ()){new File(DATA_DIR).mkdirs();}
+        loadFontRes(System.getProperty("user.dir")+"/PixelPurl.ttf","/PixelPurl.ttf");
         refreshWorldList();
         loadSettings();
-        try{java.awt.image.BufferedImage bi=new java.awt.image.BufferedImage(1,1,java.awt.image.BufferedImage.TYPE_INT_ARGB);blankCursor=java.awt.Toolkit.getDefaultToolkit().createCustomCursor(bi,new java.awt.Point(0,0),"blank");}catch(Exception e){blankCursor=null;}
+        if(!isCheerpJ()){try{java.awt.image.BufferedImage bi=new java.awt.image.BufferedImage(1,1,java.awt.image.BufferedImage.TYPE_INT_ARGB);blankCursor=java.awt.Toolkit.getDefaultToolkit().createCustomCursor(bi,new java.awt.Point(0,0),"blank");}catch(Exception e){blankCursor=null;}}
         timer=new javax.swing.Timer(16,this);timer.start();
-        new Thread(()->checkUpdate()).start();
-        new Thread(()->{
-            try{Thread.sleep(500);}
-            catch(Exception e){}
-            try{loadMusic();}catch(Exception e){System.out.println("[Auto] Music error: "+e.getMessage());}
-            try{loadSFX();}catch(Exception e){System.out.println("[Auto] SFX error: "+e.getMessage());}
-            try{
-                discordRPC=new DiscordRPC();
-                discordRPC.setDaemon(true);
-                discordRPC.start();
-                System.out.println("[Auto] RPC started");
-            }catch(Exception e){System.out.println("[Auto] RPC error: "+e.getMessage());}
-            try{loadMods();}catch(Exception e){System.out.println("[Auto] Mods error: "+e.getMessage());}
-        }).start();
+        if(!isCheerpJ()){new Thread(()->checkUpdate()).start();}
+        if(!isCheerpJ()){
+            new Thread(()->{
+                try{Thread.sleep(500);}
+                catch(Exception e){}
+                try{loadMusic();}catch(Exception e){System.out.println("[Auto] Music error: "+e.getMessage());}
+                try{loadSFX();}catch(Exception e){System.out.println("[Auto] SFX error: "+e.getMessage());}
+                try{
+                    discordRPC=new DiscordRPC();
+                    discordRPC.setDaemon(true);
+                    discordRPC.start();
+                    System.out.println("[Auto] RPC started");
+                }catch(Exception e){System.out.println("[Auto] RPC error: "+e.getMessage());}
+                try{loadMods();}catch(Exception e){System.out.println("[Auto] Mods error: "+e.getMessage());}
+            }).start();
+        }
     }
     private void updateCursor(){
         if(threeDMode&&screen==Screen.PLAY&&blankCursor!=null)setCursor(blankCursor);
@@ -765,7 +804,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         SwingUtilities.invokeLater(()->JOptionPane.showMessageDialog(this,msg,"MiniCraft Update",JOptionPane.INFORMATION_MESSAGE));
     }
 
-    private void loadTex(){tex=new BufferedImage[BLOCK_COUNT];for(int i=0;i<BLOCK_COUNT;i++){try{tex[i]=javax.imageio.ImageIO.read(new File(TEX_DIR+TF[i]+".png"));
+    private void loadTex(){tex=new BufferedImage[BLOCK_COUNT];for(int i=0;i<BLOCK_COUNT;i++){try{tex[i]=loadImg(TEX_DIR+TF[i]+".png","/textures/"+TF[i]+".png");
+        if(tex[i]==null)throw new Exception("Missing texture "+TF[i]);
         if(i==WATER||i==LAVA){BufferedImage wt=new BufferedImage(TILE,TILE,BufferedImage.TYPE_INT_ARGB);Graphics2D g=wt.createGraphics();g.drawImage(tex[i],0,0,null);g.setColor(i==LAVA?new Color(255,100,20,150):new Color(60,60,200,120));g.fillRect(0,0,TILE,TILE);g.dispose();tex[i]=wt;}
         if(i>=COAL_ORE&&i<=COPPER_ORE){BufferedImage ot=new BufferedImage(TILE,TILE,BufferedImage.TYPE_INT_ARGB);Graphics2D g=ot.createGraphics();g.drawImage(tex[i],0,0,null);Color oc=FB[i];g.setColor(new Color(oc.getRed(),oc.getGreen(),oc.getBlue(),80));g.fillRect(0,0,TILE,TILE);g.dispose();tex[i]=ot;}
     }catch(Exception e){tex[i]=new BufferedImage(TILE,TILE,BufferedImage.TYPE_INT_ARGB);Graphics2D g=tex[i].createGraphics();g.setColor(FB[i]);g.fillRect(0,0,TILE,TILE);g.dispose();}}}

@@ -27,8 +27,17 @@ else
     CRAZY_ERROR="$CRAZY_SH"
 fi
 
-# Prefer JAR, fallback to compiled classes, auto-compile if needed
-if [ -f MiniCraft.jar ]; then
+# Prefer newer build/ over stale JAR to avoid running old code
+USE_JAR=false
+if [ -f MiniCraft.jar ] && [ -f build/MiniCraft.class ]; then
+    if [ MiniCraft.jar -nt build/MiniCraft.class ]; then
+        USE_JAR=true
+    fi
+elif [ -f MiniCraft.jar ] && [ ! -f build/MiniCraft.class ]; then
+    USE_JAR=true
+fi
+
+if [ "$USE_JAR" = true ]; then
     "$JAVA" -jar MiniCraft.jar "$@"
     EXIT=$?
 elif [ -f build/MiniCraft.class ]; then
