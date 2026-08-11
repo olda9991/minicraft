@@ -88,8 +88,7 @@ async function launchGame(){
 
   try{
     await cheerpjInit({
-      javaProperties:['user.dir=/app'],
-      version:3
+      javaProperties:['user.dir=/app']
     });
     status.textContent='Loading MiniCraft.jar (fat JAR with assets)...';
     const exitCode=await cheerpjRunMain('MiniCraft','/app/MiniCraft.jar');
