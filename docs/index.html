@@ -120,8 +120,14 @@ function downloadJar(){
   a.href='MiniCraft.jar';a.download='MiniCraft.jar';a.click();
 }
 
+// Force fresh service worker: unregister old poisoned caches, then register new
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
+  navigator.serviceWorker.getRegistrations().then(regs=>{
+    const dereg=regs.map(r=>r.unregister());
+    return Promise.all(dereg);
+  }).then(()=>{
+    return navigator.serviceWorker.register('sw.js');
+  }).catch(()=>{});
 }
 </script>
 </body>

@@ -1,8 +1,9 @@
 /**
  * MiniCraft Web Service Worker
- * Network-first for game files (instant updates), cache-first for CheerpJ runtime.
+ * Network-first for game files, cache-first for CheerpJ runtime.
+ * Never caches 404 / failed responses.
  */
-const VERSION = '6.4.2-crashlog';
+const VERSION = '6.4.2-fatjar-v2';
 const CACHE_NAME = 'minicraft-' + VERSION;
 const RUNTIME_CACHE = 'minicraft-runtime';
 
@@ -20,9 +21,15 @@ const OWN_FILES = [
 
 self.addEventListener('install', e => {
     e.waitUntil(
-        caches.open(CACHE_NAME).then(cache => cache.addAll(OWN_FILES))
+        caches.open(CACHE_NAME).then(cache => {
+            return Promise.all(OWN_FILES.map(url =>
+                fetch(url).then(r => {
+                    if (r.ok) return cache.put(url, r);
+                    else console.warn('[SW] skip bad response', url, r.status);
+                }).catch(err => console.warn('[SW] skip failed fetch', url, err))
+            ));
+        }).then(() => self.skipWaiting())
     );
-    self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {
@@ -46,13 +53,12 @@ self.addEventListener('fetch', e => {
     }
 
     if (isCheerpJ) {
-        // CheerpJ runtime: cache-first, never expires
         e.respondWith(
             caches.open(RUNTIME_CACHE).then(cache =>
                 cache.match(e.request).then(resp => {
                     if (resp) return resp;
                     return fetch(e.request).then(r => {
-                        cache.put(e.request, r.clone());
+                        if (r.ok) cache.put(e.request, r.clone());
                         return r;
                     });
                 })
@@ -61,19 +67,18 @@ self.addEventListener('fetch', e => {
         return;
     }
 
-    // Our own files: network-first so updates are immediate
+    // Own files: network-first, only cache 200 OK
     e.respondWith(
         fetch(e.request).then(r => {
-            const copy = r.clone();
-            caches.open(CACHE_NAME).then(c => c.put(e.request, copy));
+            if (r.ok) {
+                const copy = r.clone();
+                caches.open(CACHE_NAME).then(c => c.put(e.request, copy));
+            }
             return r;
-        }).catch(() => {
-            return caches.match(e.request);
-        })
+        }).catch(() => caches.match(e.request))
     );
 });
 
-// Listen for messages from page (e.g. "skipWaiting")
 self.addEventListener('message', e => {
     if (e.data === 'skipWaiting') self.skipWaiting();
 });
