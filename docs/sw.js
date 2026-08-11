@@ -2,7 +2,7 @@
  * MiniCraft Web Service Worker
  * Network-first for game files (instant updates), cache-first for CheerpJ runtime.
  */
-const VERSION = '6.4.2-fatjar';
+const VERSION = '6.4.2-crashlog';
 const CACHE_NAME = 'minicraft-' + VERSION;
 const RUNTIME_CACHE = 'minicraft-runtime';
 

@@ -662,15 +662,18 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     }
 
     public MiniCraft(){
-        setPreferredSize(new Dimension(VW*TILE,VH*TILE));
-        setFocusable(true);
-        addKeyListener(this);addMouseListener(this);addMouseMotionListener(this);addMouseWheelListener(this);
-        loadTex();
-        steveImg=new BufferedImage[1];
-        steveImg[0]=loadImg(System.getProperty("user.dir")+"/steve.png","/steve.png");
-        if(steveImg[0]!=null){playerW=steveImg[0].getWidth();playerH=steveImg[0].getHeight();}else{steveImg[0]=makeSteve();}
-        heartImg=new BufferedImage[1];heartImg[0]=makeIcon(new Color(200,0,0),9);
-        hungerImg=new BufferedImage[1];hungerImg[0]=makeIcon(new Color(180,120,40),9);
+        try{setPreferredSize(new Dimension(VW*TILE,VH*TILE));}catch(Throwable t){System.out.println("[Init] setPreferredSize failed: "+t);}
+        try{setFocusable(true);}catch(Throwable t){System.out.println("[Init] setFocusable failed: "+t);}
+        try{addKeyListener(this);addMouseListener(this);addMouseMotionListener(this);addMouseWheelListener(this);}catch(Throwable t){System.out.println("[Init] listeners failed: "+t);}
+        try{loadTex();System.out.println("[Init] textures loaded");}catch(Throwable t){System.out.println("[Init] loadTex failed: "+t);}
+        try{
+            steveImg=new BufferedImage[1];
+            steveImg[0]=loadImg(System.getProperty("user.dir")+"/steve.png","/steve.png");
+            if(steveImg[0]!=null){playerW=steveImg[0].getWidth();playerH=steveImg[0].getHeight();}else{steveImg[0]=makeSteve();}
+            System.out.println("[Init] steve OK");
+        }catch(Throwable t){System.out.println("[Init] steve failed: "+t);steveImg=new BufferedImage[]{makeSteve()};playerW=28;playerH=28;}
+        try{heartImg=new BufferedImage[1];heartImg[0]=makeIcon(new Color(200,0,0),9);}catch(Throwable t){System.out.println("[Init] heart failed: "+t);}
+        try{hungerImg=new BufferedImage[1];hungerImg[0]=makeIcon(new Color(180,120,40),9);}catch(Throwable t){System.out.println("[Init] hunger failed: "+t);}
         try{
             File gifFile=new File(System.getProperty("user.dir")+"/MINICRAFT.gif");
             if(gifFile.exists()){
@@ -681,7 +684,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 for(int i=0;i<n;i++)logoFrames[i]=reader.read(i);
                 reader.dispose();iis.close();
             }
-        }catch(Exception e){}
+        }catch(Throwable t){System.out.println("[Init] logo gif disk failed: "+t);}
         if(logoFrames==null){
             try{
                 java.io.InputStream is=getClass().getResourceAsStream("/MINICRAFT.gif");
@@ -696,36 +699,32 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                     logoFrames=new BufferedImage[n];
                     for(int i=0;i<n;i++)logoFrames[i]=reader.read(i);
                     reader.dispose();iis.close();
+                    System.out.println("[Init] logo gif res OK");
                 }
-            }catch(Exception e){}
+            }catch(Throwable t){System.out.println("[Init] logo gif res failed: "+t);}
         }
         if(logoFrames==null){
-            logoImg=loadImg(System.getProperty("user.dir")+"/MINICRAFT.png","/MINICRAFT.png");
+            try{logoImg=loadImg(System.getProperty("user.dir")+"/MINICRAFT.png","/MINICRAFT.png");System.out.println("[Init] logo png OK");}catch(Throwable t){System.out.println("[Init] logo png failed: "+t);}
         }
-        discIcon=loadImg(System.getProperty("user.dir")+"/discord.png","/discord.png");
-        ghIcon=loadImg(System.getProperty("user.dir")+"/github.png","/github.png");
-        if(!isCheerpJ()){new File(DATA_DIR).mkdirs();}
-        loadFontRes(System.getProperty("user.dir")+"/PixelPurl.ttf","/PixelPurl.ttf");
-        refreshWorldList();
-        loadSettings();
-        if(!isCheerpJ()){try{java.awt.image.BufferedImage bi=new java.awt.image.BufferedImage(1,1,java.awt.image.BufferedImage.TYPE_INT_ARGB);blankCursor=java.awt.Toolkit.getDefaultToolkit().createCustomCursor(bi,new java.awt.Point(0,0),"blank");}catch(Exception e){blankCursor=null;}}
-        timer=new javax.swing.Timer(16,this);timer.start();
-        if(!isCheerpJ()){new Thread(()->checkUpdate()).start();}
+        try{discIcon=loadImg(System.getProperty("user.dir")+"/discord.png","/discord.png");}catch(Throwable t){System.out.println("[Init] discord icon failed: "+t);}
+        try{ghIcon=loadImg(System.getProperty("user.dir")+"/github.png","/github.png");}catch(Throwable t){System.out.println("[Init] github icon failed: "+t);}
+        try{if(!isCheerpJ())new File(DATA_DIR).mkdirs();}catch(Throwable t){System.out.println("[Init] mkdirs failed: "+t);}
+        try{loadFontRes(System.getProperty("user.dir")+"/PixelPurl.ttf","/PixelPurl.ttf");System.out.println("[Init] font OK");}catch(Throwable t){System.out.println("[Init] font failed: "+t);}
+        try{refreshWorldList();System.out.println("[Init] world list OK");}catch(Throwable t){System.out.println("[Init] world list failed: "+t);}
+        try{loadSettings();System.out.println("[Init] settings OK");}catch(Throwable t){System.out.println("[Init] settings failed: "+t);}
+        try{if(!isCheerpJ()){java.awt.image.BufferedImage bi=new java.awt.image.BufferedImage(1,1,java.awt.image.BufferedImage.TYPE_INT_ARGB);blankCursor=java.awt.Toolkit.getDefaultToolkit().createCustomCursor(bi,new java.awt.Point(0,0),"blank");}}catch(Throwable t){System.out.println("[Init] blank cursor failed: "+t);blankCursor=null;}
+        try{timer=new javax.swing.Timer(16,this);timer.start();System.out.println("[Init] timer started");}catch(Throwable t){System.out.println("[Init] timer failed: "+t);}
         if(!isCheerpJ()){
+            try{new Thread(()->checkUpdate()).start();}catch(Throwable t){System.out.println("[Init] update thread failed: "+t);}
             new Thread(()->{
-                try{Thread.sleep(500);}
-                catch(Exception e){}
-                try{loadMusic();}catch(Exception e){System.out.println("[Auto] Music error: "+e.getMessage());}
-                try{loadSFX();}catch(Exception e){System.out.println("[Auto] SFX error: "+e.getMessage());}
-                try{
-                    discordRPC=new DiscordRPC();
-                    discordRPC.setDaemon(true);
-                    discordRPC.start();
-                    System.out.println("[Auto] RPC started");
-                }catch(Exception e){System.out.println("[Auto] RPC error: "+e.getMessage());}
-                try{loadMods();}catch(Exception e){System.out.println("[Auto] Mods error: "+e.getMessage());}
+                try{Thread.sleep(500);}catch(Exception e){}
+                try{loadMusic();}catch(Throwable t){System.out.println("[Auto] Music error: "+t);}
+                try{loadSFX();}catch(Throwable t){System.out.println("[Auto] SFX error: "+t);}
+                try{discordRPC=new DiscordRPC();discordRPC.setDaemon(true);discordRPC.start();System.out.println("[Auto] RPC started");}catch(Throwable t){System.out.println("[Auto] RPC error: "+t);}
+                try{loadMods();}catch(Throwable t){System.out.println("[Auto] Mods error: "+t);}
             }).start();
         }
+        System.out.println("[Init] constructor complete");
     }
     private void updateCursor(){
         if(threeDMode&&screen==Screen.PLAY&&blankCursor!=null)setCursor(blankCursor);
@@ -2333,7 +2332,18 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         boolean isConnected(){return connected;}
     }
 
-    public static void main(String[] args){JFrame f=new JFrame("MiniCraft");MiniCraft g=new MiniCraft();f.add(g);f.pack();f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);f.setLocationRelativeTo(null);f.setResizable(false);f.setVisible(true);
-        Runtime.getRuntime().addShutdownHook(new Thread(()->{if(g.discordRPC!=null)g.discordRPC.stopRPC();}));
-        f.addWindowListener(new java.awt.event.WindowAdapter(){public void windowClosing(java.awt.event.WindowEvent e){g.saveSettings();g.stopNetworking();if(g.discordRPC!=null)g.discordRPC.stopRPC();System.exit(0);}});}
+    public static void main(String[] args){
+        try{
+            System.out.println("[Main] Starting MiniCraft...");
+            JFrame f=new JFrame("MiniCraft");MiniCraft g=new MiniCraft();
+            System.out.println("[Main] MiniCraft constructed");
+            f.add(g);f.pack();f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);f.setLocationRelativeTo(null);f.setResizable(false);f.setVisible(true);
+            System.out.println("[Main] Window visible");
+            Runtime.getRuntime().addShutdownHook(new Thread(()->{if(g.discordRPC!=null)g.discordRPC.stopRPC();}));
+            f.addWindowListener(new java.awt.event.WindowAdapter(){public void windowClosing(java.awt.event.WindowEvent e){g.saveSettings();g.stopNetworking();if(g.discordRPC!=null)g.discordRPC.stopRPC();System.exit(0);}});
+        }catch(Throwable t){
+            System.out.println("[Main] CRASH: "+t);
+            t.printStackTrace();
+        }
+    }
 }
