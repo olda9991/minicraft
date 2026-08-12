@@ -305,20 +305,24 @@ footer a:hover{text-decoration:underline}
   </div>
 </section>
 
-<!-- Web Demo -->
+<!-- Lite Demo -->
 <section class="section">
-  <h2 class="section-title">Try the Web Demo</h2>
-  <p class="section-subtitle">A bite-sized MiniCraft experience running directly in your browser. No Java required.</p>
-  <div class="demo-wrap">
-    <canvas id="mcDemo" width="640" height="360"></canvas>
-    <div class="demo-overlay" id="demoOverlay">
-      <h3>MiniCraft Web Demo</h3>
-      <p>WASD to move &middot; Space to jump &middot; Click to break/place</p>
-      <p>1-9 hotbar &middot; Mini-map top-right</p>
-      <button class="btn btn-green" onclick="startDemo()">Play Demo</button>
-    </div>
-    <div class="demo-hud" id="demoHud">
-      <div class="demo-hint" id="demoHint">WASD move &middot; Click blocks &middot; 1-9 hotbar &middot; Mini-map top-right</div>
+  <h2 class="section-title">Try the Lite Demo</h2>
+  <p class="section-subtitle">MiniCraft Lite boots straight into a creative world — no menus, no setup. The fastest way to experience the game.</p>
+  <div class="download-grid" style="max-width:640px">
+    <div class="download-card" style="padding:48px 32px">
+      <div class="platform-icon">⚡</div>
+      <h3>MiniCraft Lite</h3>
+      <p>Instant creative sandbox. 150 blocks, day/night cycle, break &amp; place, Steve, minimap — zero menus.</p>
+      <ul style="text-align:left;color:var(--text-dim);font-size:14px;margin:16px 0;padding-left:20px">
+        <li>Auto-generates world on launch</li>
+        <li>Always creative mode</li>
+        <li>No multiplayer / settings / survival</li>
+        <li>Same 150 blocks as the full game</li>
+        <li>F9 for 3D raycasting, F10 for VR SBS</li>
+      </ul>
+      <a class="btn btn-green" href="MiniCraftLite.jar" download style="width:100%;justify-content:center">Download Lite Demo JAR</a>
+      <code>java -jar MiniCraftLite.jar</code>
     </div>
   </div>
 </section>
