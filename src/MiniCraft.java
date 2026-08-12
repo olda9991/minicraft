@@ -96,6 +96,21 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
     private long logoFrameTime=0;
     private int playerW=28, playerH=28;
 
+    // ========== SKIN SYSTEM ==========
+    private BufferedImage customSkinImg=null;
+    private boolean useCustomSkin=false;
+    private String minecraftUsername="";
+    private String skinSource="steve"; // steve, file, minecraft
+    private static final String SKIN_DIR=System.getProperty("user.dir")+"/skins/";
+    private BufferedImage[] skinCache=new BufferedImage[8]; // 8 directional frames
+    private int skinFrame=0;
+
+    // ========== ADMIN MENU ==========
+    private boolean adminMenuOpen=false;
+    private int adminSel=-1;
+    private ArrayList<String> adminPlayers=new ArrayList<>();
+    private boolean adminShowCoords=true,adminShowChat=true;
+
     private static final int AIR=0,GRASS=1,DIRT=2,STONE=3,COBBLESTONE=4,BEDROCK=5,SAND=6,GRAVEL=7;
     private static final int OAK_LOG=8,SPRUCE_LOG=9,BIRCH_LOG=10,JUNGLE_LOG=11,ACACIA_LOG=12,DARK_OAK_LOG=13;
     private static final int OAK_PLANKS=14,SPRUCE_PLANKS=15,BIRCH_PLANKS=16,JUNGLE_PLANKS=17,ACACIA_PLANKS=18,DARK_OAK_PLANKS=19;
@@ -832,6 +847,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             }).start();
         }
         System.out.println("[Init] constructor complete");
+        loadSavedSkin();
     }
     private void updateCursor(){
         if(threeDMode&&screen==Screen.PLAY&&blankCursor!=null)setCursor(blankCursor);
@@ -946,6 +962,123 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             }
             br.close();
         }catch(Exception e){}
+    }
+
+    // ========== SKIN SYSTEM ==========
+    private BufferedImage getPlayerSkin(){return useCustomSkin&&customSkinImg!=null?customSkinImg:steveImg[0];}
+
+    private void loadSkinFromFile(){
+        try{
+            javax.swing.JFileChooser fc=new javax.swing.JFileChooser();
+            fc.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("PNG Images","png"));
+            if(fc.showOpenDialog(this)!=javax.swing.JFileChooser.APPROVE_OPTION)return;
+            File f=fc.getSelectedFile();
+            BufferedImage img=javax.imageio.ImageIO.read(f);
+            if(img==null){addChat("Skin","Failed to load image");return;}
+            customSkinImg=scaleSkin(img);
+            useCustomSkin=true;skinSource="file";
+            addChat("Skin","Loaded custom skin: "+f.getName());
+            new File(SKIN_DIR).mkdirs();
+            javax.imageio.ImageIO.write(img,"png",new File(SKIN_DIR+"custom.png"));
+            syncSkin();
+        }catch(Exception e){addChat("Skin","Error: "+e.getMessage());}
+    }
+
+    private void loadSkinFromMinecraft(String username){
+        if(username==null||username.isEmpty())return;
+        new Thread(()->{
+            try{
+                // NameMC API (CORS-friendly unofficial endpoint)
+                java.net.URL url=new java.net.URI("https://api.namemc.com/profile/"+username).toURL();
+                java.net.HttpURLConnection c=(java.net.HttpURLConnection)url.openConnection();
+                c.setConnectTimeout(5000);c.setReadTimeout(5000);
+                if(c.getResponseCode()!=200){SwingUtilities.invokeLater(()->addChat("Skin","NameMC: profile not found"));return;}
+                java.io.BufferedReader br=new java.io.BufferedReader(new java.io.InputStreamReader(c.getInputStream()));
+                StringBuilder sb=new StringBuilder();String l;
+                while((l=br.readLine())!=null)sb.append(l);br.close();
+                String json=sb.toString();
+                int si=json.indexOf("\"texture\":\"");
+                if(si<0){SwingUtilities.invokeLater(()->addChat("Skin","No skin found for "+username));return;}
+                String texture=json.substring(si+12,json.indexOf("\"",si+12));
+                java.net.URL skinUrl=new java.net.URI("https://texture.namemc.com/"+texture.charAt(0)+"/"+texture.charAt(1)+"/"+texture+".png").toURL();
+                BufferedImage skin=javax.imageio.ImageIO.read(skinUrl);
+                if(skin==null){SwingUtilities.invokeLater(()->addChat("Skin","Failed to download skin"));return;}
+                SwingUtilities.invokeLater(()->{
+                    customSkinImg=scaleSkin(skin);useCustomSkin=true;skinSource="minecraft";minecraftUsername=username;
+                    addChat("Skin","Loaded Minecraft skin for "+username);
+                    try{new File(SKIN_DIR).mkdirs();javax.imageio.ImageIO.write(skin,"png",new File(SKIN_DIR+"minecraft_"+username+".png"));}catch(Exception e){}
+                    syncSkin();
+                });
+            }catch(Exception e){SwingUtilities.invokeLater(()->addChat("Skin","Error: "+e.getMessage()));}
+        }).start();
+    }
+
+    private BufferedImage scaleSkin(BufferedImage src){
+        if(src==null)return null;
+        int tw=playerW,th=playerH;
+        BufferedImage scaled=new BufferedImage(tw,th,BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g=scaled.createGraphics();
+        g.drawImage(src.getSubimage(Math.max(0,src.getWidth()/2-4),Math.max(0,src.getHeight()/2-8),8,16),0,0,tw,th,null);
+        g.dispose();return scaled;
+    }
+
+    private void syncSkin(){
+        if(client!=null&&client.isConnected()){
+            client.send("SKIN "+skinSource+" "+(skinSource.equals("minecraft")?minecraftUsername:"custom"));
+        }
+    }
+
+    private void loadSavedSkin(){
+        try{
+            File f=new File(SKIN_DIR+"custom.png");
+            if(f.exists()){customSkinImg=scaleSkin(javax.imageio.ImageIO.read(f));useCustomSkin=true;skinSource="file";}
+            File[] mcSkins=new File(SKIN_DIR).listFiles((d,n)->n.startsWith("minecraft_"));
+            if(mcSkins!=null&&mcSkins.length>0){
+                String n=mcSkins[0].getName().replace("minecraft_","").replace(".png","");
+                customSkinImg=scaleSkin(javax.imageio.ImageIO.read(mcSkins[0]));useCustomSkin=true;skinSource="minecraft";minecraftUsername=n;
+            }
+        }catch(Exception e){}
+    }
+
+    // ========== ADMIN MENU ==========
+    private void doAdminAction(){
+        switch(adminSel){
+            case 0: // Kick player
+                if(!remotePlayers.isEmpty()){
+                    RemotePlayer target=remotePlayers.get(0);
+                    if(client!=null&&client.isConnected())client.send("KICK "+target.id);
+                    addChat("Admin","Requested kick for "+target.name);
+                }else{addChat("Admin","No players to kick");}
+                break;
+            case 1: showCoords=!showCoords;addChat("Admin","Coords "+(showCoords?"ON":"OFF"));break;
+            case 2: adminShowChat=!adminShowChat;addChat("Admin","Chat "+(adminShowChat?"ON":"OFF"));break;
+            case 3: adminMenuOpen=false;break;
+        }
+    }
+
+    private void drawAdminMenu(Graphics2D g2){
+        int w=getWidth(),h=getHeight();
+        g2.setColor(new Color(0,0,0,180));g2.fillRect(0,0,w,h);
+        g2.setColor(new Color(30,30,30,240));g2.fillRect(w/2-180,h/2-200,360,400);
+        g2.setColor(new Color(100,200,100));g2.setFont(new Font("PixelPurl",Font.BOLD,20));g2.drawString("Admin Menu",w/2-60,h/2-175);
+        String[] opts={"Kick Player","Toggle Chat","Toggle Coords","Close"};
+        int yy=h/2-140;
+        for(int i=0;i<opts.length;i++){
+            g2.setColor(adminSel==i?new Color(80,140,80):new Color(60,60,60));
+            g2.fillRect(w/2-150,yy,300,32);
+            g2.setColor(adminSel==i?Color.WHITE:new Color(180,180,180));
+            g2.drawString(opts[i],w/2-140,yy+24);
+            yy+=40;
+        }
+        yy+=10;
+        g2.setColor(new Color(120,120,120));g2.setFont(new Font("PixelPurl",Font.PLAIN,12));
+        g2.drawString("Players online: "+remotePlayers.size(),w/2-150,yy);
+        int py2=yy+20;
+        synchronized(remotePlayers){
+            for(RemotePlayer rp:remotePlayers){
+                g2.drawString(rp.id+": "+rp.name,w/2-150,py2);py2+=16;
+            }
+        }
     }
 
     private void startWebServer(){
@@ -1413,7 +1546,10 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             case "survival":survival=true;addChat("Mode","survival");break;
             case "give":if(parts.length>1){try{int b=Integer.parseInt(parts[1]),c=parts.length>2?Integer.parseInt(parts[2]):1;addToInv(b,c);addChat("Give",""+c+"x "+BNAME[Math.min(b,BLOCK_COUNT-1)]);}catch(Exception e){addChat("Give","usage: /give <id> [count]");}}break;
             case "kill":health=0;dead=true;deathDrop();screen=Screen.DEATH;break;
-            case "help":addChat("Cmds","time day/night, tp x y, heal, creative, survival, give id, kill, nether, rpc, rpcviz, rpcdebug, voice, bg, demo");break;
+            case "help":addChat("Cmds","time day/night, tp x y, heal, creative, survival, give id, kill, nether, rpc, rpcviz, rpcdebug, voice, bg, demo, skin <mcuser>, skinfile");break;
+            case "skinfile":loadSkinFromFile();break;
+            case "skin":if(parts.length>1)loadSkinFromMinecraft(parts[1]);else addChat("Skin","Usage: /skin <minecraft_username> or /skinfile");break;
+            case "admin":adminMenuOpen=!adminMenuOpen;break;
             case "rpcdebug":if(discordRPC!=null){addChat("RPC-State",discordRPC.lastState);addChat("RPC-Secret",discordRPC.currentSecret.isEmpty()?"(none)":discordRPC.currentSecret);addChat("RPC-JSON",discordRPC.currentJson);}else{addChat("RPC","Not running. Use /rpc to start.");}break;
             case "voice":if(voiceChat!=null){voiceChat.shutdown();voiceChat=null;addChat("Voice","stopped");}else{int vp=(serverPort>0?serverPort:clientPort>0?clientPort:0);voiceChat=new VoiceChatThread(vp);voiceChat.start();addChat("Voice","started on port "+(vp+1000));}break;
             case "bg":bgEdit=!bgEdit;addChat("BG","background edit mode: "+bgEdit);break;
@@ -1701,8 +1837,9 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         if(!threeDMode){
         int pxOff=(int)(px-camX),pyOff=(int)(py-camY);
         int bob=(int)(Math.sin(frame*0.3)*2);
-        g2.drawImage(steveImg[0],pxOff-playerW/2,pyOff-playerH/2+bob,null);
-        drawNameTag(g2,pxOff,pyOff+bob,playerName,new Color(255,255,255));
+        BufferedImage mySkin=getPlayerSkin();
+        g2.drawImage(mySkin,pxOff-playerW/2,pyOff-playerH/2+bob,null);
+        drawNameTag(g2,pxOff,pyOff+bob,playerName+(skinSource.equals("minecraft")?" [M]":""),new Color(255,255,255));
         g2.setColor(new Color(0,0,0,30));g2.fillOval(pxOff-8,pyOff+TILE-6,16,4);
 
         synchronized(remotePlayers){
@@ -1711,7 +1848,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             for(RemotePlayer rp:remotePlayers){
                 if(rp.name==null)continue;
                 int rx=(int)(rp.x-camX)+(idx%3-1)*8,ry=(int)(rp.y-camY)+(idx/3)*4;
-                g2.drawImage(steveImg[0],rx-playerW/2,ry-playerH/2,null);
+                BufferedImage rpSkin=rp.skinImg!=null?rp.skinImg:steveImg[0];
+                g2.drawImage(rpSkin,rx-playerW/2,ry-playerH/2,null);
                 drawNameTag(g2,rx,ry,rp.name+" ["+(idx+1)+"]",tagColors[idx%tagColors.length]);
                 idx++;
             }
@@ -1897,6 +2035,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         g2.setColor(Color.YELLOW);
         int mpx=mmX+(int)(px/TILE)*ms+1,mpy=mmY+(int)(py/TILE)*ms+1;
         g2.drawLine(mpx,mpy,(int)(mpx+Math.cos(playerDir)*8),(int)(mpy+Math.sin(playerDir)*8));
+        if(adminMenuOpen)drawAdminMenu(g2);
     }
 
     private void drawNameTag(Graphics2D g2,int x,int y,String name,Color c){
@@ -2011,6 +2150,12 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 toggleFullscreen();
                 return;
             }
+            if(e.getKeyCode()==KeyEvent.VK_F12&&(screen==Screen.PLAY||screen==Screen.SETTINGS)){
+                adminMenuOpen=!adminMenuOpen;return;
+            }
+            if(e.getKeyCode()==KeyEvent.VK_P&&screen==Screen.PLAY&&!chatOpen){
+                loadSkinFromFile();return;
+            }
         }
         if(e.getKeyCode()==KeyEvent.VK_G&&(screen==Screen.PLAY||screen==Screen.SETTINGS)&&!chatOpen){noclip=!noclip;return;}
         if(screen==Screen.SETTINGS){
@@ -2034,6 +2179,13 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             else if(e.getKeyCode()==KeyEvent.VK_ESCAPE){chatText="";chatOpen=false;}
             else if(e.getKeyCode()==KeyEvent.VK_BACK_SPACE&&chatText.length()>0)chatText=chatText.substring(0,chatText.length()-1);
             else{char c=e.getKeyChar();if(c>=' '&&c<='~'&&chatText.length()<60)chatText+=c;}
+            return;
+        }
+        if(adminMenuOpen){
+            if(e.getKeyCode()==KeyEvent.VK_UP){adminSel=Math.max(0,adminSel-1);return;}
+            if(e.getKeyCode()==KeyEvent.VK_DOWN){adminSel=Math.min(3,adminSel+1);return;}
+            if(e.getKeyCode()==KeyEvent.VK_ENTER){doAdminAction();return;}
+            if(e.getKeyCode()==KeyEvent.VK_ESCAPE){adminMenuOpen=false;return;}
             return;
         }
         if(e.getKeyCode()>=0&&e.getKeyCode()<keys.length)keys[e.getKeyCode()]=true;
@@ -2072,21 +2224,31 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         remotePlayers.clear();
     }
 
+    private volatile boolean connectTimeoutCancelled=false;
     private void connectToServer(String ip,int port){
         if(screen==Screen.PLAY)return;
-        screen=Screen.CONNECTING;lastMsg="";
+        screen=Screen.CONNECTING;lastMsg="";connectTimeoutCancelled=false;
         new Thread(()->{
             try{
                 serverIP=ip;serverPort=port;clientPort=port;
                 client=new MiniClient(ip,port);
                 if(client.connect()){
-                    new Thread(()->{try{Thread.sleep(8000);SwingUtilities.invokeLater(()->{if(screen==Screen.CONNECTING){screen=Screen.CONNECT;lastMsg="Timeout! Server not responding.";}});}catch(Exception e){}}).start();}
-                else{SwingUtilities.invokeLater(()->{screen=Screen.CONNECT;lastMsg="Failed: connection refused";});}
+                    new Thread(()->{
+                        try{Thread.sleep(8000);}
+                        catch(Exception e){}
+                        if(!connectTimeoutCancelled){
+                            SwingUtilities.invokeLater(()->{if(screen==Screen.CONNECTING){screen=Screen.CONNECT;lastMsg="Timeout! Server not responding.";}});
+                        }
+                    }).start();
+                }else{
+                    SwingUtilities.invokeLater(()->{screen=Screen.CONNECT;lastMsg="Failed: connection refused";});}
             }catch(Exception e){SwingUtilities.invokeLater(()->{screen=Screen.CONNECT;lastMsg="Error: "+e.getMessage();});}
         }).start();
     }
     private void tryConnect(){
-        String a=typing.trim();if(a.matches("\\d{4,6}"))a="bore.pub:"+a;
+        String a=typing.trim();
+        // Support: "ip:port", "code" (4-6 digits = bore.pub tunnel), "ip" (default port)
+        if(a.matches("\\d{4,6}"))a="127.0.0.1:"+a; // Assume local port number for direct LAN
         String[] parts=a.split(":");String ip=parts[0];int port=parts.length>1?Integer.parseInt(parts[1]):25565;
         connectToServer(ip,port);
     }
@@ -2209,6 +2371,11 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             for(int i=0;i<inv.length;i++){int ix=30+(i%8)*60,iy=220+(i/8)*60;if(wx>=ix&&wx<ix+50&&wy>=iy&&wy<iy+50&&inv[i]>0){selInv=i;return;}}
             return;
         }
+        if(adminMenuOpen){
+            int aw=getWidth(),ah=getHeight(),ayy=ah/2-140;
+            for(int i=0;i<4;i++){if(inBtn(mx,my,aw/2-150,ayy+i*40,300,32)){adminSel=i;doAdminAction();return;}}
+            return;
+        }
         if(screen==Screen.PLAY){
             int tx=-1,ty=-1;
             if(threeDMode){
@@ -2288,7 +2455,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         }
     }
 
-    class RemotePlayer{int id;double x,y,targetX,targetY;String name;RemotePlayer(int i,String n,double sx,double sy){id=i;name=n;x=targetX=sx;y=targetY=sy;}}
+    class RemotePlayer{int id;double x,y,targetX,targetY;String name;BufferedImage skinImg=null;RemotePlayer(int i,String n,double sx,double sy){id=i;name=n;x=targetX=sx;y=targetY=sy;}}
 
     class MiniServer extends Thread{
         private ServerSocket ss;private boolean running=false;
@@ -2382,6 +2549,9 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                             synchronized(remotePlayers){remotePlayers.removeIf(rp->rp.id==id);remotePlayers.add(new RemotePlayer(id,name,(int)px,(int)py));}
                             broadcast("N "+id+" "+oldName+" "+name,0);
                         }
+                        else if(p[0].equals("SKIN")&&p.length>=3){
+                            broadcast("SKIN "+id+" "+p[1]+" "+p[2],0);
+                        }
                     }
                 }catch(Exception e){}finally{try{s.close();}catch(Exception e){}if(name!=null)removeClient(this);}
             }
@@ -2418,7 +2588,8 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                     }
                     else if(p[0].equals("WD")&&tempWorld!=null){
                         final int[][] tw=tempWorld;tempWorld=null;worldReady=true;
-                        SwingUtilities.invokeLater(()->{world=tw;screen=Screen.PLAY;});
+                        connectTimeoutCancelled=true;
+                        SwingUtilities.invokeLater(()->{world=tw;screen=Screen.PLAY;addChat("Net","Joined server!");});
                     }
                     else if(p[0].equals("P")&&p.length>=4){
                         final int pid=Integer.parseInt(p[1]);
@@ -2463,6 +2634,46 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                                 }
                             });
                         }
+                    }
+                    else if(p[0].equals("SKIN")&&p.length>=4){
+                        final int sid=Integer.parseInt(p[1]);
+                        final String src=p[2],user=p[3];
+                        SwingUtilities.invokeLater(()->{
+                            synchronized(remotePlayers){
+                                for(RemotePlayer rp:remotePlayers)if(rp.id==sid){
+                                    if(src.equals("minecraft")){
+                                        // Async load Minecraft skin for remote player
+                                        new Thread(()->{
+                                            try{
+                                                java.net.URL u=new java.net.URI("https://api.namemc.com/profile/"+user).toURL();
+                                                java.net.HttpURLConnection c=(java.net.HttpURLConnection)u.openConnection();
+                                                c.setConnectTimeout(5000);c.setReadTimeout(5000);
+                                                if(c.getResponseCode()==200){
+                                                    java.io.BufferedReader br=new java.io.BufferedReader(new java.io.InputStreamReader(c.getInputStream()));
+                                                    StringBuilder sb=new StringBuilder();String l;
+                                                    while((l=br.readLine())!=null)sb.append(l);br.close();
+                                                    String json=sb.toString();
+                                                    int ti=json.indexOf("\"texture\":\"");
+                                                    if(ti>=0){
+                                                        String tx=json.substring(ti+12,json.indexOf("\"",ti+12));
+                                                        java.net.URL su=new java.net.URI("https://texture.namemc.com/"+tx.charAt(0)+"/"+tx.charAt(1)+"/"+tx+".png").toURL();
+                                                        BufferedImage skin=javax.imageio.ImageIO.read(su);
+                                                        if(skin!=null){
+                                                            BufferedImage scaled=new BufferedImage(28,28,BufferedImage.TYPE_INT_ARGB);
+                                                            Graphics2D g=scaled.createGraphics();
+                                                            g.drawImage(skin.getSubimage(Math.max(0,skin.getWidth()/2-4),Math.max(0,skin.getHeight()/2-8),8,16),0,0,28,28,null);
+                                                            g.dispose();
+                                                            rp.skinImg=scaled;
+                                                        }
+                                                    }
+                                                }
+                                            }catch(Exception e){}
+                                        }).start();
+                                    }
+                                    break;
+                                }
+                            }
+                        });
                     }
                 }
             }catch(Exception e){}finally{connected=false;try{if(s!=null)s.close();}catch(Exception ex){}}
