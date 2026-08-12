@@ -292,6 +292,113 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
         void stopDisc(){running=false;if(socket!=null)socket.close();}
     }
 
+    // ==================== DEMO RECORDER / PLAYER ====================
+    private DemoRecorder demoRecorder;
+    private DemoPlayer demoPlayer;
+    private boolean demoRecording=false,demoPlaying=false;
+    private static final String DEMO_DIR=System.getProperty("user.dir")+"/demos/";
+
+    class DemoRecorder{
+        private ArrayList<String> frames=new ArrayList<>();
+        private long seed;private double startX,startY, startDir;
+        private boolean startSurvival;private int startSel;
+        void startRecording(){
+            seed=worldSeed;startX=px;startY=py;startDir=playerDir;
+            startSurvival=survival;startSel=selBlock;
+            frames.clear();demoRecording=true;
+            addChat("Demo","Recording started! Press F6 to stop.");
+        }
+        void recordTick(){
+            if(!demoRecording)return;
+            int mask=0;
+            if(keys[KeyEvent.VK_W]||keys[KeyEvent.VK_UP])mask|=1;
+            if(keys[KeyEvent.VK_S]||keys[KeyEvent.VK_DOWN])mask|=2;
+            if(keys[KeyEvent.VK_A]||keys[KeyEvent.VK_LEFT])mask|=4;
+            if(keys[KeyEvent.VK_D]||keys[KeyEvent.VK_RIGHT])mask|=8;
+            if(keys[KeyEvent.VK_SPACE])mask|=16;
+            if(keys[KeyEvent.VK_SHIFT])mask|=32;
+            if(keys[KeyEvent.VK_E])mask|=64;
+            if(keys[KeyEvent.VK_F])mask|=128;
+            if(keys[KeyEvent.VK_T])mask|=256;
+            frames.add(mask+","+mx+","+my+","+((breakX>=0)?1:0)+","+selBlock+","+String.format("%.4f",playerDir)+","+String.format("%.4f",playerPitch));
+        }
+        void stopRecording(){
+            demoRecording=false;
+            try{
+                new File(DEMO_DIR).mkdirs();
+                String fname="demo_"+System.currentTimeMillis()+".mcdemo";
+                PrintWriter pw=new PrintWriter(new FileWriter(DEMO_DIR+fname));
+                pw.println("MINICRAFT_DEMO v1");
+                pw.println("seed="+seed);
+                pw.println("px="+String.format("%.2f",startX));
+                pw.println("py="+String.format("%.2f",startY));
+                pw.println("dir="+String.format("%.4f",startDir));
+                pw.println("survival="+startSurvival);
+                pw.println("sel="+startSel);
+                pw.println("frames="+frames.size());
+                for(String f:frames)pw.println(f);
+                pw.close();
+                addChat("Demo","Saved to demos/"+fname+" ("+frames.size()+" frames)");
+            }catch(Exception e){addChat("Demo","Save failed: "+e.getMessage());}
+        }
+    }
+
+    class DemoPlayer{
+        private ArrayList<String> frames=new ArrayList<>();
+        private int frameIdx=0;
+        private long demoSeed;private double demoStartX,demoStartY,demoStartDir;
+        private boolean demoSurvival;private int demoSel;
+        boolean loadDemo(String path){
+            try{
+                BufferedReader br=new BufferedReader(new FileReader(path));
+                String hdr=br.readLine();
+                if(!hdr.startsWith("MINICRAFT_DEMO")){br.close();return false;}
+                frames.clear();frameIdx=0;
+                demoSeed=Long.parseLong(br.readLine().split("=",2)[1]);
+                demoStartX=Double.parseDouble(br.readLine().split("=",2)[1]);
+                demoStartY=Double.parseDouble(br.readLine().split("=",2)[1]);
+                demoStartDir=Double.parseDouble(br.readLine().split("=",2)[1]);
+                demoSurvival=Boolean.parseBoolean(br.readLine().split("=",2)[1]);
+                demoSel=Integer.parseInt(br.readLine().split("=",2)[1]);
+                int fc=Integer.parseInt(br.readLine().split("=",2)[1]);
+                String line;
+                while((line=br.readLine())!=null)frames.add(line);
+                br.close();
+                return true;
+            }catch(Exception e){return false;}
+        }
+        void startPlayback(){
+            if(frames.isEmpty())return;
+            frameIdx=0;demoPlaying=true;
+            genWorld(demoSeed);worldName="demo";
+            px=demoStartX;py=demoStartY;playerDir=demoStartDir;
+            survival=demoSurvival;selBlock=demoSel;
+            screen=Screen.PLAY;
+            addChat("Demo","Playing demo ("+frames.size()+" frames)... Press F7 to stop.");
+        }
+        void playTick(){
+            if(!demoPlaying||frameIdx>=frames.size()){demoPlaying=false;addChat("Demo","Playback finished.");return;}
+            String[] p=frames.get(frameIdx).split(",");
+            frameIdx++;
+            if(p.length<5)return;
+            int mask=Integer.parseInt(p[0]);
+            for(int i=0;i<keys.length;i++)keys[i]=false;
+            if((mask&1)!=0){keys[KeyEvent.VK_W]=true;keys[KeyEvent.VK_UP]=true;}
+            if((mask&2)!=0){keys[KeyEvent.VK_S]=true;keys[KeyEvent.VK_DOWN]=true;}
+            if((mask&4)!=0){keys[KeyEvent.VK_A]=true;keys[KeyEvent.VK_LEFT]=true;}
+            if((mask&8)!=0){keys[KeyEvent.VK_D]=true;keys[KeyEvent.VK_RIGHT]=true;}
+            if((mask&16)!=0)keys[KeyEvent.VK_SPACE]=true;
+            if((mask&32)!=0)keys[KeyEvent.VK_SHIFT]=true;
+            mx=Integer.parseInt(p[1]);my=Integer.parseInt(p[2]);
+            if(Integer.parseInt(p[3])==1){breakX=(int)(px/TILE);breakY=(int)(py/TILE);breakTimer=0;breakTime=5;}
+            else{breakX=-1;breakY=-1;breakTimer=0;}
+            selBlock=Integer.parseInt(p[4]);
+            if(p.length>5)try{playerDir=Double.parseDouble(p[5]);}catch(Exception e){}
+            if(p.length>6)try{playerPitch=Double.parseDouble(p[6]);}catch(Exception e){}
+        }
+        void stopPlayback(){demoPlaying=false;frameIdx=0;for(int i=0;i<keys.length;i++)keys[i]=false;}
+    }
+
     private MiniServer server;
     private MiniClient client;
     private ArrayList<RemotePlayer> remotePlayers=new ArrayList<>();
@@ -1138,6 +1245,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
 
     @Override
     public void actionPerformed(ActionEvent e){
+        if(demoPlaying&&demoPlayer!=null&&screen==Screen.PLAY){demoPlayer.playTick();}
         if(screen==Screen.MENU||screen==Screen.WORLD_LIST||screen==Screen.CREATE_WORLD||screen==Screen.MULTIPLAYER||screen==Screen.CONNECT||screen==Screen.HOST||screen==Screen.CONNECTING||screen==Screen.SETTINGS||screen==Screen.PAUSE||screen==Screen.HELP){repaint();return;}
         if(screen==Screen.DEATH||screen==Screen.CRAFTING){repaint();return;}
         if(screen!=Screen.PLAY)return;
@@ -1273,6 +1381,7 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
                 }
             }
         }
+        if(demoRecording&&demoRecorder!=null)demoRecorder.recordTick();
         repaint();
     }
 
@@ -1304,13 +1413,28 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             case "survival":survival=true;addChat("Mode","survival");break;
             case "give":if(parts.length>1){try{int b=Integer.parseInt(parts[1]),c=parts.length>2?Integer.parseInt(parts[2]):1;addToInv(b,c);addChat("Give",""+c+"x "+BNAME[Math.min(b,BLOCK_COUNT-1)]);}catch(Exception e){addChat("Give","usage: /give <id> [count]");}}break;
             case "kill":health=0;dead=true;deathDrop();screen=Screen.DEATH;break;
-            case "help":addChat("Cmds","time day/night, tp x y, heal, creative, survival, give id, kill, nether, rpc, rpcviz, rpcdebug, voice, bg");break;
+            case "help":addChat("Cmds","time day/night, tp x y, heal, creative, survival, give id, kill, nether, rpc, rpcviz, rpcdebug, voice, bg, demo");break;
             case "rpcdebug":if(discordRPC!=null){addChat("RPC-State",discordRPC.lastState);addChat("RPC-Secret",discordRPC.currentSecret.isEmpty()?"(none)":discordRPC.currentSecret);addChat("RPC-JSON",discordRPC.currentJson);}else{addChat("RPC","Not running. Use /rpc to start.");}break;
             case "voice":if(voiceChat!=null){voiceChat.shutdown();voiceChat=null;addChat("Voice","stopped");}else{int vp=(serverPort>0?serverPort:clientPort>0?clientPort:0);voiceChat=new VoiceChatThread(vp);voiceChat.start();addChat("Voice","started on port "+(vp+1000));}break;
             case "bg":bgEdit=!bgEdit;addChat("BG","background edit mode: "+bgEdit);break;
             case "rpc":if(discordRPC!=null){discordRPC.stopRPC();discordRPC=null;addChat("RPC","stopped");}else{discordRPC=new DiscordRPC();discordRPC.setDaemon(true);discordRPC.start();addChat("RPC","started");}break;
             case "rpcviz":SwingUtilities.invokeLater(()->new RPCVisualizer().setVisible(true));break;
             case "nether":inNether=!inNether;genWorld(worldSeed);addChat("Nether",inNether?"Entered!":"Overworld!");break;
+            case "demo":
+                if(parts.length>1&&parts[1].equals("list")){
+                    File ddir=new File(DEMO_DIR);
+                    File[] demos=ddir.exists()?ddir.listFiles((d,n)->n.endsWith(".mcdemo")):null;
+                    if(demos!=null&&demos.length>0){for(File d:demos)addChat("Demo",d.getName());}
+                    else addChat("Demo","No demos found");
+                }else if(parts.length>1&&parts[1].equals("stop")){
+                    if(demoPlaying&&demoPlayer!=null){demoPlayer.stopPlayback();demoPlaying=false;addChat("Demo","Stopped");}
+                    else if(demoRecording&&demoRecorder!=null){demoRecorder.stopRecording();demoRecording=false;addChat("Demo","Recording stopped");}
+                }else if(parts.length>1){
+                    if(demoPlayer==null)demoPlayer=new DemoPlayer();
+                    if(demoPlayer.loadDemo(DEMO_DIR+parts[1]+(parts[1].endsWith(".mcdemo")?"":".mcdemo"))){demoPlayer.startPlayback();}
+                    else addChat("Demo","Not found: "+parts[1]);
+                }else{addChat("Demo","Usage: /demo <name> | /demo list | /demo stop");}
+                break;
             default:addChat("CMD","unknown: /"+parts[0]+"  use /help");
         }
     }
@@ -1861,8 +1985,24 @@ public class MiniCraft extends JPanel implements ActionListener, KeyListener, Mo
             if(e.getKeyCode()==KeyEvent.VK_F3){showDebug=!showDebug;return;}
             if(e.getKeyCode()==KeyEvent.VK_F4){ultraFps=!ultraFps;return;}
             if(e.getKeyCode()==KeyEvent.VK_F5){rtxMode=!rtxMode;return;}
-            if(e.getKeyCode()==KeyEvent.VK_F6){rtxWater=!rtxWater;return;}
-            if(e.getKeyCode()==KeyEvent.VK_F7){physicsLevel=(physicsLevel+1)%3;physicsOn=physicsLevel>0;return;}
+            if(e.getKeyCode()==KeyEvent.VK_F6){
+                if(demoRecording){demoRecorder.stopRecording();demoRecording=false;}
+                else if(screen==Screen.PLAY){if(demoRecorder==null)demoRecorder=new DemoRecorder();demoRecorder.startRecording();}
+                return;
+            }
+            if(e.getKeyCode()==KeyEvent.VK_F7){
+                if(demoPlaying){demoPlayer.stopPlayback();demoPlaying=false;}
+                else{
+                    File ddir=new File(DEMO_DIR);
+                    File[] demos=ddir.exists()?ddir.listFiles((d,n)->n.endsWith(".mcdemo")):null;
+                    if(demos!=null&&demos.length>0){
+                        if(demoPlayer==null)demoPlayer=new DemoPlayer();
+                        if(demoPlayer.loadDemo(demos[0].getAbsolutePath()))demoPlayer.startPlayback();
+                        else addChat("Demo","Failed to load demo");
+                    }else{addChat("Demo","No demos found in demos/");}
+                }
+                return;
+            }
             if(e.getKeyCode()==KeyEvent.VK_F8){shaderMode=(shaderMode+1)%3;return;}
             if(e.getKeyCode()==KeyEvent.VK_F9){threeDMode=!threeDMode;updateCursor();lastMx=-1;lastMy=-1;addChat("3D","Mode: "+(threeDMode?"ON":"OFF"));return;}
             if(e.getKeyCode()==KeyEvent.VK_F10){vrMode=!vrMode;addChat("VR","Mode: "+(vrMode?"ON (SBS)":"OFF"));return;}
