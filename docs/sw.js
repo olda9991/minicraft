@@ -1,9 +1,8 @@
 /**
  * MiniCraft Web Service Worker
- * ONLY caches CheerpJ runtime files.
- * Our own files are NEVER cached to prevent stale-JAR poisoning.
+ * No caching of local files. Only CheerpJ runtime is cached.
  */
-const VERSION = '6.4.2-nocache';
+const VERSION = '6.4.2-website';
 const RUNTIME_CACHE = 'minicraft-runtime-v2';
 
 self.addEventListener('install', e => {
@@ -23,13 +22,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
     const url = new URL(e.request.url);
     const isCheerpJ = url.hostname.includes('leaningtech.com');
-
-    if (!isCheerpJ) {
-        // Do NOT intercept our own files — let browser fetch fresh every time
-        return;
-    }
-
-    // CheerpJ runtime: cache-first
+    if (!isCheerpJ) return;
     e.respondWith(
         caches.open(RUNTIME_CACHE).then(cache =>
             cache.match(e.request).then(resp => {
@@ -41,8 +34,4 @@ self.addEventListener('fetch', e => {
             })
         )
     );
-});
-
-self.addEventListener('message', e => {
-    if (e.data === 'skipWaiting') self.skipWaiting();
 });

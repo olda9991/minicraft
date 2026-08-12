@@ -3,132 +3,346 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MiniCraft Web — v6.4.2</title>
+<meta name="description" content="MiniCraft v6.4.2 - A Minecraft-inspired 2D/3D Java game with raycasting, multiplayer, voice chat and VR support.">
+<meta name="theme-color" content="#0f0f0f">
+<title>MiniCraft - A Blocky Adventure</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root{
+  --green:#64c864;
+  --green-glow:#4a9a4a;
+  --green-dark:#3a7a3a;
+  --bg:#0a0a0a;
+  --bg-elev:#111;
+  --bg-card:#151515;
+  --border:#222;
+  --border-hover:#333;
+  --text:#e0e0e0;
+  --text-dim:#888;
+  --text-muted:#555;
+  --red:#c86464;
+  --blue:#648ac8;
+  --orange:#c8a464;
+  --grad-start:#0f2a0f;
+  --grad-end:#0a0a0a;
+}
+
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0f0f0f;color:#ddd;font-family:'Segoe UI',system-ui,sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:16px}
-h1{color:#64c864;margin-bottom:4px;font-size:24px}
-.subtitle{color:#888;font-size:13px;margin-bottom:12px}
-#game-wrap{width:100%;max-width:840px;background:#000;border:3px solid #333;border-radius:8px;overflow:hidden;position:relative;min-height:400px}
-#loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a1a1a;z-index:10;transition:opacity .4s}
-#loading h2{color:#64c864;margin-bottom:10px}
-#loading p{color:#aaa;font-size:13px;max-width:480px;text-align:center;line-height:1.5;padding:0 16px}
-#spinner{width:36px;height:36px;border:3px solid #333;border-top-color:#64c864;border-radius:50%;animation:spin 1s linear infinite;margin:10px 0}
-@keyframes spin{to{transform:rotate(360deg)}}
-#status{margin-top:8px;font-size:12px;color:#888}
-#cheerpj-display{width:100%;height:576px;background:#000}
-#error{display:none;position:absolute;inset:0;background:#2a0a0a;z-index:20;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:32px;text-align:center}
-#error.show{display:flex}
-#error h3{color:#c86464}
-#error p{color:#ccc;font-size:13px}
-#controls{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
-button{padding:10px 18px;border:none;border-radius:6px;background:#3a5a3a;color:#fff;font-weight:bold;cursor:pointer;font-size:14px}
-button:hover{background:#4a7a4a}
-button:disabled{background:#333;color:#666;cursor:not-allowed}
-#footer{margin-top:16px;max-width:840px;font-size:12px;color:#777;line-height:1.6;text-align:center}
-#footer a{color:#64c864}
-#footer code{background:#1a1a1a;padding:2px 6px;border-radius:3px;color:#8f8}
-@media(max-width:600px){#cheerpj-display{height:420px}h1{font-size:20px}}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Inter',system-ui,sans-serif;
+  line-height:1.6;
+  overflow-x:hidden;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--green-dark);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--green)}
+
+/* Hero */
+.hero{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:40px 20px;
+  background:radial-gradient(ellipse at 50% 0%,var(--grad-start),var(--grad-end));
+  position:relative;
+  overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2364c864' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events:none;
+}
+.hero-content{position:relative;z-index:1;max-width:800px}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(100,200,100,0.1);border:1px solid rgba(100,200,100,0.2);
+  color:var(--green);padding:8px 16px;border-radius:100px;font-size:13px;font-weight:600;
+  margin-bottom:24px;letter-spacing:0.5px;
+}
+.hero-badge .dot{width:8px;height:8px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+.hero h1{
+  font-size:clamp(40px,8vw,72px);
+  font-weight:800;
+  letter-spacing:-2px;
+  line-height:1.1;
+  margin-bottom:16px;
+  background:linear-gradient(135deg,#fff 0%,var(--green) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hero p.subtitle{
+  font-size:clamp(16px,2.5vw,20px);
+  color:var(--text-dim);
+  max-width:560px;
+  margin:0 auto 32px;
+}
+
+/* Buttons */
+.btn-group{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:16px}
+.btn{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:14px 28px;border-radius:10px;
+  font-weight:700;font-size:15px;cursor:pointer;
+  border:none;transition:all 0.2s ease;
+  text-decoration:none;color:#fff;
+}
+.btn-green{background:var(--green);color:#0a0a0a}
+.btn-green:hover{background:#7ad87a;transform:translateY(-2px);box-shadow:0 8px 24px rgba(100,200,100,0.25)}
+.btn-dark{background:var(--bg-card);border:1px solid var(--border);color:var(--text)}
+.btn-dark:hover{border-color:var(--green);transform:translateY(-2px)}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-blue:hover{background:#7aa4d8;transform:translateY(-2px)}
+
+.version-note{color:var(--text-muted);font-size:12px;margin-top:8px}
+
+/* Scroll indicator */
+.scroll-down{
+  position:absolute;bottom:32px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  color:var(--text-muted);font-size:12px;animation:bounce 2s infinite;
+}
+@keyframes bounce{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(8px)}}
+.scroll-down svg{width:20px;height:20px;stroke:var(--green);stroke-width:2;fill:none}
+
+/* Sections */
+.section{padding:80px 20px;max-width:1200px;margin:0 auto}
+.section-title{
+  text-align:center;font-size:32px;font-weight:700;margin-bottom:12px;
+  background:linear-gradient(90deg,#fff,var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.section-subtitle{text-align:center;color:var(--text-dim);max-width:500px;margin:0 auto 48px;font-size:15px}
+
+/* Feature Grid */
+.features{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+.feature{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:16px;
+  padding:28px;transition:all 0.3s ease;position:relative;overflow:hidden;
+}
+.feature::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--green),transparent);opacity:0;transition:opacity 0.3s;
+}
+.feature:hover{border-color:var(--border-hover);transform:translateY(-4px)}
+.feature:hover::before{opacity:1}
+.feature-icon{
+  width:48px;height:48px;border-radius:12px;background:rgba(100,200,100,0.1);
+  display:flex;align-items:center;justify-content:center;margin-bottom:16px;
+  font-size:24px;
+}
+.feature h3{font-size:17px;font-weight:700;margin-bottom:8px;color:#fff}
+.feature p{font-size:14px;color:var(--text-dim);line-height:1.5}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:20px;text-align:center;margin-bottom:48px}
+.stat{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px}
+.stat-number{font-size:36px;font-weight:800;color:var(--green);font-family:'JetBrains Mono',monospace}
+.stat-label{font-size:13px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+
+/* Download Section */
+.download-section{background:var(--bg-elev);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.download-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;max-width:900px;margin:0 auto}
+.download-card{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:16px;
+  padding:32px;text-align:center;transition:all 0.3s;
+}
+.download-card:hover{border-color:var(--green-glow);transform:translateY(-2px)}
+.download-card .platform-icon{font-size:40px;margin-bottom:16px}
+.download-card h3{font-size:20px;margin-bottom:8px}
+.download-card p{font-size:14px;color:var(--text-dim);margin-bottom:20px}
+.download-card code{
+  display:block;background:#0a0a0a;border:1px solid var(--border);
+  padding:10px 14px;border-radius:8px;font-family:'JetBrains Mono',monospace;
+  font-size:12px;color:var(--text-dim);margin-top:12px;text-align:left;
+}
+
+/* Changelog */
+.changelog{max-width:700px;margin:0 auto;background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:32px}
+.changelog h3{font-size:20px;margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.changelog h3 .tag{background:var(--green);color:#0a0a0a;padding:4px 10px;border-radius:6px;font-size:13px;font-weight:700}
+.changelog ul{list-style:none}
+.changelog li{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px;color:var(--text-dim)}
+.changelog li:last-child{border-bottom:none}
+.changelog li .bullet{color:var(--green);font-weight:700}
+
+/* Footer */
+footer{text-align:center;padding:48px 20px;color:var(--text-muted);font-size:13px;border-top:1px solid var(--border)}
+footer a{color:var(--green);text-decoration:none}
+footer a:hover{text-decoration:underline}
+
+/* Responsive */
+@media(max-width:600px){
+  .hero{padding:60px 16px}
+  .section{padding:48px 16px}
+  .btn{padding:12px 20px;font-size:14px}
+  .features{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
 
-<h1>MiniCraft Web</h1>
-<p class="subtitle">v6.4.2 — Java JAR running in your browser via CheerpJ</p>
-
-<div id="game-wrap">
-  <div id="loading">
-    <h2>Ready to Launch</h2>
-    <p>Click <b>Launch Game</b> to download the CheerpJ runtime (~30 MB) and start MiniCraft.<br>First visit may take 20-40 seconds; repeat visits load from cache in ~2 seconds.</p>
-    <div id="spinner" style="display:none"></div>
-    <div id="status">Waiting for launch</div>
-  </div>
-
-  <div id="error">
-    <h3>Launch Failed</h3>
-    <p id="errMsg">CheerpJ could not start MiniCraft.</p>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
-      <button onclick="location.reload()">Retry</button>
-      <button onclick="downloadJar()">Download JAR</button>
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="dot"></span>
+      v6.4.2 NOW AVAILABLE
     </div>
-    <p style="font-size:12px;color:#888">Linux: <code>./run.sh</code> | Windows: <code>java -jar MiniCraft.jar</code></p>
+    <h1>MiniCraft</h1>
+    <p class="subtitle">A Minecraft-inspired 2D/3D Java adventure. Build, explore, survive — alone or with friends. Featuring raycasting, voice chat, VR, and 150 unique blocks.</p>
+    <div class="btn-group">
+      <a class="btn btn-green" href="MiniCraft.jar" download>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download JAR
+      </a>
+      <a class="btn btn-dark" href="https://github.com/olda9991/minicraft/releases" target="_blank">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        Android APK
+      </a>
+      <a class="btn btn-blue" href="https://github.com/olda9991/minicraft" target="_blank">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+        GitHub
+      </a>
+    </div>
+    <p class="version-note">Java 17+ required &middot; Linux, Windows, macOS &middot; Open source</p>
+  </div>
+  <div class="scroll-down">
+    <span>Explore</span>
+    <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>
+</section>
+
+<!-- Stats -->
+<section class="section">
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-number">150</div>
+      <div class="stat-label">Blocks</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number">15+</div>
+      <div class="stat-label">Recipes</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number">3D</div>
+      <div class="stat-label">Raycasting</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number">VR</div>
+      <div class="stat-label">SBS Mode</div>
+    </div>
   </div>
 
-  <div id="cheerpj-display"></div>
-</div>
+  <h2 class="section-title">Features</h2>
+  <p class="section-subtitle">Everything you need for an epic block-building adventure.</p>
+  <div class="features">
+    <div class="feature">
+      <div class="feature-icon">🧱</div>
+      <h3>150 Unique Blocks</h3>
+      <p>From classic grass and stone to deepslate, copper variants, cherry wood, bamboo, sculk, and ancient debris.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🎮</div>
+      <h3>3D Raycasting Mode</h3>
+      <p>Wolfenstein-style first-person rendering. Press F9 to toggle between 2D platformer and immersive 3D worlds.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🥽</div>
+      <h3>VR Side-by-Side</h3>
+      <p>Press F10 for stereoscopic split-screen. Works with cardboard VR headsets and cross-eyed viewing.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🌐</div>
+      <h3>Cross-Platform Multiplayer</h3>
+      <p>Host LAN servers with auto-discovery. Android and desktop players can join the same world seamlessly.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🎙️</div>
+      <h3>In-Game Voice Chat</h3>
+      <p>UDP voice chat on server port + 1000. Talk to friends while you build, no third-party apps needed.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🎵</div>
+      <h3>Discord Rich Presence</h3>
+      <p>Party invites, join secrets, and real-time status via HTTP bridge. Bring your Discord friends in.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">⚔️</div>
+      <h3>Survival & Creative</h3>
+      <p>Toggle modes with F key. Hunger, health, mobs, crafting table, furnace smelting, and 15+ recipes.</p>
+    </div>
+    <div class="feature">
+      <div class="feature-icon">🔥</div>
+      <h3>Fire & Physics</h3>
+      <p>Spreading fire, soul fire, TNT explosions, sand physics, superflat world toggle, and Nether portals.</p>
+    </div>
+  </div>
+</section>
 
-<div id="controls">
-  <button id="btnLaunch" onclick="launchGame()">Launch Game</button>
-  <button onclick="toggleFullscreen()">Fullscreen</button>
-  <button onclick="downloadJar()">Download JAR</button>
-</div>
+<!-- Download -->
+<section class="section download-section">
+  <h2 class="section-title">Get MiniCraft</h2>
+  <p class="section-subtitle">Choose your platform and start building.</p>
+  <div class="download-grid">
+    <div class="download-card">
+      <div class="platform-icon">🖥️</div>
+      <h3>Desktop</h3>
+      <p>Java 17 or newer required. Works on Linux, Windows, and macOS.</p>
+      <a class="btn btn-green" href="MiniCraft.jar" download style="width:100%;justify-content:center">Download JAR</a>
+      <code>java -jar MiniCraft.jar</code>
+    </div>
+    <div class="download-card">
+      <div class="platform-icon">📱</div>
+      <h3>Android</h3>
+      <p>Full gameplay with touch controls, multiplayer host/join, and voice chat.</p>
+      <a class="btn btn-blue" href="https://github.com/olda9991/minicraft/releases" target="_blank" style="width:100%;justify-content:center">Download APK</a>
+      <code>Install via APK or build from source</code>
+    </div>
+    <div class="download-card">
+      <div class="platform-icon">🐧</div>
+      <h3>Linux (Bazzite)</h3>
+      <p>One-command launch with Hyprland support and auto-compile.</p>
+      <a class="btn btn-dark" href="https://github.com/olda9991/minicraft" target="_blank" style="width:100%;justify-content:center">Clone Repo</a>
+      <code>./run.sh</code>
+    </div>
+  </div>
+</section>
 
-<div id="footer">
-  <p><b>Controls:</b> WASD move · Space jump · Click break/place · 1-9 hotbar · F Survival/Creative · F9 3D mode · F10 VR SBS · Esc menu · T chat · E inventory</p>
-  <p style="margin-top:6px">Browser audio requires a click first. Multiplayer / voice chat require the desktop JAR.</p>
-  <p style="margin-top:6px">Made by <a href="https://github.com/olda9991" target="_blank">olda9991</a> · <a href="https://github.com/olda9991/minicraft" target="_blank">GitHub</a></p>
-</div>
+<!-- Changelog -->
+<section class="section">
+  <h2 class="section-title">What's New</h2>
+  <p class="section-subtitle">Latest updates in v6.4.2</p>
+  <div class="changelog">
+    <h3>Changelog <span class="tag">v6.4.2</span></h3>
+    <ul>
+      <li><span class="bullet">&rsaquo;</span><span>3D raycasting mode with mouse look, pitch control, and smooth keyboard turning</span></li>
+      <li><span class="bullet">&rsaquo;</span><span>VR stereoscopic SBS split-screen mode with 0.035 rad eye offset</span></li>
+      <li><span class="bullet">&rsaquo;</span><span>60 new blocks including cherry, bamboo, copper variants, deepslate, and sculk</span></li>
+      <li><span class="bullet">&rsaquo;</span><span>Cross-platform multiplayer with Android — ID-based player tracking, spawn offsets, lerp smoothing</span></li>
+      <li><span class="bullet">&rsaquo;</span><span>Voice chat via UDP on port + 1000, desktop and Android both supported</span></li>
+      <li><span class="bullet">&rsaquo;</span><span>Discord RPC with party tracking, auto-start, and Rich Presence Visualizer</span></li>
+      <li><span class="bullet">&rsaquo;</span><span>Crazy Error crash dialog for Linux (Zenity/KDialog fallbacks)</span></li>
+      <li><span class="bullet">&rsaquo;</span><span>Automated VR test script with wiggle GIF, cross-eye, and anaglyph output</span></li>
+    </ul>
+  </div>
+</section>
 
-<script src="https://cjrtnc.leaningtech.com/3.0/cj3loader.js"></script>
-<script>
-const loading=document.getElementById('loading');
-const spinner=document.getElementById('spinner');
-const status=document.getElementById('status');
-const errorBox=document.getElementById('error');
-const errMsg=document.getElementById('errMsg');
-const btnLaunch=document.getElementById('btnLaunch');
-let launched=false;
+<!-- Footer -->
+<footer>
+  <p>MiniCraft by <a href="https://github.com/olda9991" target="_blank">olda9991</a> &middot; Not affiliated with Mojang or Microsoft</p>
+  <p style="margin-top:8px">Open source under MIT &middot; <a href="https://github.com/olda9991/minicraft" target="_blank">github.com/olda9991/minicraft</a></p>
+</footer>
 
-async function launchGame(){
-  if(launched) return;
-  launched=true;
-  btnLaunch.disabled=true;
-  spinner.style.display='block';
-  status.textContent='Initializing CheerpJ JVM...';
-
-  try{
-    await cheerpjInit({
-      javaProperties:['user.dir=/app']
-    });
-    status.textContent='Loading MiniCraft.jar (fat JAR with assets)...';
-    const exitCode=await cheerpjRunMain('MiniCraft','/app/MiniCraft.jar');
-    if(exitCode!==0){
-      showError('MiniCraft exited with code '+exitCode);
-    }else{
-      status.textContent='Game ended.';
-    }
-  }catch(e){
-    console.error(e);
-    showError(e.message||String(e)||'Unknown error');
-  }
-}
-
-function showError(msg){
-  loading.style.display='none';
-  errorBox.classList.add('show');
-  errMsg.textContent=msg;
-}
-
-function toggleFullscreen(){
-  const c=document.getElementById('game-wrap');
-  if(!document.fullscreenElement){c.requestFullscreen().catch(()=>{});}
-  else{document.exitFullscreen().catch(()=>{});}
-}
-
-function downloadJar(){
-  const a=document.createElement('a');
-  a.href='MiniCraft.jar';a.download='MiniCraft.jar';a.click();
-}
-
-// Force fresh service worker: unregister old poisoned caches, then register new
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.getRegistrations().then(regs=>{
-    const dereg=regs.map(r=>r.unregister());
-    return Promise.all(dereg);
-  }).then(()=>{
-    return navigator.serviceWorker.register('sw.js');
-  }).catch(()=>{});
-}
-</script>
 </body>
 </html>
