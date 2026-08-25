@@ -27,29 +27,21 @@ else
     CRAZY_ERROR="$CRAZY_SH"
 fi
 
-# Prefer newer build/ over stale JAR to avoid running old code
-USE_JAR=false
-if [ -f MiniCraft.jar ] && [ -f build/MiniCraft.class ]; then
-    if [ MiniCraft.jar -nt build/MiniCraft.class ]; then
-        USE_JAR=true
-    fi
-elif [ -f MiniCraft.jar ] && [ ! -f build/MiniCraft.class ]; then
-    USE_JAR=true
+# In a checkout, prefer the source build so local edits are what gets tested.
+FORCE_SOURCE=false
+if [ "$1" = "--source" ]; then
+    FORCE_SOURCE=true
+    shift
 fi
 
-if [ "$USE_JAR" = true ]; then
-    "$JAVA" -jar MiniCraft.jar "$@"
-    EXIT=$?
-elif [ -f build/MiniCraft.class ]; then
-    "$JAVA" -cp build MiniCraft "$@"
-    EXIT=$?
-elif [ -f src/MiniCraft.java ]; then
-    echo "Compiling..."
+if [ -f src/MiniCraft.java ] && { [ "$FORCE_SOURCE" = true ] || [ ! -f build/MiniCraft.class ] || [ src/MiniCraft.java -nt build/MiniCraft.class ]; }; then
+    echo "Compiling current source..."
     JAVAC=$(which javac 2>/dev/null)
     [ -z "$JAVAC" ] && JAVAC="${JAVA%/java}/javac"
     if [ -x "$JAVAC" ]; then
         mkdir -p build
         if "$JAVAC" -d build src/MiniCraft.java; then
+            echo "Running MiniCraft from build/ (source build)"
             "$JAVA" -cp build MiniCraft "$@"
             EXIT=$?
         else
@@ -59,6 +51,14 @@ elif [ -f src/MiniCraft.java ]; then
         echo "ERROR: javac not found! Install Java JDK 21+"
         exit 1
     fi
+elif [ -f build/MiniCraft.class ]; then
+    echo "Running MiniCraft from build/"
+    "$JAVA" -cp build MiniCraft "$@"
+    EXIT=$?
+elif [ -f MiniCraft.jar ]; then
+    echo "Running MiniCraft.jar"
+    "$JAVA" -jar MiniCraft.jar "$@"
+    EXIT=$?
 else
     echo "ERROR: No MiniCraft.jar, build/, or src/ found!"
     exit 1

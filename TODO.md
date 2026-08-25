@@ -1,6 +1,19 @@
 # MiniCraft v6.2 - TODO
 
 ## Done v6.2
+- [x] First-day survival checklist in HUD
+- [x] Chest storage v1 (8 slots, saved in world file)
+- [x] Furnace GUI v1 (input + fuel + output, saved in world file)
+- [x] Crafting bug fixes (sticks recipe, no double ingredient consume)
+- [x] Main menu Continue button (loads newest saved world)
+- [x] Solid world bottom repair for new and old worlds
+- [x] Drop item collision so mined blocks land on terrain
+- [x] Survival movement cleanup (noclip starts OFF, better block collision)
+- [x] Crafting close/result cleanup (Esc/E returns grid, result click crafts)
+- [x] Source-first `run.sh` so playtests use current code instead of stale JAR
+- [x] Main menu split into Continue, New World, Load World
+- [x] New world mode selection (Survival / Creative)
+- [x] Creative no longer implies noclip/fly; both modes use block collision by default
 - [x] Furnace GUI (right-click placed furnace, smelt ores/food with fuel)
 - [x] 15+ crafting recipes (Pickaxe, Axe, Shovel, Sword, Bow, Fishing Rod, Flint&Steel, Torches, Arrows, Sticks, Planks, CraftingTable, Furnace, Bed, Iron/Gold from ore)
 - [x] More achievements (Taking Inventory!, Getting Wood!)
@@ -32,7 +45,10 @@
 - [x] Cross-platform (Linux/macOS/Windows run scripts, EXE launcher)
 
 ## To Do
-- [ ] Chest storage system (save/load inventory in chests)
+- [ ] Better chest UI (split stacks, shift-click, item sorting)
+- [ ] Better player movement polish (coyote time, variable jump height)
+- [ ] Better inventory UI (pages, tooltips, selected item details)
+- [ ] Creative palette screen separate from crafting screen
 - [ ] Biomes (desert, snow, plains color differences)
 - [ ] Doors, trapdoors, fences, gates
 - [ ] Boats / minecarts
@@ -46,5 +62,5 @@
 - [ ] Better mob pixel art
 - [ ] More sound effects (mob-specific)
 - [ ] Item tooltips on hotbar hover
-- [ ] Crafting recipe book in GUI
+- [ ] Better crafting recipe book in GUI
 - [ ] Proper inventory GUI with armor slots
